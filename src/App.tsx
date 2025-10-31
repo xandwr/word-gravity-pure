@@ -1,7 +1,7 @@
 // App.tsx
 
 import { useState, useEffect } from "react";
-import WordGrid from "./components/WordGrid";
+import WordGrid from "./components/wordGrid";
 import PlayerHand from "./components/PlayerHand";
 import type { Tile } from "./utils/letterBag";
 import { createLetterBag, drawTiles } from "./utils/letterBag";

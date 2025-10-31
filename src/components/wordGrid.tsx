@@ -19,7 +19,7 @@ interface WordGridProps {
 
 export default function WordGrid({ tiles, onDrop, onTileClick, detectedWords, animatingTiles = new Set(), fadingTiles = new Set() }: WordGridProps) {
   return (
-    <div className={`grid gap-0.5 grid-cols-${GRID_COLS} grid-rows-${GRID_ROWS}`}>
+    <div className="grid gap-0.5 grid-cols-7 grid-rows-6">
       {tiles.map((tile, i) => {
         const highlight = getTileHighlight(i, detectedWords);
         const isAnimating = animatingTiles.has(i);
