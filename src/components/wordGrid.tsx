@@ -11,10 +11,11 @@ const GRID_ROWS = 6;
 interface WordGridProps {
   tiles: (Tile | null)[];
   onDrop: (index: number) => void;
+  onTileClick: (index: number) => void;
   detectedWords: WordMatch[];
 }
 
-export default function WordGrid({ tiles, onDrop, detectedWords }: WordGridProps) {
+export default function WordGrid({ tiles, onDrop, onTileClick, detectedWords }: WordGridProps) {
   return (
     <div className={`grid gap-0.5 grid-cols-${GRID_COLS} grid-rows-${GRID_ROWS}`}>
       {tiles.map((tile, i) => {
@@ -25,6 +26,7 @@ export default function WordGrid({ tiles, onDrop, detectedWords }: WordGridProps
             index={i}
             tile={tile}
             onDrop={onDrop}
+            onClick={onTileClick}
             allowDrop={true}
             highlight={highlight}
           />

@@ -5,9 +5,11 @@ import WordGrid from "./components/WordGrid";
 import PlayerHand from "./components/PlayerHand";
 import type { Tile } from "./utils/letterBag";
 import { createLetterBag, drawTiles } from "./utils/letterBag";
-import { detectWords, loadDictionary, type WordMatch } from "./utils/wordDetection";
+import { detectWords, loadDictionary, type WordMatch, findConnectedWordChain, getUniqueIndicesFromWords, calculateWordChainScore } from "./utils/wordDetection";
+import { useGameStore } from "./store/gameStore";
 
 function App() {
+  const { score, addScore } = useGameStore();
   const [playerHand, setPlayerHand] = useState<(Tile | null)[]>(Array(8).fill(null));
   const [gridTiles, setGridTiles] = useState<(Tile | null)[]>(Array(42).fill(null));
   const [draggedTile, setDraggedTile] = useState<Tile | null>(null);
@@ -141,17 +143,51 @@ function App() {
     handleSwap();
   };
 
+  const handleTileClick = (tileIndex: number) => {
+    // Find all connected words starting from this tile
+    const connectedWords = findConnectedWordChain(tileIndex, detectedWords);
+
+    if (connectedWords.length === 0) return;
+
+    // Calculate score for the word chain
+    const chainScore = calculateWordChainScore(connectedWords);
+    addScore(chainScore);
+
+    // Get all unique tile indices to remove
+    const indicesToRemove = getUniqueIndicesFromWords(connectedWords);
+
+    // Log the claimed words for feedback
+    console.log(`Claimed ${connectedWords.length} word(s):`, connectedWords.map(w => w.word).join(', '));
+    console.log(`Score: +${chainScore} points`);
+
+    // Remove the tiles from the grid
+    const newGrid = [...gridTiles];
+    indicesToRemove.forEach(idx => {
+      newGrid[idx] = null;
+    });
+
+    // Apply gravity and detect new words
+    setGridTiles(newGrid);
+    animateGravity(newGrid);
+  };
+
   return (
     <main className="bg-neutral-800/50 border-neutral-900/30 border-8 border-y-0 h-screen max-w-2xl m-auto flex flex-col items-center">
       <header className="text-2xl lg:text-5xl font-bold my-4">Word Gravity</header>
 
-      <div className="flex gap-1">
-        <h2>Players Today:</h2>
-        <h2 className="font-bold">0</h2> {/* this needs to be replaced with global player count later */}
+      <div className="flex gap-4">
+        <div className="flex gap-1">
+          <h2>Players Today:</h2>
+          <h2 className="font-bold">0</h2> {/* this needs to be replaced with global player count later */}
+        </div>
+        <div className="flex gap-1">
+          <h2>Score:</h2>
+          <h2 className="font-bold text-yellow-400">{score}</h2>
+        </div>
       </div>
 
       <div className="mt-4">
-        <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} detectedWords={detectedWords} />
+        <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} onTileClick={handleTileClick} detectedWords={detectedWords} />
       </div>
 
       <div className="mt-12">

@@ -219,3 +219,74 @@ export function getTileHighlight(index: number, words: WordMatch[]): 'horizontal
   if (inVertical) return 'vertical';
   return null;
 }
+
+// Find all words that contain a specific tile index
+export function findWordsContainingTile(tileIndex: number, words: WordMatch[]): WordMatch[] {
+  return words.filter(word => word.indices.includes(tileIndex));
+}
+
+// Recursively find all connected words in a chain
+export function findConnectedWordChain(startingTileIndex: number, words: WordMatch[]): WordMatch[] {
+  const connectedWords = new Set<WordMatch>();
+  const processedIndices = new Set<number>();
+  const wordsToProcess = [...findWordsContainingTile(startingTileIndex, words)];
+
+  // Add all starting words to the connected set
+  wordsToProcess.forEach(word => connectedWords.add(word));
+
+  while (wordsToProcess.length > 0) {
+    const currentWord = wordsToProcess.shift()!;
+
+    // Mark all indices in this word as processed
+    currentWord.indices.forEach(idx => processedIndices.add(idx));
+
+    // Find all words that share any tile with the current word
+    for (const word of words) {
+      // Skip if we've already added this word
+      if (connectedWords.has(word)) continue;
+
+      // Check if this word shares any tiles with the current word
+      const hasSharedTile = word.indices.some(idx => processedIndices.has(idx));
+
+      if (hasSharedTile) {
+        connectedWords.add(word);
+        wordsToProcess.push(word);
+      }
+    }
+  }
+
+  return Array.from(connectedWords);
+}
+
+// Get all unique tile indices from a list of words
+export function getUniqueIndicesFromWords(words: WordMatch[]): number[] {
+  const indices = new Set<number>();
+  words.forEach(word => {
+    word.indices.forEach(idx => indices.add(idx));
+  });
+  return Array.from(indices).sort((a, b) => a - b);
+}
+
+// Calculate score for a list of words
+export function calculateWordChainScore(words: WordMatch[]): number {
+  let score = 0;
+
+  for (const word of words) {
+    // Base score: word length
+    const baseScore = word.word.length;
+
+    // Bonus for longer words
+    let multiplier = 1;
+    if (word.word.length >= 7) multiplier = 3;
+    else if (word.word.length >= 5) multiplier = 2;
+
+    score += baseScore * multiplier;
+  }
+
+  // Bonus for multiple words in one chain
+  if (words.length > 1) {
+    score += words.length * 5;
+  }
+
+  return score;
+}
