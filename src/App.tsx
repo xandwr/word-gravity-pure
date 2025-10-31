@@ -147,6 +147,9 @@ function App() {
 
   // Start the claim timer for player
   const startClaimTimer = (currentGrid: (Tile | null)[], isLastTile: boolean) => {
+    // Set turn to player so they can click words
+    setTurn('player');
+
     let secondsLeft = 5;
     setTimeRemaining(secondsLeft);
 
@@ -179,6 +182,25 @@ function App() {
       clearInterval(claimTimer);
       setClaimTimer(null);
       setTimeRemaining(5);
+    }
+  };
+
+  // Check if player can claim any words at the start of their turn
+  const checkForPlayerClaimableWords = (currentGrid: (Tile | null)[]) => {
+    const allWords = detectWords(currentGrid, claimedWords);
+    const playerWords = filterClaimableWords(allWords, currentGrid, 'player');
+
+    if (playerWords.length > 0) {
+      console.log(`Player can claim ${playerWords.length} existing word(s) before placing:`, playerWords.map(w => w.word).join(', '));
+      setDetectedWords(allWords);
+      setTimeRemaining(5);
+
+      // Start timer with isLastTile check
+      const isLastTile = letterBag.length === 0;
+      startClaimTimer(currentGrid, isLastTile);
+    } else {
+      // No claimable words, just clear detected words
+      setDetectedWords([]);
     }
   };
 
@@ -324,7 +346,7 @@ function App() {
         const tile = currentGrid[idx];
         return tile?.placedBy || 'none';
       });
-      console.log(`  "${word.word}" ownership:`, owners);
+      console.log(`  "${word.word}" ownership: [${owners.join(', ')}]`);
     });
 
     // World can only claim words that contain at least one world-placed tile
@@ -332,7 +354,7 @@ function App() {
 
     if (claimableWords.length === 0) {
       console.log('World has no words to claim - returning to player');
-      setTurn('player');
+      finalizeWorldTurn(currentGrid);
       return;
     }
 
@@ -352,15 +374,8 @@ function App() {
         newGrid[idx] = null;
       });
 
-      // Clear placedBy markers
-      for (let i = 0; i < newGrid.length; i++) {
-        if (newGrid[i]) {
-          newGrid[i] = {
-            ...newGrid[i]!,
-            placedBy: undefined
-          };
-        }
-      }
+      // Don't clear placedBy markers - they persist for multi-turn word building
+      // This allows proper ownership tracking across multiple turns
 
       // Apply gravity and continue cascade
       setGridTiles(newGrid);
@@ -372,6 +387,12 @@ function App() {
     }, 500);
   };
 
+  // After world cascade completes, check if player can claim existing words
+  const finalizeWorldTurn = (currentGrid: (Tile | null)[]) => {
+    setTurn('player');
+    checkForPlayerClaimableWords(currentGrid);
+  };
+
   // Player cascade: evaluates after manual claim
   const evaluateWordCascade = (
     currentGrid: (Tile | null)[],
@@ -380,13 +401,23 @@ function App() {
     onComplete?: (finalGrid: (Tile | null)[]) => void
   ) => {
     const allWords = detectWords(currentGrid, claimedWords);
+    console.log(`Player cascade: ${allWords.length} total words detected:`, allWords.map(w => w.word).join(', '));
+
+    // Debug: Check tile ownership for each word
+    allWords.forEach(word => {
+      const owners = word.indices.map(idx => {
+        const tile = currentGrid[idx];
+        return tile?.placedBy || 'none';
+      });
+      console.log(`  "${word.word}" ownership: [${owners.join(', ')}]`);
+    });
 
     // Filter to only words that contain at least one tile placed by the current player
     const currentPlayer = isPlayerTurn ? 'player' : 'world';
     const claimableWords = filterClaimableWords(allWords, currentGrid, currentPlayer);
 
     if (claimableWords.length === 0) {
-      console.log('No more words to evaluate - cascade complete');
+      console.log('Player cascade: No more words to evaluate - cascade complete');
       if (onComplete) {
         onComplete(currentGrid);
       }
@@ -423,16 +454,8 @@ function App() {
         newGrid[idx] = null;
       });
 
-      // Clear placedBy markers from remaining tiles so they can't be reclaimed in cascades
-      // Only tiles from the current turn's fresh placement should be claimable
-      for (let i = 0; i < newGrid.length; i++) {
-        if (newGrid[i]) {
-          newGrid[i] = {
-            ...newGrid[i]!,
-            placedBy: undefined
-          };
-        }
-      }
+      // Don't clear placedBy markers - they persist for multi-turn word building
+      // This allows proper ownership tracking across multiple turns
 
       // Apply gravity and continue cascade
       setGridTiles(newGrid);
@@ -446,8 +469,11 @@ function App() {
   };
 
   const handleTileClick = (tileIndex: number) => {
+    console.log(`Tile clicked at index ${tileIndex}, currentTurn: ${currentTurn}, timer: ${claimTimer !== null}`);
+
     // Only allow clicking during player's turn with timer active
     if (currentTurn !== 'player' || claimTimer === null) {
+      console.log('Click rejected: not player turn or no timer');
       return;
     }
 
@@ -455,6 +481,8 @@ function App() {
     const wordsContainingTile = detectedWords.filter(word =>
       word.indices.includes(tileIndex)
     );
+
+    console.log(`Found ${wordsContainingTile.length} words containing this tile`);
 
     if (wordsContainingTile.length === 0) {
       console.log('No valid word at this tile');
