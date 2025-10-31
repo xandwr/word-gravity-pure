@@ -233,6 +233,10 @@ function App() {
           <h2 className="font-bold">0</h2> {/* this needs to be replaced with global player count later */}
         </div>
         <div className="flex gap-1">
+          <h2>Today's Seed:</h2>
+          <h2 className="font-bold">0</h2> {/* this needs to be replaced with global seed later */}
+        </div>
+        <div className="flex gap-1">
           <h2>Score:</h2>
           <h2 className="font-bold text-yellow-400">{score}</h2>
         </div>
