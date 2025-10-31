@@ -33,11 +33,11 @@ export default function LetterTile({ tile, onDragStart, draggable = false, highl
       onDragStart={handleDragStart}
     >
       <div className={`absolute top-1 lg:top-0.5 text-lg lg:text-3xl font-semibold leading-none ${getLetterColor()}`}>{tile.letter === '_' ? '' : tile.letter}</div>
-      <div className="absolute bottom-0.5 right-0.75 text-xs lg:text-sm font-bold pr-0 pb-0">
+      <div className="absolute bottom-0.5 right-1 text-xs lg:text-sm font-bold">
         {tile.score}
       </div>
       {tile.multiplier > 1 && (
-        <div className="absolute bottom-0 right-0 text-xs lg:text-sm font-bold pr-0 pb-0 text-red-500">
+        <div className="absolute top-0.5 right-1 text-xs lg:text-sm font-bold text-red-600 bg-red-100 px-0.5 rounded">
           x{tile.multiplier}
         </div>
       )}

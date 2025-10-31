@@ -30,6 +30,47 @@ function App() {
     });
   }, []);
 
+  const applyMultipliers = (grid: (Tile | null)[]): (Tile | null)[] => {
+    const GRID_COLS = 7;
+    const GRID_ROWS = 6;
+    const newGrid = [...grid];
+
+    // Reset all multipliers to 1
+    for (let i = 0; i < newGrid.length; i++) {
+      if (newGrid[i]) {
+        newGrid[i] = {
+          ...newGrid[i]!,
+          multiplier: 1
+        };
+      }
+    }
+
+    // For each column, each tile adds +1 multiplier to all tiles below it
+    for (let col = 0; col < GRID_COLS; col++) {
+      for (let row = 0; row < GRID_ROWS; row++) {
+        const currentIndex = row * GRID_COLS + col;
+        const currentTile = newGrid[currentIndex];
+
+        if (currentTile) {
+          // This tile adds +1 to the multiplier of all tiles below it
+          for (let belowRow = row + 1; belowRow < GRID_ROWS; belowRow++) {
+            const belowIndex = belowRow * GRID_COLS + col;
+            const belowTile = newGrid[belowIndex];
+
+            if (belowTile) {
+              newGrid[belowIndex] = {
+                ...belowTile,
+                multiplier: belowTile.multiplier + 1
+              };
+            }
+          }
+        }
+      }
+    }
+
+    return newGrid;
+  };
+
   const applyGravityStep = (grid: (Tile | null)[]): { newGrid: (Tile | null)[]; moved: boolean } => {
     const GRID_COLS = 7;
     const GRID_ROWS = 6;
@@ -66,8 +107,10 @@ function App() {
         currentGrid = newGrid;
         setTimeout(step, 100); // 100ms delay between each step
       } else {
-        // Gravity has settled, detect words
-        const words = detectWords(newGrid);
+        // Gravity has settled, apply multipliers and detect words
+        const gridWithMultipliers = applyMultipliers(newGrid);
+        setGridTiles(gridWithMultipliers);
+        const words = detectWords(gridWithMultipliers);
         console.log('Detected words:', words);
         setDetectedWords(words);
       }
@@ -155,8 +198,8 @@ function App() {
 
     if (connectedWords.length === 0) return;
 
-    // Calculate score for the word chain
-    const chainScore = calculateWordChainScore(connectedWords);
+    // Calculate score for the word chain (passing the current grid to access multipliers)
+    const chainScore = calculateWordChainScore(connectedWords, gridTiles);
     addScore(chainScore);
 
     // Get all unique tile indices to remove

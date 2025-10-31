@@ -267,25 +267,32 @@ export function getUniqueIndicesFromWords(words: WordMatch[]): number[] {
   return Array.from(indices).sort((a, b) => a - b);
 }
 
-// Calculate score for a list of words
-export function calculateWordChainScore(words: WordMatch[]): number {
+// Calculate score for a list of words, using tile data from the grid
+export function calculateWordChainScore(words: WordMatch[], grid: (Tile | null)[]): number {
   let score = 0;
 
   for (const word of words) {
-    // Base score: word length
-    const baseScore = word.word.length;
+    // Calculate score for each tile in the word
+    let wordScore = 0;
+    for (const tileIndex of word.indices) {
+      const tile = grid[tileIndex];
+      if (tile) {
+        // Apply the tile's multiplier to its base score
+        wordScore += tile.score * tile.multiplier;
+      }
+    }
 
-    // Bonus for longer words
-    let multiplier = 1;
-    if (word.word.length >= 7) multiplier = 3;
-    else if (word.word.length >= 5) multiplier = 2;
+    // Bonus for longer words (applied to the total word score)
+    let lengthMultiplier = 1;
+    if (word.word.length >= 7) lengthMultiplier = 1.5;
+    else if (word.word.length >= 5) lengthMultiplier = 1.25;
 
-    score += baseScore * multiplier;
+    score += Math.floor(wordScore * lengthMultiplier);
   }
 
   // Bonus for multiple words in one chain
   if (words.length > 1) {
-    score += words.length * 5;
+    score += words.length * 10;
   }
 
   return score;
