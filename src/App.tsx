@@ -183,6 +183,10 @@ function App() {
 
   const handleDropOnGrid = (gridIndex: number) => {
     if (draggedTile && dragSource && dragSource.type === 'hand' && currentTurn === 'player') {
+      // IMMEDIATELY lock the player out by setting turn to 'world'
+      // This prevents any quick double-placements
+      setTurn('world');
+
       // Add tile to grid at the dropped position
       const newGrid = [...gridTiles];
       newGrid[gridIndex] = draggedTile;
@@ -201,6 +205,9 @@ function App() {
       }
       setPlayerHand(newHand);
 
+      setDraggedTile(null);
+      setDragSource(null);
+
       // Animate gravity to make tiles fall down
       animateGravity(newGrid, (finalGrid) => {
         // After player's gravity settles, evaluate any words formed
@@ -217,14 +224,11 @@ function App() {
           });
         }, 300);
       });
-
-      setDraggedTile(null);
-      setDragSource(null);
     }
   };
 
   const handleSwap = () => {
-    if (draggedTile && dragSource && dragSource.type === 'hand' && swapsRemaining > 0 && letterBag.length > 0) {
+    if (draggedTile && dragSource && dragSource.type === 'hand' && swapsRemaining > 0 && letterBag.length > 0 && currentTurn === 'player') {
       // Get a random tile from the bag
       const randomIndex = Math.floor(Math.random() * letterBag.length);
       const newTile = letterBag[randomIndex];
@@ -249,7 +253,7 @@ function App() {
   };
 
   const handleSwapZoneDragOver = (e: React.DragEvent) => {
-    if (draggedTile && dragSource?.type === 'hand' && swapsRemaining > 0) {
+    if (draggedTile && dragSource?.type === 'hand' && swapsRemaining > 0 && currentTurn === 'player') {
       e.preventDefault();
       setIsSwapZoneHovered(true);
     }
