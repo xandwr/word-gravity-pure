@@ -227,7 +227,7 @@ function App() {
     <main className="bg-neutral-800/50 border-neutral-900/30 border-8 border-y-0 h-screen max-w-2xl m-auto flex flex-col items-center">
       <header className="text-2xl lg:text-5xl font-bold my-4">Word Gravity</header>
 
-      <div className="flex gap-4">
+      <div className="flex flex-col items-center gap-1">
         <div className="flex gap-1">
           <h2>Players Today:</h2>
           <h2 className="font-bold">0</h2> {/* this needs to be replaced with global player count later */}
@@ -242,7 +242,12 @@ function App() {
         <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} onTileClick={handleTileClick} detectedWords={detectedWords} />
       </div>
 
-      <div className="mt-12">
+      <div className="mt-2 flex flex-row gap-1 text-lg">
+        <h1>Current Turn:</h1>
+        <h1 className="font-semibold">PLAYER</h1>
+      </div>
+
+      <div className="mt-8">
         <PlayerHand tiles={playerHand} onDragStart={handleDragStartFromHand} />
       </div>
 
