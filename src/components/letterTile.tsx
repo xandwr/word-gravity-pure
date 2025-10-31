@@ -19,7 +19,7 @@ export default function LetterTile({ tile, onDragStart, draggable = false }: Let
 
   return (
     <div
-      className="rounded-xl border lg:border-4 border-black/20 bg-amber-100 text-neutral-900 w-full h-full flex flex-col items-center justify-center relative cursor-grab active:cursor-grabbing"
+      className="rounded-xl border lg:border-4 border-black/20 bg-amber-100 text-neutral-900 w-full h-full flex flex-col items-center justify-center relative cursor-grab active:cursor-grabbing transition-all duration-100"
       draggable={draggable}
       onDragStart={handleDragStart}
     >

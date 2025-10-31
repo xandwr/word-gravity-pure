@@ -23,6 +23,76 @@ function App() {
     setLetterBag(remaining);
   }, []);
 
+  const applyGravity = (grid: (Tile | null)[]): (Tile | null)[] => {
+    const GRID_COLS = 7;
+    const GRID_ROWS = 6;
+    const newGrid = [...grid];
+
+    // Process each column from bottom to top
+    for (let col = 0; col < GRID_COLS; col++) {
+      // Collect all tiles in this column
+      const columnTiles: Tile[] = [];
+      for (let row = 0; row < GRID_ROWS; row++) {
+        const index = row * GRID_COLS + col;
+        if (newGrid[index]) {
+          columnTiles.push(newGrid[index]!);
+          newGrid[index] = null;
+        }
+      }
+
+      // Place tiles at the bottom of the column
+      let placementRow = GRID_ROWS - 1;
+      for (const tile of columnTiles) {
+        const index = placementRow * GRID_COLS + col;
+        newGrid[index] = tile;
+        placementRow--;
+      }
+    }
+
+    return newGrid;
+  };
+
+  const applyGravityStep = (grid: (Tile | null)[]): { newGrid: (Tile | null)[]; moved: boolean } => {
+    const GRID_COLS = 7;
+    const GRID_ROWS = 6;
+    const newGrid = [...grid];
+    let moved = false;
+
+    // Process each column from bottom to top
+    for (let col = 0; col < GRID_COLS; col++) {
+      // Start from the second-to-last row and move up
+      for (let row = GRID_ROWS - 2; row >= 0; row--) {
+        const currentIndex = row * GRID_COLS + col;
+        const belowIndex = (row + 1) * GRID_COLS + col;
+
+        // If current cell has a tile and the cell below is empty, move it down
+        if (newGrid[currentIndex] && !newGrid[belowIndex]) {
+          newGrid[belowIndex] = newGrid[currentIndex];
+          newGrid[currentIndex] = null;
+          moved = true;
+        }
+      }
+    }
+
+    return { newGrid, moved };
+  };
+
+  const animateGravity = (initialGrid: (Tile | null)[]) => {
+    let currentGrid = initialGrid;
+
+    const step = () => {
+      const { newGrid, moved } = applyGravityStep(currentGrid);
+      setGridTiles(newGrid);
+
+      if (moved) {
+        currentGrid = newGrid;
+        setTimeout(step, 100); // 100ms delay between each step
+      }
+    };
+
+    step();
+  };
+
   const handleDragStartFromHand = (tile: Tile, index: number) => {
     setDraggedTile(tile);
     setDragSource({ type: 'hand', index });
@@ -35,10 +105,13 @@ function App() {
       newHand[dragSource.index] = null;
       setPlayerHand(newHand);
 
-      // Add tile to grid
+      // Add tile to grid at the dropped position
       const newGrid = [...gridTiles];
       newGrid[gridIndex] = draggedTile;
       setGridTiles(newGrid);
+
+      // Animate gravity to make tiles fall down
+      animateGravity(newGrid);
 
       setDraggedTile(null);
       setDragSource(null);

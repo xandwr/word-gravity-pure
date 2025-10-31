@@ -16,7 +16,7 @@ export default function WordGrid({ tiles, onDrop }: WordGridProps) {
     <div className={`grid gap-0.5 grid-cols-${GRID_COLS} grid-rows-${GRID_ROWS}`}>
       {tiles.map((tile, i) => (
         <LetterSlot
-          key={i}
+          key={`slot-${i}`}
           index={i}
           tile={tile}
           onDrop={onDrop}
