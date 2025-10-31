@@ -13,7 +13,7 @@ interface WordGridProps {
 
 export default function WordGrid({ tiles, onDrop }: WordGridProps) {
   return (
-    <div className={`grid gap-1 grid-cols-${GRID_COLS} grid-rows-${GRID_ROWS}`}>
+    <div className={`grid gap-0.5 grid-cols-${GRID_COLS} grid-rows-${GRID_ROWS}`}>
       {tiles.map((tile, i) => (
         <LetterSlot
           key={i}

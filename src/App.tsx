@@ -12,9 +12,10 @@ function App() {
   const [draggedTile, setDraggedTile] = useState<Tile | null>(null);
   const [dragSource, setDragSource] = useState<{ type: 'hand' | 'grid'; index: number } | null>(null);
 
+  let bag = createLetterBag();
+
   // Initialize the game on launch
   useEffect(() => {
-    const bag = createLetterBag();
     const { drawn } = drawTiles(bag, 8);
     setPlayerHand(drawn);
   }, []);
@@ -42,15 +43,20 @@ function App() {
   };
 
   return (
-    <main className="bg-neutral-800/50 h-screen max-w-2xl m-auto flex flex-col items-center justify-center-safe">
+    <main className="bg-neutral-800/50 h-screen max-w-2xl m-auto flex flex-col items-center">
       <header className="text-4xl font-semibold">Word Gravity</header>
 
-      <div className="my-10">
+      <div className="mt-2">
         <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} />
       </div>
 
-      <div className="my-10">
+      <div className="mt-2">
         <PlayerHand tiles={playerHand} onDragStart={handleDragStartFromHand} />
+      </div>
+
+      <div className="mt-2 flex gap-1 text-xl">
+        <h2>Letters Remaining:</h2>
+        <h2 className="font-semibold">{bag.length - playerHand.length}</h2>
       </div>
     </main>
   );
