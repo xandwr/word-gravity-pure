@@ -345,8 +345,8 @@ function App() {
           <h2>Today's Seed:</h2>
           <h2 className="font-bold">{worldSeed}</h2>
         </div>
-        <div className="flex gap-1">
-          <h2>Score:</h2>
+        <div className="flex gap-1 text-2xl">
+          <h2 className="">Score:</h2>
           <h2 className="font-bold text-yellow-400">{score}</h2>
         </div>
       </div>
