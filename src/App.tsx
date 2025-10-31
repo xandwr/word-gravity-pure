@@ -159,17 +159,28 @@ function App() {
 
         // Apply gravity to world's placement
         animateGravity(result.grid, (finalGrid) => {
-          // After world's gravity settles, check if world formed any words
-          const worldWords = detectWords(finalGrid, claimedWords);
+          // After world's gravity settles, check if world formed any NEW words
+          const wordsAfter = detectWords(finalGrid, claimedWords);
+          const wordsBefore = detectWords(currentGrid, claimedWords);
 
-          if (worldWords.length > 0) {
-            // World formed words! Calculate score and deduct from player
-            const worldScore = calculateWordChainScore(worldWords, finalGrid);
-            console.log(`World formed words worth ${worldScore} points!`);
+          // Find NEW words that weren't present before the world's turn
+          const newWords = wordsAfter.filter(afterWord => {
+            // Check if this exact word (same indices pattern) existed before
+            return !wordsBefore.some(beforeWord =>
+              beforeWord.direction === afterWord.direction &&
+              beforeWord.indices.length === afterWord.indices.length &&
+              beforeWord.indices.every((idx, i) => idx === afterWord.indices[i])
+            );
+          });
+
+          if (newWords.length > 0) {
+            // World formed NEW words! Calculate score and deduct from player
+            const worldScore = calculateWordChainScore(newWords, finalGrid);
+            console.log(`World formed NEW words worth ${worldScore} points!`, newWords.map(w => w.word));
             addScore(-worldScore); // Negative score
 
             // Remove world's word tiles from grid
-            const indicesToRemove = getUniqueIndicesFromWords(worldWords);
+            const indicesToRemove = getUniqueIndicesFromWords(newWords);
             const newGrid = [...finalGrid];
             indicesToRemove.forEach(idx => {
               newGrid[idx] = null;
@@ -182,7 +193,8 @@ function App() {
               setTurn('player');
             });
           } else {
-            // No words formed, just return turn to player
+            // No NEW words formed, just return turn to player
+            console.log('World did not form any new words - existing words remain safe');
             setTurn('player');
           }
         });
