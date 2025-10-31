@@ -43,8 +43,8 @@ function App() {
   };
 
   return (
-    <main className="bg-neutral-800/50 h-screen max-w-2xl m-auto flex flex-col items-center">
-      <header className="text-4xl font-bold my-4">Word Gravity</header>
+    <main className="bg-neutral-800/50 border-neutral-900/30 border-8 border-y-0 h-screen max-w-2xl m-auto flex flex-col items-center">
+      <header className="text-2xl lg:text-5xl font-bold my-4">Word Gravity</header>
 
       <div className="flex gap-1">
         <h2>Players Today:</h2>
@@ -59,9 +59,12 @@ function App() {
         <PlayerHand tiles={playerHand} onDragStart={handleDragStartFromHand} />
       </div>
 
-      <div className="mt-2 flex gap-1 text-xl">
-        <h2>Letters Remaining:</h2>
-        <h2 className="font-semibold">{bag.length - playerHand.length}</h2>
+      <div className="flex flex-col items-center my-4 bg-gray-400/20 px-16 py-4 rounded-2xl border-4 border-neutral-800/50">
+        <h1 className="text-xl font-bold underline decoration-double">SWAP</h1>
+        <div className="mt-2 flex gap-1 text-xl">
+          <h2>Letters Remaining:</h2>
+          <h2 className="font-semibold">{bag.length - playerHand.length}</h2>
+        </div>
       </div>
     </main>
   );
