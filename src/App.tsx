@@ -23,35 +23,6 @@ function App() {
     setLetterBag(remaining);
   }, []);
 
-  const applyGravity = (grid: (Tile | null)[]): (Tile | null)[] => {
-    const GRID_COLS = 7;
-    const GRID_ROWS = 6;
-    const newGrid = [...grid];
-
-    // Process each column from bottom to top
-    for (let col = 0; col < GRID_COLS; col++) {
-      // Collect all tiles in this column
-      const columnTiles: Tile[] = [];
-      for (let row = 0; row < GRID_ROWS; row++) {
-        const index = row * GRID_COLS + col;
-        if (newGrid[index]) {
-          columnTiles.push(newGrid[index]!);
-          newGrid[index] = null;
-        }
-      }
-
-      // Place tiles at the bottom of the column
-      let placementRow = GRID_ROWS - 1;
-      for (const tile of columnTiles) {
-        const index = placementRow * GRID_COLS + col;
-        newGrid[index] = tile;
-        placementRow--;
-      }
-    }
-
-    return newGrid;
-  };
-
   const applyGravityStep = (grid: (Tile | null)[]): { newGrid: (Tile | null)[]; moved: boolean } => {
     const GRID_COLS = 7;
     const GRID_ROWS = 6;
