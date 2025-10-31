@@ -1,5 +1,7 @@
 // utils/letterBag.ts
 
+import { SeededRandom } from "./seededRandom";
+
 export interface Tile {
   id: string;
   letter: string;
@@ -37,7 +39,7 @@ const SCRABBLE_DISTRIBUTION: Record<string, { count: number; score: number }> = 
   'Z': { count: 1, score: 10 },
 };
 
-export function createLetterBag(): Tile[] {
+export function createLetterBag(seed?: number): Tile[] {
   const bag: Tile[] = [];
   let tileId = 0;
 
@@ -52,10 +54,20 @@ export function createLetterBag(): Tile[] {
     }
   }
 
-  // Shuffle the bag
-  for (let i = bag.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [bag[i], bag[j]] = [bag[j], bag[i]];
+  // Shuffle the bag deterministically if seed provided, otherwise random
+  if (seed !== undefined) {
+    const rng = new SeededRandom(seed);
+    // Fisher-Yates shuffle with seeded random
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = rng.nextInt(0, i + 1);
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
+  } else {
+    // Random shuffle (fallback for backwards compatibility)
+    for (let i = bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [bag[i], bag[j]] = [bag[j], bag[i]];
+    }
   }
 
   return bag;

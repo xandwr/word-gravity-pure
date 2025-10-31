@@ -37,14 +37,15 @@ function App() {
   useEffect(() => {
     // Load dictionary first
     loadDictionary().then(() => {
-      const bag = createLetterBag();
+      // Set today's seed for deterministic gameplay
+      const seed = getTodaysSeed();
+      setWorldSeed(seed);
+
+      // Create deterministic letter bag using the same seed
+      const bag = createLetterBag(seed);
       const { drawn, remaining } = drawTiles(bag, 8);
       setPlayerHand(drawn);
       setLetterBag(remaining);
-
-      // Set today's seed for deterministic world turns
-      const seed = getTodaysSeed();
-      setWorldSeed(seed);
     });
   }, [setWorldSeed]);
 
