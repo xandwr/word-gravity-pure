@@ -5,6 +5,7 @@ import WordGrid from "./components/WordGrid";
 import PlayerHand from "./components/PlayerHand";
 import type { Tile } from "./utils/letterBag";
 import { createLetterBag, drawTiles } from "./utils/letterBag";
+import { detectWords, loadDictionary, type WordMatch } from "./utils/wordDetection";
 
 function App() {
   const [playerHand, setPlayerHand] = useState<(Tile | null)[]>(Array(8).fill(null));
@@ -14,13 +15,17 @@ function App() {
   const [swapsRemaining, setSwapsRemaining] = useState(5);
   const [letterBag, setLetterBag] = useState<Tile[]>([]);
   const [isSwapZoneHovered, setIsSwapZoneHovered] = useState(false);
+  const [detectedWords, setDetectedWords] = useState<WordMatch[]>([]);
 
   // Initialize the game on launch
   useEffect(() => {
-    const bag = createLetterBag();
-    const { drawn, remaining } = drawTiles(bag, 8);
-    setPlayerHand(drawn);
-    setLetterBag(remaining);
+    // Load dictionary first
+    loadDictionary().then(() => {
+      const bag = createLetterBag();
+      const { drawn, remaining } = drawTiles(bag, 8);
+      setPlayerHand(drawn);
+      setLetterBag(remaining);
+    });
   }, []);
 
   const applyGravityStep = (grid: (Tile | null)[]): { newGrid: (Tile | null)[]; moved: boolean } => {
@@ -58,6 +63,11 @@ function App() {
       if (moved) {
         currentGrid = newGrid;
         setTimeout(step, 100); // 100ms delay between each step
+      } else {
+        // Gravity has settled, detect words
+        const words = detectWords(newGrid);
+        console.log('Detected words:', words);
+        setDetectedWords(words);
       }
     };
 
@@ -141,7 +151,7 @@ function App() {
       </div>
 
       <div className="mt-4">
-        <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} />
+        <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} detectedWords={detectedWords} />
       </div>
 
       <div className="mt-12">

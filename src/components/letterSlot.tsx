@@ -10,9 +10,10 @@ interface LetterSlotProps {
   onDrop?: (index: number) => void;
   onDragStart?: (tile: Tile) => void;
   allowDrop?: boolean;
+  highlight?: 'horizontal' | 'vertical' | 'both' | null;
 }
 
-export default function LetterSlot({ index = 0, tile, onDrop, onDragStart, allowDrop = false }: LetterSlotProps) {
+export default function LetterSlot({ index = 0, tile, onDrop, onDragStart, allowDrop = false, highlight = null }: LetterSlotProps) {
   const [isDragOver, setIsDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -44,7 +45,7 @@ export default function LetterSlot({ index = 0, tile, onDrop, onDragStart, allow
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
     >
-      {tile && <LetterTile tile={tile} onDragStart={onDragStart} draggable={!!onDragStart} />}
+      {tile && <LetterTile tile={tile} onDragStart={onDragStart} draggable={!!onDragStart} highlight={highlight} />}
     </div>
   );
 }
