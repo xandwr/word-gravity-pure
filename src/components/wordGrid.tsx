@@ -13,13 +13,17 @@ interface WordGridProps {
   onDrop: (index: number) => void;
   onTileClick: (index: number) => void;
   detectedWords: WordMatch[];
+  animatingTiles?: Set<number>;
+  fadingTiles?: Set<number>;
 }
 
-export default function WordGrid({ tiles, onDrop, onTileClick, detectedWords }: WordGridProps) {
+export default function WordGrid({ tiles, onDrop, onTileClick, detectedWords, animatingTiles = new Set(), fadingTiles = new Set() }: WordGridProps) {
   return (
     <div className={`grid gap-0.5 grid-cols-${GRID_COLS} grid-rows-${GRID_ROWS}`}>
       {tiles.map((tile, i) => {
         const highlight = getTileHighlight(i, detectedWords);
+        const isAnimating = animatingTiles.has(i);
+        const isFading = fadingTiles.has(i);
         return (
           <LetterSlot
             key={`slot-${i}`}
@@ -29,6 +33,8 @@ export default function WordGrid({ tiles, onDrop, onTileClick, detectedWords }: 
             onClick={onTileClick}
             allowDrop={true}
             highlight={highlight}
+            isAnimating={isAnimating}
+            isFading={isFading}
           />
         );
       })}

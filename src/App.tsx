@@ -34,6 +34,8 @@ function App() {
   const [gameOver, setGameOver] = useState(false);
   const [claimTimer, setClaimTimer] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState<number>(5);
+  const [animatingTiles, setAnimatingTiles] = useState<Set<number>>(new Set());
+  const [fadingTiles, setFadingTiles] = useState<Set<number>>(new Set());
 
   // Initialize the game on launch
   useEffect(() => {
@@ -183,6 +185,87 @@ function App() {
       setClaimTimer(null);
       setTimeRemaining(5);
     }
+  };
+
+  // Animate tiles in a flood-fill pattern from a starting point
+  const animateFloodFill = (
+    startIndex: number,
+    allIndices: number[],
+    onComplete: () => void
+  ): void => {
+    const GRID_COLS = 7;
+    const indicesSet = new Set(allIndices);
+    const visited = new Set<number>();
+    const layers: number[][] = [];
+
+    // BFS to find layers radiating from start
+    const queue: Array<{ index: number; layer: number }> = [{ index: startIndex, layer: 0 }];
+    visited.add(startIndex);
+
+    while (queue.length > 0) {
+      const { index, layer } = queue.shift()!;
+
+      if (!layers[layer]) layers[layer] = [];
+      layers[layer].push(index);
+
+      // Get neighbors (up, down, left, right)
+      const row = Math.floor(index / GRID_COLS);
+      const col = index % GRID_COLS;
+      const neighbors = [
+        { idx: index - GRID_COLS, valid: row > 0 }, // up
+        { idx: index + GRID_COLS, valid: row < 5 }, // down
+        { idx: index - 1, valid: col > 0 }, // left
+        { idx: index + 1, valid: col < GRID_COLS - 1 }, // right
+      ];
+
+      for (const { idx, valid } of neighbors) {
+        if (valid && indicesSet.has(idx) && !visited.has(idx)) {
+          visited.add(idx);
+          queue.push({ index: idx, layer: layer + 1 });
+        }
+      }
+    }
+
+    // Animate layer by layer (blue pop)
+    let currentLayer = 0;
+    const animateNextLayer = () => {
+      if (currentLayer >= layers.length) {
+        // Blue pop animation complete, start fade-out
+        setAnimatingTiles(new Set());
+        startFadeOut();
+        return;
+      }
+
+      const layerIndices = layers[currentLayer];
+      setAnimatingTiles(new Set(layerIndices));
+
+      currentLayer++;
+      setTimeout(animateNextLayer, 150); // 150ms per layer
+    };
+
+    // Fade out tiles sequentially after blue pop
+    const startFadeOut = () => {
+      let fadeLayer = 0;
+      const fadeNextLayer = () => {
+        if (fadeLayer >= layers.length) {
+          // Fade complete, clear state and call completion
+          setFadingTiles(new Set());
+          onComplete();
+          return;
+        }
+
+        const layerIndices = layers[fadeLayer];
+        // Add these tiles to fading set (accumulative)
+        setFadingTiles(prev => new Set([...prev, ...layerIndices]));
+
+        fadeLayer++;
+        setTimeout(fadeNextLayer, 100); // 100ms per fade layer
+      };
+
+      fadeNextLayer();
+    };
+
+    animateNextLayer();
   };
 
   // Check if player can claim any words at the start of their turn
@@ -366,25 +449,39 @@ function App() {
     // Add to claimed words
     addClaimedWords(claimableWords);
 
-    // Remove tiles
+    // Get all tiles to remove
     const indicesToRemove = getUniqueIndicesFromWords(claimableWords);
-    setTimeout(() => {
-      const newGrid = [...currentGrid];
-      indicesToRemove.forEach(idx => {
-        newGrid[idx] = null;
-      });
 
-      // Don't clear placedBy markers - they persist for multi-turn word building
-      // This allows proper ownership tracking across multiple turns
+    // Find the triggering tile (newest world tile in the claimed words)
+    const worldTiles = indicesToRemove.filter(idx => {
+      const tile = currentGrid[idx];
+      return tile?.placedBy === 'world';
+    });
+    const startIndex = worldTiles.length > 0 ? worldTiles[worldTiles.length - 1] : indicesToRemove[0];
 
-      // Apply gravity and continue cascade
-      setGridTiles(newGrid);
-      animateGravity(newGrid, (finalGrid) => {
-        setTimeout(() => {
-          evaluateWorldCascade(finalGrid);
-        }, 300);
-      });
-    }, 500);
+    // Animate flood fill, then remove tiles after fade completes
+    const removeAndCascade = () => {
+      // Wait a bit for fade animation to complete
+      setTimeout(() => {
+        const newGrid = [...currentGrid];
+        indicesToRemove.forEach(idx => {
+          newGrid[idx] = null;
+        });
+
+        // Don't clear placedBy markers - they persist for multi-turn word building
+        // This allows proper ownership tracking across multiple turns
+
+        // Apply gravity and continue cascade
+        setGridTiles(newGrid);
+        animateGravity(newGrid, (finalGrid) => {
+          setTimeout(() => {
+            evaluateWorldCascade(finalGrid);
+          }, 300);
+        });
+      }, 200); // Small delay to let fade finish visually
+    };
+
+    animateFloodFill(startIndex, indicesToRemove, removeAndCascade);
   };
 
   // After world cascade completes, check if player can claim existing words
@@ -447,25 +544,37 @@ function App() {
     // Get all unique tile indices to remove
     const indicesToRemove = getUniqueIndicesFromWords(claimableWords);
 
-    // Remove the tiles from the grid with a visual delay
-    setTimeout(() => {
-      const newGrid = [...currentGrid];
-      indicesToRemove.forEach(idx => {
-        newGrid[idx] = null;
-      });
+    // Find the triggering tile (newest player tile in the claimed words)
+    const playerTiles = indicesToRemove.filter(idx => {
+      const tile = currentGrid[idx];
+      return tile?.placedBy === currentPlayer;
+    });
+    const startIndex = playerTiles.length > 0 ? playerTiles[playerTiles.length - 1] : indicesToRemove[0];
 
-      // Don't clear placedBy markers - they persist for multi-turn word building
-      // This allows proper ownership tracking across multiple turns
+    // Animate flood fill, then remove tiles after fade completes
+    const removeAndCascade = () => {
+      // Wait a bit for fade animation to complete
+      setTimeout(() => {
+        const newGrid = [...currentGrid];
+        indicesToRemove.forEach(idx => {
+          newGrid[idx] = null;
+        });
 
-      // Apply gravity and continue cascade
-      setGridTiles(newGrid);
-      animateGravity(newGrid, (finalGrid) => {
-        // After gravity settles, check for more words
-        setTimeout(() => {
-          evaluateWordCascade(finalGrid, isPlayerTurn, isLastTile, onComplete);
-        }, 300); // Delay before next evaluation
-      });
-    }, 500); // Visual delay before removing tiles
+        // Don't clear placedBy markers - they persist for multi-turn word building
+        // This allows proper ownership tracking across multiple turns
+
+        // Apply gravity and continue cascade
+        setGridTiles(newGrid);
+        animateGravity(newGrid, (finalGrid) => {
+          // After gravity settles, check for more words
+          setTimeout(() => {
+            evaluateWordCascade(finalGrid, isPlayerTurn, isLastTile, onComplete);
+          }, 300); // Delay before next evaluation
+        });
+      }, 200); // Small delay to let fade finish visually
+    };
+
+    animateFloodFill(startIndex, indicesToRemove, removeAndCascade);
   };
 
   const handleTileClick = (tileIndex: number) => {
@@ -540,7 +649,14 @@ function App() {
       </div>
 
       <div className="mt-4">
-        <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} onTileClick={handleTileClick} detectedWords={detectedWords} />
+        <WordGrid
+          tiles={gridTiles}
+          onDrop={handleDropOnGrid}
+          onTileClick={handleTileClick}
+          detectedWords={detectedWords}
+          animatingTiles={animatingTiles}
+          fadingTiles={fadingTiles}
+        />
       </div>
 
       <div className="mt-2 flex flex-col items-center gap-2">
