@@ -1,17 +1,25 @@
 // wordGrid.tsx
 "use client";
 import { useGame } from "../context/GameContext";
+import LetterSlot from "./letterSlot";
 
 export default function WordGrid({ }) {
-    const {score, setScore} = useGame();
-    const {boardCols, setBoardCols} = useGame();
-    const {boardRows, setBoardRows} = useGame();
+    const { boardCols, setBoardCols } = useGame();
+    const { boardRows, setBoardRows } = useGame();
+
+    const numberOfSlots = boardCols * boardRows;
 
     return (
-        <div className="flex flex-col">
-            <h1>Score: {score}</h1>
-            <h1>Board cols: {boardCols}</h1>
-            <h1>Board rows: {boardRows}</h1>
+        <div
+            className="grid w-min h-min m-auto gap-0.5"
+            style={{
+                gridTemplateColumns: `repeat(${boardCols}, 1fr)`,
+                gridTemplateRows: `repeat(${boardRows}, 1fr)`
+            }}
+        >
+            {Array.from({ length: numberOfSlots }).map((_, index) => (
+                <LetterSlot key={index} index={index} />
+            ))}
         </div>
     );
 }
