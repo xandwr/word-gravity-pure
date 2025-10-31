@@ -38,8 +38,47 @@ export function isValidWord(word: string): boolean {
   return word.length >= 3 && VALID_WORDS.has(word.toUpperCase());
 }
 
+// Check if a sequence of indices matches a previously claimed word
+function isClaimedWord(indices: number[], direction: 'horizontal' | 'vertical', claimedWords: WordMatch[]): boolean {
+  return claimedWords.some(claimed => {
+    if (claimed.direction !== direction) return false;
+    if (claimed.indices.length !== indices.length) return false;
+    return claimed.indices.every((idx, i) => idx === indices[i]);
+  });
+}
+
+// Find all valid substrings (including previously claimed ones) in a contiguous sequence
+function findValidSubstrings(
+  word: string,
+  indices: number[],
+  direction: 'horizontal' | 'vertical',
+  claimedWords: WordMatch[]
+): WordMatch[] {
+  const results: WordMatch[] = [];
+  const len = word.length;
+
+  // Check all possible substrings (length 3 or more)
+  for (let start = 0; start < len; start++) {
+    for (let end = start + 3; end <= len; end++) {
+      const substring = word.substring(start, end);
+      const substringIndices = indices.slice(start, end);
+
+      // Valid if either: 1) in dictionary, or 2) previously claimed
+      if (isValidWord(substring) || isClaimedWord(substringIndices, direction, claimedWords)) {
+        results.push({
+          word: substring,
+          indices: substringIndices,
+          direction
+        });
+      }
+    }
+  }
+
+  return results;
+}
+
 // Extract horizontal words (left to right and right to left)
-function findHorizontalWords(grid: (Tile | null)[]): WordMatch[] {
+function findHorizontalWords(grid: (Tile | null)[], claimedWords: WordMatch[] = []): WordMatch[] {
   const words: WordMatch[] = [];
 
   for (let row = 0; row < GRID_ROWS; row++) {
@@ -54,25 +93,17 @@ function findHorizontalWords(grid: (Tile | null)[]): WordMatch[] {
         currentWord += tile.letter;
         currentIndices.push(index);
       } else {
-        // Check if we have a word
+        // Check if we have a contiguous sequence
         if (currentWord.length >= 3) {
-          // Check left-to-right
-          if (isValidWord(currentWord)) {
-            words.push({
-              word: currentWord,
-              indices: [...currentIndices],
-              direction: 'horizontal'
-            });
-          }
-          // Check right-to-left
+          // Find all valid substrings (including previously claimed)
+          const validSubstrings = findValidSubstrings(currentWord, currentIndices, 'horizontal', claimedWords);
+          words.push(...validSubstrings);
+
+          // Also check reversed sequences
           const reversed = currentWord.split('').reverse().join('');
-          if (isValidWord(reversed)) {
-            words.push({
-              word: reversed,
-              indices: [...currentIndices].reverse(),
-              direction: 'horizontal'
-            });
-          }
+          const reversedIndices = [...currentIndices].reverse();
+          const validReversed = findValidSubstrings(reversed, reversedIndices, 'horizontal', claimedWords);
+          words.push(...validReversed);
         }
         currentWord = '';
         currentIndices = [];
@@ -81,21 +112,13 @@ function findHorizontalWords(grid: (Tile | null)[]): WordMatch[] {
 
     // Check end of row
     if (currentWord.length >= 3) {
-      if (isValidWord(currentWord)) {
-        words.push({
-          word: currentWord,
-          indices: [...currentIndices],
-          direction: 'horizontal'
-        });
-      }
+      const validSubstrings = findValidSubstrings(currentWord, currentIndices, 'horizontal', claimedWords);
+      words.push(...validSubstrings);
+
       const reversed = currentWord.split('').reverse().join('');
-      if (isValidWord(reversed)) {
-        words.push({
-          word: reversed,
-          indices: [...currentIndices].reverse(),
-          direction: 'horizontal'
-        });
-      }
+      const reversedIndices = [...currentIndices].reverse();
+      const validReversed = findValidSubstrings(reversed, reversedIndices, 'horizontal', claimedWords);
+      words.push(...validReversed);
     }
   }
 
@@ -103,7 +126,7 @@ function findHorizontalWords(grid: (Tile | null)[]): WordMatch[] {
 }
 
 // Extract vertical words (top to bottom and bottom to top)
-function findVerticalWords(grid: (Tile | null)[]): WordMatch[] {
+function findVerticalWords(grid: (Tile | null)[], claimedWords: WordMatch[] = []): WordMatch[] {
   const words: WordMatch[] = [];
 
   for (let col = 0; col < GRID_COLS; col++) {
@@ -118,25 +141,17 @@ function findVerticalWords(grid: (Tile | null)[]): WordMatch[] {
         currentWord += tile.letter;
         currentIndices.push(index);
       } else {
-        // Check if we have a word
+        // Check if we have a contiguous sequence
         if (currentWord.length >= 3) {
-          // Check top-to-bottom
-          if (isValidWord(currentWord)) {
-            words.push({
-              word: currentWord,
-              indices: [...currentIndices],
-              direction: 'vertical'
-            });
-          }
-          // Check bottom-to-top
+          // Find all valid substrings (including previously claimed)
+          const validSubstrings = findValidSubstrings(currentWord, currentIndices, 'vertical', claimedWords);
+          words.push(...validSubstrings);
+
+          // Also check reversed sequences
           const reversed = currentWord.split('').reverse().join('');
-          if (isValidWord(reversed)) {
-            words.push({
-              word: reversed,
-              indices: [...currentIndices].reverse(),
-              direction: 'vertical'
-            });
-          }
+          const reversedIndices = [...currentIndices].reverse();
+          const validReversed = findValidSubstrings(reversed, reversedIndices, 'vertical', claimedWords);
+          words.push(...validReversed);
         }
         currentWord = '';
         currentIndices = [];
@@ -145,21 +160,13 @@ function findVerticalWords(grid: (Tile | null)[]): WordMatch[] {
 
     // Check end of column
     if (currentWord.length >= 3) {
-      if (isValidWord(currentWord)) {
-        words.push({
-          word: currentWord,
-          indices: [...currentIndices],
-          direction: 'vertical'
-        });
-      }
+      const validSubstrings = findValidSubstrings(currentWord, currentIndices, 'vertical', claimedWords);
+      words.push(...validSubstrings);
+
       const reversed = currentWord.split('').reverse().join('');
-      if (isValidWord(reversed)) {
-        words.push({
-          word: reversed,
-          indices: [...currentIndices].reverse(),
-          direction: 'vertical'
-        });
-      }
+      const reversedIndices = [...currentIndices].reverse();
+      const validReversed = findValidSubstrings(reversed, reversedIndices, 'vertical', claimedWords);
+      words.push(...validReversed);
     }
   }
 
@@ -189,9 +196,9 @@ function filterLargestWords(words: WordMatch[]): WordMatch[] {
   return kept;
 }
 
-export function detectWords(grid: (Tile | null)[]): WordMatch[] {
-  const horizontalWords = findHorizontalWords(grid);
-  const verticalWords = findVerticalWords(grid);
+export function detectWords(grid: (Tile | null)[], claimedWords: WordMatch[] = []): WordMatch[] {
+  const horizontalWords = findHorizontalWords(grid, claimedWords);
+  const verticalWords = findVerticalWords(grid, claimedWords);
 
   // Filter each direction separately for largest words
   const filteredHorizontal = filterLargestWords(horizontalWords);

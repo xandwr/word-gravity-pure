@@ -9,7 +9,7 @@ import { detectWords, loadDictionary, type WordMatch, findConnectedWordChain, ge
 import { useGameStore } from "./store/gameStore";
 
 function App() {
-  const { score, addScore } = useGameStore();
+  const { score, addScore, claimedWords, addClaimedWords } = useGameStore();
   const [playerHand, setPlayerHand] = useState<(Tile | null)[]>(Array(8).fill(null));
   const [gridTiles, setGridTiles] = useState<(Tile | null)[]>(Array(42).fill(null));
   const [draggedTile, setDraggedTile] = useState<Tile | null>(null);
@@ -110,7 +110,7 @@ function App() {
         // Gravity has settled, apply multipliers and detect words
         const gridWithMultipliers = applyMultipliers(newGrid);
         setGridTiles(gridWithMultipliers);
-        const words = detectWords(gridWithMultipliers);
+        const words = detectWords(gridWithMultipliers, claimedWords);
         console.log('Detected words:', words);
         setDetectedWords(words);
       }
@@ -201,6 +201,9 @@ function App() {
     // Calculate score for the word chain (passing the current grid to access multipliers)
     const chainScore = calculateWordChainScore(connectedWords, gridTiles);
     addScore(chainScore);
+
+    // Add these words to the claimed words list so they remain valid even if invalidated later
+    addClaimedWords(connectedWords);
 
     // Get all unique tile indices to remove
     const indicesToRemove = getUniqueIndicesFromWords(connectedWords);
