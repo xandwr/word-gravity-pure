@@ -59,8 +59,13 @@ function App() {
         <PlayerHand tiles={playerHand} onDragStart={handleDragStartFromHand} />
       </div>
 
-      <div className="flex flex-col items-center my-4 bg-gray-400/20 px-16 py-4 rounded-2xl border-4 border-neutral-800/50">
-        <h1 className="text-xl font-bold underline decoration-double">SWAP</h1>
+      <div className="flex flex-col items-center my-4 bg-gray-400/10 px-16 py-4 rounded-2xl border-4 border-neutral-900/60">
+        <h1 className="flex gap-1 text-xl font-bold text-blue-200">
+          Swaps Remaining:
+          <p>
+            {0}
+          </p>
+        </h1>
         <div className="mt-2 flex gap-1 text-xl">
           <h2>Letters Remaining:</h2>
           <h2 className="font-semibold">{bag.length - playerHand.length}</h2>
