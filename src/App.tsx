@@ -7,9 +7,22 @@ import type { Tile } from "./utils/letterBag";
 import { createLetterBag, drawTiles } from "./utils/letterBag";
 import { detectWords, loadDictionary, type WordMatch, findConnectedWordChain, getUniqueIndicesFromWords, calculateWordChainScore } from "./utils/wordDetection";
 import { useGameStore } from "./store/gameStore";
+import { getTodaysSeed } from "./utils/seededRandom";
+import { executeWorldTurn } from "./utils/worldTurn";
 
 function App() {
-  const { score, addScore, claimedWords, addClaimedWords } = useGameStore();
+  const {
+    score,
+    addScore,
+    claimedWords,
+    addClaimedWords,
+    currentTurn,
+    setTurn,
+    worldSeed,
+    setWorldSeed,
+    worldTurnCount,
+    incrementWorldTurnCount
+  } = useGameStore();
   const [playerHand, setPlayerHand] = useState<(Tile | null)[]>(Array(8).fill(null));
   const [gridTiles, setGridTiles] = useState<(Tile | null)[]>(Array(42).fill(null));
   const [draggedTile, setDraggedTile] = useState<Tile | null>(null);
@@ -18,6 +31,7 @@ function App() {
   const [letterBag, setLetterBag] = useState<Tile[]>([]);
   const [isSwapZoneHovered, setIsSwapZoneHovered] = useState(false);
   const [detectedWords, setDetectedWords] = useState<WordMatch[]>([]);
+  const [gameOver, setGameOver] = useState(false);
 
   // Initialize the game on launch
   useEffect(() => {
@@ -27,8 +41,12 @@ function App() {
       const { drawn, remaining } = drawTiles(bag, 8);
       setPlayerHand(drawn);
       setLetterBag(remaining);
+
+      // Set today's seed for deterministic world turns
+      const seed = getTodaysSeed();
+      setWorldSeed(seed);
     });
-  }, []);
+  }, [setWorldSeed]);
 
   const applyMultipliers = (grid: (Tile | null)[]): (Tile | null)[] => {
     const GRID_COLS = 7;
@@ -96,7 +114,7 @@ function App() {
     return { newGrid, moved };
   };
 
-  const animateGravity = (initialGrid: (Tile | null)[]) => {
+  const animateGravity = (initialGrid: (Tile | null)[], onComplete?: (finalGrid: (Tile | null)[]) => void) => {
     let currentGrid = initialGrid;
 
     const step = () => {
@@ -113,10 +131,67 @@ function App() {
         const words = detectWords(gridWithMultipliers, claimedWords);
         console.log('Detected words:', words);
         setDetectedWords(words);
+
+        // Call completion callback if provided
+        if (onComplete) {
+          onComplete(gridWithMultipliers);
+        }
       }
     };
 
     step();
+  };
+
+  // Execute the world's turn
+  const performWorldTurn = (currentGrid: (Tile | null)[]) => {
+    // Delay slightly so player can see their turn complete
+    setTimeout(() => {
+      setTurn('world');
+
+      // Execute world turn
+      const result = executeWorldTurn(currentGrid, worldSeed, worldTurnCount);
+
+      if (result) {
+        console.log(`World placed ${result.tile.letter} in column ${result.column}`);
+
+        // Increment world turn count
+        incrementWorldTurnCount();
+
+        // Apply gravity to world's placement
+        animateGravity(result.grid, (finalGrid) => {
+          // After world's gravity settles, check if world formed any words
+          const worldWords = detectWords(finalGrid, claimedWords);
+
+          if (worldWords.length > 0) {
+            // World formed words! Calculate score and deduct from player
+            const worldScore = calculateWordChainScore(worldWords, finalGrid);
+            console.log(`World formed words worth ${worldScore} points!`);
+            addScore(-worldScore); // Negative score
+
+            // Remove world's word tiles from grid
+            const indicesToRemove = getUniqueIndicesFromWords(worldWords);
+            const newGrid = [...finalGrid];
+            indicesToRemove.forEach(idx => {
+              newGrid[idx] = null;
+            });
+
+            // Apply gravity again after removing world's words
+            setGridTiles(newGrid);
+            animateGravity(newGrid, () => {
+              // After final gravity, return turn to player
+              setTurn('player');
+            });
+          } else {
+            // No words formed, just return turn to player
+            setTurn('player');
+          }
+        });
+      } else {
+        // World couldn't play (grid full), return to player
+        console.log('World could not play - grid full');
+        setTurn('player');
+      }
+    }, 500);
   };
 
   const handleDragStartFromHand = (tile: Tile, index: number) => {
@@ -125,7 +200,7 @@ function App() {
   };
 
   const handleDropOnGrid = (gridIndex: number) => {
-    if (draggedTile && dragSource && dragSource.type === 'hand') {
+    if (draggedTile && dragSource && dragSource.type === 'hand' && currentTurn === 'player') {
       // Add tile to grid at the dropped position
       const newGrid = [...gridTiles];
       newGrid[gridIndex] = draggedTile;
@@ -133,6 +208,8 @@ function App() {
 
       // Replace the tile in hand with a new one from the bag (if available)
       const newHand = [...playerHand];
+      const isLastTile = letterBag.length === 0;
+
       if (letterBag.length > 0) {
         const { drawn, remaining } = drawTiles(letterBag, 1);
         newHand[dragSource.index] = drawn[0];
@@ -143,7 +220,17 @@ function App() {
       setPlayerHand(newHand);
 
       // Animate gravity to make tiles fall down
-      animateGravity(newGrid);
+      animateGravity(newGrid, (finalGrid) => {
+        // After player's gravity settles, trigger world's turn
+        // But only if player still has tiles left
+        if (!isLastTile) {
+          performWorldTurn(finalGrid);
+        } else {
+          console.log('Game Over - Player bag is empty!');
+          setGameOver(true);
+          setTurn('player'); // Keep it on player to prevent further actions
+        }
+      });
 
       setDraggedTile(null);
       setDragSource(null);
@@ -224,8 +311,16 @@ function App() {
   };
 
   return (
-    <main className="bg-neutral-800/50 border-neutral-900/30 border-8 border-y-0 h-screen max-w-2xl m-auto flex flex-col items-center">
+    <main className="bg-neutral-800/50 border-neutral-900/30 border-8 border-y-0 h-screen max-w-2xl m-auto flex flex-col items-center relative">
       <header className="text-2xl lg:text-5xl font-bold my-4">Word Gravity</header>
+
+      {gameOver && (
+        <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
+          <h1 className="text-5xl font-bold text-white mb-4">Game Over!</h1>
+          <h2 className="text-3xl text-yellow-400 mb-2">Final Score: {score}</h2>
+          <p className="text-xl text-gray-300">All letters used!</p>
+        </div>
+      )}
 
       <div className="flex flex-col items-center gap-1">
         <div className="flex gap-1">
@@ -234,7 +329,7 @@ function App() {
         </div>
         <div className="flex gap-1">
           <h2>Today's Seed:</h2>
-          <h2 className="font-bold">0</h2> {/* this needs to be replaced with global seed later */}
+          <h2 className="font-bold">{worldSeed}</h2>
         </div>
         <div className="flex gap-1">
           <h2>Score:</h2>
@@ -248,7 +343,9 @@ function App() {
 
       <div className="mt-2 flex flex-row gap-1 text-lg">
         <h1>Current Turn:</h1>
-        <h1 className="font-semibold">PLAYER</h1>
+        <h1 className={`font-semibold ${currentTurn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
+          {currentTurn.toUpperCase()}
+        </h1>
       </div>
 
       <div className="mt-8">
