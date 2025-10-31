@@ -1,7 +1,13 @@
+import WordGrid from "./components/wordGrid"
+import PlayerHand from "./components/playerHand"
+
 function App() {
   return (
     <>
-      <h1>Word Gravity</h1>
+      <div className="flex flex-col justify-center-safe items-center-safe">
+        <WordGrid />
+        <PlayerHand />
+      </div>
     </>
   )
 }
