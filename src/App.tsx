@@ -324,7 +324,9 @@ function App() {
 
   return (
     <main className="bg-neutral-800/50 border-neutral-900/30 border-8 border-y-0 h-screen max-w-2xl m-auto flex flex-col items-center relative">
-      <header className="text-2xl lg:text-5xl font-bold my-4">Word Gravity</header>
+      <header className="mb-2 mt-2">
+        <h1 className="text-2xl lg:text-5xl font-bold">Word Gravity</h1>
+      </header>
 
       {gameOver && (
         <div className="absolute inset-0 bg-black/80 flex flex-col items-center justify-center z-50">
