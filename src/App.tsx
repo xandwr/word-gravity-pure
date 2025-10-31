@@ -334,7 +334,7 @@ function App() {
         </div>
       )}
 
-      <div className="flex flex-col items-center gap-1">
+      <div className="flex flex-col items-center gap-1 text-sm lg:text-lg">
         <div className="flex gap-1">
           <h2>Players Today:</h2>
           <h2 className="font-bold">0</h2> {/* this needs to be replaced with global player count later */}
@@ -353,7 +353,7 @@ function App() {
         <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} onTileClick={handleTileClick} detectedWords={detectedWords} />
       </div>
 
-      <div className="mt-2 flex flex-row gap-1 text-lg">
+      <div className="mt-2 flex flex-row gap-1 text-sm lg:text-lg">
         <h1>Current Turn:</h1>
         <h1 className={`font-semibold ${currentTurn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
           {currentTurn.toUpperCase()}
@@ -365,7 +365,7 @@ function App() {
       </div>
 
       <div
-        className={`flex flex-col items-center my-4 px-16 py-4 rounded-2xl border-4 transition-all ${isSwapZoneHovered && swapsRemaining > 0
+        className={`flex flex-col items-center my-4 px-16 py-2 rounded-2xl border-4 transition-all ${isSwapZoneHovered && swapsRemaining > 0
             ? 'bg-blue-500/30 border-blue-400/80 shadow-lg shadow-blue-500/50'
             : 'bg-gray-400/10 border-neutral-900/60'
           }`}
@@ -373,13 +373,13 @@ function App() {
         onDragLeave={handleSwapZoneDragLeave}
         onDrop={handleSwapZoneDrop}
       >
-        <h1 className="flex gap-1 text-xl font-bold text-blue-200">
+        <h1 className="flex gap-1 text-sm lg:text-xl font-bold text-blue-200">
           Swaps Remaining:
           <p>
             {swapsRemaining}
           </p>
         </h1>
-        <div className="mt-2 flex gap-1 text-xl">
+        <div className="mt-2 flex gap-1 text-sm lg:text-xl">
           <h2>Letters Remaining:</h2>
           <h2 className="font-semibold">{letterBag.length}</h2>
         </div>
