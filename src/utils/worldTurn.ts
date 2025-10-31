@@ -90,12 +90,13 @@ export function executeWorldTurn(
   const columnIndex = rng.nextInt(0, availableColumns.length);
   const column = availableColumns[columnIndex];
 
-  // Create the tile
+  // Create the tile, marked as placed by world
   const tile: Tile = {
     id: `world-${worldTurnCount}`,
     letter,
     score,
     multiplier: 1,
+    placedBy: 'world',
   };
 
   // Place the tile at the top of the chosen column

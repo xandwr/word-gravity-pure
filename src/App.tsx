@@ -5,7 +5,7 @@ import WordGrid from "./components/WordGrid";
 import PlayerHand from "./components/PlayerHand";
 import type { Tile } from "./utils/letterBag";
 import { createLetterBag, drawTiles } from "./utils/letterBag";
-import { detectWords, loadDictionary, type WordMatch, getUniqueIndicesFromWords, calculateWordChainScore } from "./utils/wordDetection";
+import { detectWords, loadDictionary, type WordMatch, getUniqueIndicesFromWords, calculateWordChainScore, filterClaimableWords } from "./utils/wordDetection";
 import { useGameStore } from "./store/gameStore";
 import { getTodaysSeed } from "./utils/seededRandom";
 import { executeWorldTurn } from "./utils/worldTurn";
@@ -32,6 +32,8 @@ function App() {
   const [isSwapZoneHovered, setIsSwapZoneHovered] = useState(false);
   const [detectedWords, setDetectedWords] = useState<WordMatch[]>([]);
   const [gameOver, setGameOver] = useState(false);
+  const [claimTimer, setClaimTimer] = useState<number | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<number>(5);
 
   // Initialize the game on launch
   useEffect(() => {
@@ -143,6 +145,43 @@ function App() {
     step();
   };
 
+  // Start the claim timer for player
+  const startClaimTimer = (currentGrid: (Tile | null)[], isLastTile: boolean) => {
+    let secondsLeft = 5;
+    setTimeRemaining(secondsLeft);
+
+    const timerId = window.setInterval(() => {
+      secondsLeft -= 1;
+      setTimeRemaining(secondsLeft);
+
+      if (secondsLeft <= 0) {
+        clearInterval(timerId);
+        setClaimTimer(null);
+        console.log('Timer expired - player skipped claiming');
+
+        // Timer expired, move to world turn or end game
+        if (!isLastTile) {
+          performWorldTurn(currentGrid);
+        } else {
+          console.log('Game Over - Player bag is empty!');
+          setGameOver(true);
+          setTurn('player');
+        }
+      }
+    }, 1000);
+
+    setClaimTimer(timerId);
+  };
+
+  // Cancel the claim timer
+  const cancelClaimTimer = () => {
+    if (claimTimer !== null) {
+      clearInterval(claimTimer);
+      setClaimTimer(null);
+      setTimeRemaining(5);
+    }
+  };
+
   // Execute the world's turn
   const performWorldTurn = (currentGrid: (Tile | null)[]) => {
     // Delay slightly so player can see their turn complete
@@ -162,10 +201,7 @@ function App() {
         animateGravity(result.grid, (finalGrid) => {
           // After world's gravity settles, evaluate any words formed with cascading
           setTimeout(() => {
-            evaluateWordCascade(finalGrid, false, () => {
-              // After cascade completes, return turn to player
-              setTurn('player');
-            });
+            evaluateWorldCascade(finalGrid);
           }, 300);
         });
       } else {
@@ -187,9 +223,9 @@ function App() {
       // This prevents any quick double-placements
       setTurn('world');
 
-      // Add tile to grid at the dropped position
+      // Add tile to grid at the dropped position, marking it as placed by player
       const newGrid = [...gridTiles];
-      newGrid[gridIndex] = draggedTile;
+      newGrid[gridIndex] = { ...draggedTile, placedBy: 'player' };
       setGridTiles(newGrid);
 
       // Replace the tile in hand with a new one from the bag (if available)
@@ -210,18 +246,26 @@ function App() {
 
       // Animate gravity to make tiles fall down
       animateGravity(newGrid, (finalGrid) => {
-        // After player's gravity settles, evaluate any words formed
+        // After player's gravity settles, detect words and start timer
         setTimeout(() => {
-          evaluateWordCascade(finalGrid, true, (finalCascadeGrid) => {
-            // After cascade completes, trigger world's turn or end game
+          const words = detectWords(finalGrid, claimedWords);
+          setDetectedWords(words);
+
+          if (words.length > 0) {
+            // Start 5 second timer for player to claim
+            console.log('Player has 5 seconds to claim words or skip');
+            setTimeRemaining(5);
+            startClaimTimer(finalGrid, isLastTile);
+          } else {
+            // No words formed, immediately go to world turn or end game
             if (!isLastTile) {
-              performWorldTurn(finalCascadeGrid);
+              performWorldTurn(finalGrid);
             } else {
               console.log('Game Over - Player bag is empty!');
               setGameOver(true);
-              setTurn('player'); // Keep it on player to prevent further actions
+              setTurn('player');
             }
-          });
+          }
         }, 300);
       });
     }
@@ -269,15 +313,79 @@ function App() {
     handleSwap();
   };
 
-  // Cascading word evaluation system - keeps evaluating until no more words can be claimed
+  // World cascade: automatically claims words that extend player's words
+  const evaluateWorldCascade = (currentGrid: (Tile | null)[]) => {
+    const allWords = detectWords(currentGrid, claimedWords);
+    console.log(`World evaluation: ${allWords.length} total words detected:`, allWords.map(w => w.word).join(', '));
+
+    // Debug: Check tile ownership for each word
+    allWords.forEach(word => {
+      const owners = word.indices.map(idx => {
+        const tile = currentGrid[idx];
+        return tile?.placedBy || 'none';
+      });
+      console.log(`  "${word.word}" ownership:`, owners);
+    });
+
+    // World can only claim words that contain at least one world-placed tile
+    const claimableWords = filterClaimableWords(allWords, currentGrid, 'world');
+
+    if (claimableWords.length === 0) {
+      console.log('World has no words to claim - returning to player');
+      setTurn('player');
+      return;
+    }
+
+    // Calculate score for claimable words
+    const chainScore = calculateWordChainScore(claimableWords, currentGrid);
+    addScore(-chainScore);
+    console.log(`World claims ${claimableWords.length} word(s): ${claimableWords.map(w => w.word).join(', ')} (-${chainScore} points)`);
+
+    // Add to claimed words
+    addClaimedWords(claimableWords);
+
+    // Remove tiles
+    const indicesToRemove = getUniqueIndicesFromWords(claimableWords);
+    setTimeout(() => {
+      const newGrid = [...currentGrid];
+      indicesToRemove.forEach(idx => {
+        newGrid[idx] = null;
+      });
+
+      // Clear placedBy markers
+      for (let i = 0; i < newGrid.length; i++) {
+        if (newGrid[i]) {
+          newGrid[i] = {
+            ...newGrid[i]!,
+            placedBy: undefined
+          };
+        }
+      }
+
+      // Apply gravity and continue cascade
+      setGridTiles(newGrid);
+      animateGravity(newGrid, (finalGrid) => {
+        setTimeout(() => {
+          evaluateWorldCascade(finalGrid);
+        }, 300);
+      });
+    }, 500);
+  };
+
+  // Player cascade: evaluates after manual claim
   const evaluateWordCascade = (
     currentGrid: (Tile | null)[],
     isPlayerTurn: boolean = true,
+    isLastTile: boolean = false,
     onComplete?: (finalGrid: (Tile | null)[]) => void
   ) => {
-    const words = detectWords(currentGrid, claimedWords);
+    const allWords = detectWords(currentGrid, claimedWords);
 
-    if (words.length === 0) {
+    // Filter to only words that contain at least one tile placed by the current player
+    const currentPlayer = isPlayerTurn ? 'player' : 'world';
+    const claimableWords = filterClaimableWords(allWords, currentGrid, currentPlayer);
+
+    if (claimableWords.length === 0) {
       console.log('No more words to evaluate - cascade complete');
       if (onComplete) {
         onComplete(currentGrid);
@@ -285,11 +393,14 @@ function App() {
       return;
     }
 
-    // Automatically claim all valid words found
-    console.log(`Found ${words.length} word(s) to claim:`, words.map(w => w.word).join(', '));
+    // Automatically claim all valid words found that contain tiles from current player
+    console.log(`Found ${claimableWords.length} claimable word(s):`, claimableWords.map(w => w.word).join(', '));
+    if (allWords.length > claimableWords.length) {
+      console.log(`(${allWords.length - claimableWords.length} words detected but not claimable by ${currentPlayer})`);
+    }
 
-    // Calculate score for all words
-    const chainScore = calculateWordChainScore(words, currentGrid);
+    // Calculate score for claimable words only
+    const chainScore = calculateWordChainScore(claimableWords, currentGrid);
 
     if (isPlayerTurn) {
       addScore(chainScore);
@@ -300,10 +411,10 @@ function App() {
     }
 
     // Add these words to the claimed words list
-    addClaimedWords(words);
+    addClaimedWords(claimableWords);
 
     // Get all unique tile indices to remove
-    const indicesToRemove = getUniqueIndicesFromWords(words);
+    const indicesToRemove = getUniqueIndicesFromWords(claimableWords);
 
     // Remove the tiles from the grid with a visual delay
     setTimeout(() => {
@@ -312,20 +423,63 @@ function App() {
         newGrid[idx] = null;
       });
 
+      // Clear placedBy markers from remaining tiles so they can't be reclaimed in cascades
+      // Only tiles from the current turn's fresh placement should be claimable
+      for (let i = 0; i < newGrid.length; i++) {
+        if (newGrid[i]) {
+          newGrid[i] = {
+            ...newGrid[i]!,
+            placedBy: undefined
+          };
+        }
+      }
+
       // Apply gravity and continue cascade
       setGridTiles(newGrid);
       animateGravity(newGrid, (finalGrid) => {
         // After gravity settles, check for more words
         setTimeout(() => {
-          evaluateWordCascade(finalGrid, isPlayerTurn, onComplete);
+          evaluateWordCascade(finalGrid, isPlayerTurn, isLastTile, onComplete);
         }, 300); // Delay before next evaluation
       });
     }, 500); // Visual delay before removing tiles
   };
 
-  const handleTileClick = (_tileIndex: number) => {
-    // Manual claiming is disabled - evaluation happens automatically
-    console.log('Manual claiming disabled - words are auto-evaluated');
+  const handleTileClick = (tileIndex: number) => {
+    // Only allow clicking during player's turn with timer active
+    if (currentTurn !== 'player' || claimTimer === null) {
+      return;
+    }
+
+    // Find which word(s) contain this tile
+    const wordsContainingTile = detectedWords.filter(word =>
+      word.indices.includes(tileIndex)
+    );
+
+    if (wordsContainingTile.length === 0) {
+      console.log('No valid word at this tile');
+      return;
+    }
+
+    // Cancel the timer
+    cancelClaimTimer();
+
+    // Start the claiming cascade
+    console.log('Player manually claimed word(s):', wordsContainingTile.map(w => w.word).join(', '));
+
+    // Check if this is the last tile in player's bag
+    const isLastTile = letterBag.length === 0;
+
+    evaluateWordCascade(gridTiles, true, isLastTile, (finalGrid) => {
+      // After cascade completes, trigger world's turn or end game
+      if (!isLastTile) {
+        performWorldTurn(finalGrid);
+      } else {
+        console.log('Game Over - Player bag is empty!');
+        setGameOver(true);
+        setTurn('player');
+      }
+    });
   };
 
   return (
@@ -361,11 +515,24 @@ function App() {
         <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} onTileClick={handleTileClick} detectedWords={detectedWords} />
       </div>
 
-      <div className="mt-2 flex flex-row gap-1 text-sm lg:text-lg">
-        <h1>Current Turn:</h1>
-        <h1 className={`font-semibold ${currentTurn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
-          {currentTurn.toUpperCase()}
-        </h1>
+      <div className="mt-2 flex flex-col items-center gap-2">
+        <div className="flex flex-row gap-1 text-sm lg:text-lg">
+          <h1>Current Turn:</h1>
+          <h1 className={`font-semibold ${currentTurn === 'player' ? 'text-green-400' : 'text-red-400'}`}>
+            {currentTurn.toUpperCase()}
+          </h1>
+        </div>
+
+        {claimTimer !== null && detectedWords.length > 0 && (
+          <div className="bg-yellow-500/20 border-2 border-yellow-400 rounded-lg px-6 py-3 animate-pulse">
+            <p className="text-lg font-bold text-yellow-200">
+              Click a word to claim it! Time: {timeRemaining}s
+            </p>
+            <p className="text-sm text-yellow-300 mt-1">
+              Or wait to skip and let the world play
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mt-8">

@@ -7,6 +7,7 @@ export interface Tile {
   letter: string;
   score: number;
   multiplier: number;
+  placedBy?: 'player' | 'world'; // Track who placed this tile
 }
 
 // Scrabble letter distribution

@@ -274,6 +274,28 @@ export function getUniqueIndicesFromWords(words: WordMatch[]): number[] {
   return Array.from(indices).sort((a, b) => a - b);
 }
 
+// Check if a word is claimable by the current player
+// A word is claimable if at least one tile in the word was placed by the current player
+export function isWordClaimableBy(
+  word: WordMatch,
+  grid: (Tile | null)[],
+  player: 'player' | 'world'
+): boolean {
+  return word.indices.some(index => {
+    const tile = grid[index];
+    return tile && tile.placedBy === player;
+  });
+}
+
+// Filter words to only those claimable by the current player
+export function filterClaimableWords(
+  words: WordMatch[],
+  grid: (Tile | null)[],
+  player: 'player' | 'world'
+): WordMatch[] {
+  return words.filter(word => isWordClaimableBy(word, grid, player));
+}
+
 // Calculate score for a list of words, using tile data from the grid
 export function calculateWordChainScore(words: WordMatch[], grid: (Tile | null)[]): number {
   let score = 0;
