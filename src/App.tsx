@@ -44,13 +44,18 @@ function App() {
 
   return (
     <main className="bg-neutral-800/50 h-screen max-w-2xl m-auto flex flex-col items-center">
-      <header className="text-4xl font-semibold">Word Gravity</header>
+      <header className="text-4xl font-bold my-4">Word Gravity</header>
 
-      <div className="mt-2">
+      <div className="flex gap-1">
+        <h2>Players Today:</h2>
+        <h2 className="font-bold">0</h2> {/* this needs to be replaced with global player count later */}
+      </div>
+
+      <div className="mt-4">
         <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} />
       </div>
 
-      <div className="mt-2">
+      <div className="mt-4">
         <PlayerHand tiles={playerHand} onDragStart={handleDragStartFromHand} />
       </div>
 

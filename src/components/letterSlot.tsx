@@ -37,7 +37,7 @@ export default function LetterSlot({ index = 0, tile, onDrop, onDragStart, allow
 
   return (
     <div
-      className={`border-2 border-black/25 aspect-square transition-colors w-11 lg:w-16 h-11 lg:h-16 ${
+      className={`rounded-xl border shadow-lg border-black/25 aspect-square transition-colors w-11 lg:w-16 h-11 lg:h-16 ${
         isDragOver ? 'bg-blue-500/30' : ''
       }`}
       onDragOver={handleDragOver}
