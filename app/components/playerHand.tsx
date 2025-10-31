@@ -1,20 +1,24 @@
-// playerHand.tsx
 "use client";
-import { useGame } from "../context/GameContext";
 import LetterSlot from "./letterSlot";
+import { useMediaQuery } from "../hooks/useMediaQuery";
 
-export default function PlayerHand({ }) {
-    const numberOfSlots = 8;
+export default function PlayerHand() {
+    const playerHandSize = 8;
+
+    const isMobile = useMediaQuery("(max-width: 640px)"); // Tailwind's sm breakpoint
+
+    const numberOfCols = isMobile ? 4 : 8;
+    const numberOfRows = isMobile ? 2 : 1;
 
     return (
         <div
-            className="grid w-min h-min m-auto gap-0.5"
+            className="grid m-auto gap-0.5"
             style={{
-                gridTemplateColumns: `repeat(${numberOfSlots}, 1fr)`,
-                gridTemplateRows: `repeat(1, 1fr)`
+                gridTemplateColumns: `repeat(${numberOfCols}, 1fr)`,
+                gridTemplateRows: `repeat(${numberOfRows}, 1fr)`
             }}
         >
-            {Array.from({ length: numberOfSlots }).map((_, index) => (
+            {Array.from({ length: playerHandSize }).map((_, index) => (
                 <LetterSlot key={index} index={index} />
             ))}
         </div>

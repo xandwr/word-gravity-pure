@@ -11,7 +11,7 @@ export default function WordGrid({ }) {
 
     return (
         <div
-            className="grid w-min h-min m-auto gap-0.5"
+            className="grid m-auto gap-0.5"
             style={{
                 gridTemplateColumns: `repeat(${boardCols}, 1fr)`,
                 gridTemplateRows: `repeat(${boardRows}, 1fr)`
