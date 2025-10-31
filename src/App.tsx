@@ -1,7 +1,7 @@
 function App() {
   return (
     <>
-      
+      <h1>Word Gravity</h1>
     </>
   )
 }
