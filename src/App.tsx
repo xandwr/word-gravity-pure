@@ -83,15 +83,21 @@ function App() {
 
   const handleDropOnGrid = (gridIndex: number) => {
     if (draggedTile && dragSource && dragSource.type === 'hand') {
-      // Remove tile from hand
-      const newHand = [...playerHand];
-      newHand[dragSource.index] = null;
-      setPlayerHand(newHand);
-
       // Add tile to grid at the dropped position
       const newGrid = [...gridTiles];
       newGrid[gridIndex] = draggedTile;
       setGridTiles(newGrid);
+
+      // Replace the tile in hand with a new one from the bag (if available)
+      const newHand = [...playerHand];
+      if (letterBag.length > 0) {
+        const { drawn, remaining } = drawTiles(letterBag, 1);
+        newHand[dragSource.index] = drawn[0];
+        setLetterBag(remaining);
+      } else {
+        newHand[dragSource.index] = null;
+      }
+      setPlayerHand(newHand);
 
       // Animate gravity to make tiles fall down
       animateGravity(newGrid);
