@@ -5,7 +5,7 @@ import WordGrid from "./components/WordGrid";
 import PlayerHand from "./components/PlayerHand";
 import type { Tile } from "./utils/letterBag";
 import { createLetterBag, drawTiles } from "./utils/letterBag";
-import { detectWords, loadDictionary, type WordMatch, findConnectedWordChain, getUniqueIndicesFromWords, calculateWordChainScore } from "./utils/wordDetection";
+import { detectWords, loadDictionary, type WordMatch, getUniqueIndicesFromWords, calculateWordChainScore } from "./utils/wordDetection";
 import { useGameStore } from "./store/gameStore";
 import { getTodaysSeed } from "./utils/seededRandom";
 import { executeWorldTurn } from "./utils/worldTurn";
@@ -160,44 +160,13 @@ function App() {
 
         // Apply gravity to world's placement
         animateGravity(result.grid, (finalGrid) => {
-          // After world's gravity settles, check if world formed any NEW words
-          const wordsAfter = detectWords(finalGrid, claimedWords);
-          const wordsBefore = detectWords(currentGrid, claimedWords);
-
-          // Find NEW words that weren't present before the world's turn
-          const newWords = wordsAfter.filter(afterWord => {
-            // Check if this exact word (same indices pattern) existed before
-            return !wordsBefore.some(beforeWord =>
-              beforeWord.direction === afterWord.direction &&
-              beforeWord.indices.length === afterWord.indices.length &&
-              beforeWord.indices.every((idx, i) => idx === afterWord.indices[i])
-            );
-          });
-
-          if (newWords.length > 0) {
-            // World formed NEW words! Calculate score and deduct from player
-            const worldScore = calculateWordChainScore(newWords, finalGrid);
-            console.log(`World formed NEW words worth ${worldScore} points!`, newWords.map(w => w.word));
-            addScore(-worldScore); // Negative score
-
-            // Remove world's word tiles from grid
-            const indicesToRemove = getUniqueIndicesFromWords(newWords);
-            const newGrid = [...finalGrid];
-            indicesToRemove.forEach(idx => {
-              newGrid[idx] = null;
-            });
-
-            // Apply gravity again after removing world's words
-            setGridTiles(newGrid);
-            animateGravity(newGrid, () => {
-              // After final gravity, return turn to player
+          // After world's gravity settles, evaluate any words formed with cascading
+          setTimeout(() => {
+            evaluateWordCascade(finalGrid, false, () => {
+              // After cascade completes, return turn to player
               setTurn('player');
             });
-          } else {
-            // No NEW words formed, just return turn to player
-            console.log('World did not form any new words - existing words remain safe');
-            setTurn('player');
-          }
+          }, 300);
         });
       } else {
         // World couldn't play (grid full), return to player
@@ -234,15 +203,19 @@ function App() {
 
       // Animate gravity to make tiles fall down
       animateGravity(newGrid, (finalGrid) => {
-        // After player's gravity settles, trigger world's turn
-        // But only if player still has tiles left
-        if (!isLastTile) {
-          performWorldTurn(finalGrid);
-        } else {
-          console.log('Game Over - Player bag is empty!');
-          setGameOver(true);
-          setTurn('player'); // Keep it on player to prevent further actions
-        }
+        // After player's gravity settles, evaluate any words formed
+        setTimeout(() => {
+          evaluateWordCascade(finalGrid, true, (finalCascadeGrid) => {
+            // After cascade completes, trigger world's turn or end game
+            if (!isLastTile) {
+              performWorldTurn(finalCascadeGrid);
+            } else {
+              console.log('Game Over - Player bag is empty!');
+              setGameOver(true);
+              setTurn('player'); // Keep it on player to prevent further actions
+            }
+          });
+        }, 300);
       });
 
       setDraggedTile(null);
@@ -292,35 +265,63 @@ function App() {
     handleSwap();
   };
 
-  const handleTileClick = (tileIndex: number) => {
-    // Find all connected words starting from this tile
-    const connectedWords = findConnectedWordChain(tileIndex, detectedWords);
+  // Cascading word evaluation system - keeps evaluating until no more words can be claimed
+  const evaluateWordCascade = (
+    currentGrid: (Tile | null)[],
+    isPlayerTurn: boolean = true,
+    onComplete?: (finalGrid: (Tile | null)[]) => void
+  ) => {
+    const words = detectWords(currentGrid, claimedWords);
 
-    if (connectedWords.length === 0) return;
+    if (words.length === 0) {
+      console.log('No more words to evaluate - cascade complete');
+      if (onComplete) {
+        onComplete(currentGrid);
+      }
+      return;
+    }
 
-    // Calculate score for the word chain (passing the current grid to access multipliers)
-    const chainScore = calculateWordChainScore(connectedWords, gridTiles);
-    addScore(chainScore);
+    // Automatically claim all valid words found
+    console.log(`Found ${words.length} word(s) to claim:`, words.map(w => w.word).join(', '));
 
-    // Add these words to the claimed words list so they remain valid even if invalidated later
-    addClaimedWords(connectedWords);
+    // Calculate score for all words
+    const chainScore = calculateWordChainScore(words, currentGrid);
+
+    if (isPlayerTurn) {
+      addScore(chainScore);
+      console.log(`Player claims +${chainScore} points`);
+    } else {
+      addScore(-chainScore);
+      console.log(`World claims -${chainScore} points`);
+    }
+
+    // Add these words to the claimed words list
+    addClaimedWords(words);
 
     // Get all unique tile indices to remove
-    const indicesToRemove = getUniqueIndicesFromWords(connectedWords);
+    const indicesToRemove = getUniqueIndicesFromWords(words);
 
-    // Log the claimed words for feedback
-    console.log(`Claimed ${connectedWords.length} word(s):`, connectedWords.map(w => w.word).join(', '));
-    console.log(`Score: +${chainScore} points`);
+    // Remove the tiles from the grid with a visual delay
+    setTimeout(() => {
+      const newGrid = [...currentGrid];
+      indicesToRemove.forEach(idx => {
+        newGrid[idx] = null;
+      });
 
-    // Remove the tiles from the grid
-    const newGrid = [...gridTiles];
-    indicesToRemove.forEach(idx => {
-      newGrid[idx] = null;
-    });
+      // Apply gravity and continue cascade
+      setGridTiles(newGrid);
+      animateGravity(newGrid, (finalGrid) => {
+        // After gravity settles, check for more words
+        setTimeout(() => {
+          evaluateWordCascade(finalGrid, isPlayerTurn, onComplete);
+        }, 300); // Delay before next evaluation
+      });
+    }, 500); // Visual delay before removing tiles
+  };
 
-    // Apply gravity and detect new words
-    setGridTiles(newGrid);
-    animateGravity(newGrid);
+  const handleTileClick = (_tileIndex: number) => {
+    // Manual claiming is disabled - evaluation happens automatically
+    console.log('Manual claiming disabled - words are auto-evaluated');
   };
 
   return (
