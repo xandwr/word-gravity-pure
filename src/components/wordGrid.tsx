@@ -1,24 +1,28 @@
-// components/wordGrid.tsx
+// components/WordGrid.tsx
 
-import LetterSlot from "./letterSlot";
+import type { Tile } from "../utils/letterBag";
+import LetterSlot from "./LetterSlot";
 
-const GRID_COLS = 7
-const GRID_ROWS = 6
+const GRID_COLS = 7;
+const GRID_ROWS = 6;
 
-export default function WordGrid({ }) {
-    let numberOfSlots = GRID_COLS * GRID_ROWS;
+interface WordGridProps {
+  tiles: (Tile | null)[];
+  onDrop: (index: number) => void;
+}
 
-    return (
-        <div
-            className="grid gap-0.5 w-min h-min"
-            style={{
-                gridTemplateColumns: `repeat(${GRID_COLS}, 1fr)`,
-                gridTemplateRows: `repeat(${GRID_ROWS}, 1fr)`,
-            }}
-        >
-            {Array.from({ length: numberOfSlots }).map((_, index) => (
-                <LetterSlot key={index} index={index} />
-            ))}
-        </div>
-    );
+export default function WordGrid({ tiles, onDrop }: WordGridProps) {
+  return (
+    <div className={`grid grid-cols-${GRID_COLS} grid-rows-${GRID_ROWS} gap-0.5`}>
+      {tiles.map((tile, i) => (
+        <LetterSlot
+          key={i}
+          index={i}
+          tile={tile}
+          onDrop={onDrop}
+          allowDrop={true}
+        />
+      ))}
+    </div>
+  );
 }

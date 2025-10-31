@@ -1,14 +1,37 @@
-// components/letterTile.tsx
+// components/LetterTile.tsx
 
-export default function LetterTile() {
-    return (
-        <div className="aspect-square w-full max-w-10 border-2 border-white rounded-lg bg-orange-200 text-neutral-900 flex flex-col justify-center items-center p-1">
-            <h1 className="text-sm font-bold leading-none">A</h1>
-            <div className="flex gap-0.5 text-xs leading-none">
-                <span className="font-semibold">1</span>
-                <span>x</span>
-                <span className="font-semibold">1</span>
-            </div>
+import type { Tile } from "../utils/letterBag";
+
+interface LetterTileProps {
+  tile: Tile;
+  onDragStart?: (tile: Tile) => void;
+  draggable?: boolean;
+}
+
+export default function LetterTile({ tile, onDragStart, draggable = false }: LetterTileProps) {
+  const handleDragStart = (e: React.DragEvent) => {
+    if (onDragStart) {
+      onDragStart(tile);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', tile.id);
+    }
+  };
+
+  return (
+    <div
+      className="border-2 border-white bg-amber-100 text-neutral-900 h-10 w-10 flex flex-col items-center justify-center p-1 relative cursor-grab active:cursor-grabbing"
+      draggable={draggable}
+      onDragStart={handleDragStart}
+    >
+      <div className="text-lg font-bold leading-none">{tile.letter === '_' ? '' : tile.letter}</div>
+      <div className="absolute bottom-0 right-0 text-[8px] font-semibold pr-0.5 pb-0.5">
+        {tile.score}
+      </div>
+      {tile.multiplier > 1 && (
+        <div className="absolute top-0 left-0 text-[8px] font-semibold pl-0.5 pt-0.5 text-red-600">
+          x{tile.multiplier}
         </div>
-    );
+      )}
+    </div>
+  );
 }

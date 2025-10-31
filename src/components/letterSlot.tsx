@@ -1,8 +1,50 @@
-// components/letterSlot.tsx
-export default function LetterSlot({ index = 0 }) {
-    return (
-        <div className="aspect-square w-full max-w-20 border-2 border-gray-400 rounded-lg flex items-center justify-center bg-neutral-200">
-            {/* optional content */}
-        </div>
-    );
+// components/LetterSlot.tsx
+
+import type { Tile } from "../utils/letterBag";
+import LetterTile from "./LetterTile";
+import { useState } from "react";
+
+interface LetterSlotProps {
+  index: number;
+  tile?: Tile | null;
+  onDrop?: (index: number) => void;
+  onDragStart?: (tile: Tile) => void;
+  allowDrop?: boolean;
+}
+
+export default function LetterSlot({ index = 0, tile, onDrop, onDragStart, allowDrop = false }: LetterSlotProps) {
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    if (allowDrop && !tile) {
+      e.preventDefault();
+      setIsDragOver(true);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+
+    if (allowDrop && !tile && onDrop) {
+      onDrop(index);
+    }
+  };
+
+  return (
+    <div
+      className={`border-2 border-white h-10 w-10 transition-colors ${
+        isDragOver ? 'bg-blue-500/30' : ''
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {tile && <LetterTile tile={tile} onDragStart={onDragStart} draggable={!!onDragStart} />}
+    </div>
+  );
 }
