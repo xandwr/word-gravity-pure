@@ -4,7 +4,7 @@ import PlayerHand from "./components/playerHand"
 function App() {
   return (
     <>
-      <div className="flex flex-col justify-center-safe items-center-safe">
+      <div className="flex flex-col justify-center items-center">
         <WordGrid />
         <PlayerHand />
       </div>
