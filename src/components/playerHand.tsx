@@ -1,7 +1,7 @@
 // components/PlayerHand.tsx
 
 import type { Tile } from "../utils/letterBag";
-import LetterSlot from "./LetterSlot";
+import LetterSlot from "./letterSlot";
 
 interface PlayerHandProps {
   tiles: (Tile | null)[];

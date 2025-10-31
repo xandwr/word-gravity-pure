@@ -42,7 +42,7 @@ function App() {
   };
 
   return (
-    <main className="bg-neutral-800/50 h-screen max-w-lg m-auto flex flex-col items-center justify-center-safe">
+    <main className="bg-neutral-800/50 h-screen max-w-2xl m-auto flex flex-col items-center justify-center-safe">
       <div className="my-10">
         <WordGrid tiles={gridTiles} onDrop={handleDropOnGrid} />
       </div>

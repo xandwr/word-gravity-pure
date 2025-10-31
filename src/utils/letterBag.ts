@@ -35,7 +35,6 @@ const SCRABBLE_DISTRIBUTION: Record<string, { count: number; score: number }> = 
   'X': { count: 1, score: 8 },
   'Y': { count: 2, score: 4 },
   'Z': { count: 1, score: 10 },
-  '_': { count: 2, score: 0 }, // Blank tiles
 };
 
 export function createLetterBag(): Tile[] {
