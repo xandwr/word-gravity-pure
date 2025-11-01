@@ -53,7 +53,11 @@
         isSwapHover = false;
 
         const dragState = gameState.getDragState();
-        if (!dragState.tile || dragState.sourceIndex === null || dragState.sourceType !== "hand") {
+        if (
+            !dragState.tile ||
+            dragState.sourceIndex === null ||
+            dragState.sourceType !== "hand"
+        ) {
             return;
         }
 
@@ -67,14 +71,18 @@
 
     function handleSwapTouchEnd(e: TouchEvent) {
         const dragState = gameState.getDragState();
-        if (!dragState.tile || dragState.sourceIndex === null || dragState.sourceType !== "hand") {
+        if (
+            !dragState.tile ||
+            dragState.sourceIndex === null ||
+            dragState.sourceType !== "hand"
+        ) {
             return;
         }
 
         // Check if touch ended over the swap button
         const touch = e.changedTouches[0];
         const element = document.elementFromPoint(touch.clientX, touch.clientY);
-        const swapButton = element?.closest('#swapButton');
+        const swapButton = element?.closest("#swapButton");
 
         if (swapButton && gameState.playerSwapsRemaining > 0) {
             gameState.swapPlayerTile(dragState.sourceIndex);
@@ -83,13 +91,17 @@
 </script>
 
 <div>
-    <div class="flex gap-x-1 bg-purple-500">
+    <div class="flex gap-x-1">
         <div
             id="handSlots"
             class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit"
         >
             {#each gameState.playerHandSlots as slot, index}
-                <LetterSlot {index} tile={slot.heldLetterTile} slotType="hand" />
+                <LetterSlot
+                    {index}
+                    tile={slot.heldLetterTile}
+                    slotType="hand"
+                />
             {/each}
         </div>
 
@@ -98,7 +110,11 @@
                 id="swapButton"
                 role="button"
                 tabindex="0"
-                class="aspect-square rounded-xl border-4 flex flex-col items-center justify-center p-4 {isSwapHover ? 'bg-blue-500 border-blue-700' : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
+                class="aspect-square rounded-xl border-4 flex flex-col items-center justify-center p-4 {isSwapHover
+                    ? 'bg-blue-500 border-blue-700'
+                    : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0
+                    ? 'opacity-50 cursor-not-allowed'
+                    : 'cursor-pointer'}"
                 ondragover={handleSwapDragOver}
                 ondragleave={handleSwapDragLeave}
                 ondrop={handleSwapDrop}
@@ -113,7 +129,7 @@
         </div>
     </div>
 
-    <div class="text-xl bg-green-200 p-1 font-bold flex gap-1 justify-center">
+    <div class="text-xl p-1 font-bold flex gap-1 justify-center">
         <h2>Letters Remaining:</h2>
         <h2>{gameState.playerBag.length}</h2>
     </div>

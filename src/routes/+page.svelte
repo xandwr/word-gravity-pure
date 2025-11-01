@@ -17,25 +17,23 @@
     </header>
 
     <div class="flex flex-col">
-        <div class="bg-red-500/20 w-full h-full p-4 flex justify-center">
+        <div class=" w-full h-full p-4 flex justify-center">
             <WordGrid />
         </div>
 
-        <div
-            class="flex items-center gap-1 text-xl justify-center bg-blue-200 p-2"
-        >
+        <div class="flex items-center gap-1 text-xl justify-center p-2">
             <h1 class="">Current Turn:</h1>
             <h1 class="font-bold uppercase">{gameState.currentPlayerTurn}</h1>
         </div>
 
-        <div class="flex justify-center bg-orange-500/50">
+        <div class="flex justify-center">
             <div class="flex justify-between w-sm">
                 <PlayerInfoPanel player="player" />
                 <PlayerInfoPanel player="opponent" />
             </div>
         </div>
 
-        <div class="bg-purple-500/20 w-full h-full p-4 flex justify-center">
+        <div class=" w-full h-full p-4 flex justify-center">
             <PlayerHand />
         </div>
     </div>
