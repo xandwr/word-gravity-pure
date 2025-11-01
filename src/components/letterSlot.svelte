@@ -15,16 +15,20 @@
 
     let { index, tile = null, slotType }: Props = $props();
 
-    // Get highlight for board tiles
-    const highlight: TileHighlight =
+    // Get highlight for board tiles - needs to be reactive
+    const highlight = $derived<TileHighlight>(
         slotType === "board" && tile
             ? gameState.validator.getHighlight(index)
-            : "none";
+            : "none"
+    );
 
     let isDragOver = $state(false);
 
+    // Block interaction when board is settling
+    const canInteract = $derived(gameState.boardSettled);
+
     function handleDragStart(e: DragEvent) {
-        if (!tile) return;
+        if (!tile || !canInteract) return;
 
         gameState.startDrag(tile, slotType, index);
 
@@ -35,11 +39,12 @@
     }
 
     function handleTouchStart(e: TouchEvent) {
-        if (!tile) return;
+        if (!tile || !canInteract) return;
         gameState.startDrag(tile, slotType, index);
     }
 
     function handleDragOver(e: DragEvent) {
+        if (!canInteract) return;
         e.preventDefault();
         if (e.dataTransfer) {
             e.dataTransfer.dropEffect = "move";
@@ -52,6 +57,7 @@
     }
 
     function handleDrop(e: DragEvent) {
+        if (!canInteract) return;
         e.preventDefault();
         isDragOver = false;
 
@@ -171,7 +177,7 @@
     data-slot-type={slotType}
     role="button"
     tabindex="0"
-    draggable={tile !== null}
+    draggable={tile !== null && canInteract}
     ondragstart={handleDragStart}
     ondragover={handleDragOver}
     ondragleave={handleDragLeave}
