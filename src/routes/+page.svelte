@@ -5,6 +5,7 @@
 <script>
     import WordGrid from "../components/wordGrid.svelte";
     import PlayerHand from "../components/playerHand.svelte";
+    import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
 </script>
 
 <main class="flex flex-col justify-between">
@@ -27,7 +28,7 @@
                     <h1 class="font-bold text-xl">You</h1>
                     <span class="flex gap-1">
                         <h2 class="font-semibold">Letters:</h2>
-                        <h2 id="playerScoreText" class="font-bold">0 / 96</h2>
+                        <h2 id="playerScoreText" class="font-bold">0 / {HAND_CONFIG.SIZE}</h2>
                     </span>
                 </div>
 
@@ -37,7 +38,7 @@
                     <h1 class="font-bold text-xl">Opponent</h1>
                     <span class="flex gap-1">
                         <h2 class="font-semibold">Letters:</h2>
-                        <h2 id="opponentScoreText" class="font-bold">0 / 96</h2>
+                        <h2 id="opponentScoreText" class="font-bold">0 / {HAND_CONFIG.SIZE}</h2>
                     </span>
                 </div>
             </div>

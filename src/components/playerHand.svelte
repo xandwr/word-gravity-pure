@@ -1,15 +1,16 @@
-<!-- 
+<!--
     components/playerHand.svelte
 -->
 
-<script>
+<script lang="ts">
     import LetterSlot from "./letterSlot.svelte";
+    import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
 </script>
 
 <div class="flex gap-x-1">
     <div id="handSlots" class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit">
-        {#each Array(8) as _, index}
-            <LetterSlot {index} />
+        {#each gameState.hand as slot, index}
+            <LetterSlot {index} tile={slot.heldLetterTile} />
         {/each}
     </div>
 
@@ -21,7 +22,7 @@
         <h1 class="text-xl font-bold">Swap</h1>
         <span class="flex gap-1">
             <h1 class="font-semibold">Remaining:</h1>
-            <h1 class="font-bold">5</h1>
+            <h1 class="font-bold">{gameState.swapsRemaining}</h1>
         </span>
     </div>
 </div>
