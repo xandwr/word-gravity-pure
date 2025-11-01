@@ -14,7 +14,7 @@
     // Compute number of letters currently in hand
     let lettersInHand = $derived(player === "player"
         ? gameState.playerHandSlots.filter(slot => slot.heldLetterTile !== null).length
-        : 0); // TODO: Add opponent hand support
+        : gameState.opponentHandSlots.filter(slot => slot.heldLetterTile !== null).length);
 
     let score = $derived(player === "player"
         ? gameState.playerScore

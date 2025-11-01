@@ -7,12 +7,21 @@
     import LetterSlot from "./letterSlot.svelte";
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
 
-    // Populate the player's hand when the component mounts
+    // Populate both player and opponent hands when the component mounts
     onMount(() => {
-        const tiles = gameState.playerFreshHand();
-        if (tiles) {
-            tiles.forEach((tile, index) => {
+        // Deal player hand
+        const playerTiles = gameState.playerFreshHand();
+        if (playerTiles) {
+            playerTiles.forEach((tile, index) => {
                 gameState.setPlayerHandSlot(index, tile);
+            });
+        }
+
+        // Deal opponent hand
+        const opponentTiles = gameState.opponentFreshHand();
+        if (opponentTiles) {
+            opponentTiles.forEach((tile, index) => {
+                gameState.setOpponentHandSlot(index, tile);
             });
         }
     });

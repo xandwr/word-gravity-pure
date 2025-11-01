@@ -38,11 +38,18 @@ function createGameState() {
         }))
     );
 
+    // Opponent hand - 8 slots
+    const opponentHandSlots = $state<TileContainer[]>(
+        Array.from({ length: HAND_SIZE }, () => ({
+            heldLetterTile: null
+        }))
+    );
+
     // Game metadata
     const playerScore = $state({ value: 0 });
     const opponentScore = $state({ value: 0 });
 
-    const currentPlayerTurn = $state("player");
+    const currentPlayerTurn = $state<{ value: "player" | "opponent" }>({ value: "player" });
 
     const playerSwapsRemaining = $state({ value: 5 });
 
@@ -67,8 +74,12 @@ function createGameState() {
             return playerHandSlots;
         },
 
+        get opponentHandSlots() {
+            return opponentHandSlots;
+        },
+
         get currentPlayerTurn() {
-            return currentPlayerTurn;
+            return currentPlayerTurn.value;
         },
 
         // Readonly access to hand slots
@@ -109,6 +120,12 @@ function createGameState() {
         setPlayerHandSlot(index: number, tile: TileData | null) {
             if (index >= 0 && index < playerHandSlots.length) {
                 playerHandSlots[index].heldLetterTile = tile;
+            }
+        },
+
+        setOpponentHandSlot(index: number, tile: TileData | null) {
+            if (index >= 0 && index < opponentHandSlots.length) {
+                opponentHandSlots[index].heldLetterTile = tile;
             }
         },
 
@@ -156,6 +173,10 @@ function createGameState() {
             return playerHandSlots[index]?.heldLetterTile ?? null;
         },
 
+        getOpponentHandTile(index: number): TileData | null {
+            return opponentHandSlots[index]?.heldLetterTile ?? null;
+        },
+
         // Drag and drop methods
         startDrag(tile: TileData, sourceType: "hand" | "board", sourceIndex: number) {
             dragState.tile = tile;
@@ -193,6 +214,58 @@ function createGameState() {
                 return true;
             }
             return false;
+        },
+
+        // Turn management
+        switchTurn() {
+            currentPlayerTurn.value = currentPlayerTurn.value === "player" ? "opponent" : "player";
+        },
+
+        endPlayerTurn() {
+            if (currentPlayerTurn.value === "player") {
+                this.switchTurn();
+                // Trigger opponent turn after a brief delay
+                setTimeout(() => {
+                    this.makeOpponentMove();
+                }, 500);
+            }
+        },
+
+        // AI opponent logic
+        makeOpponentMove() {
+            if (currentPlayerTurn.value !== "opponent") return;
+
+            // Find a non-null tile from opponent's hand
+            let handIndex = -1;
+            for (let i = 0; i < opponentHandSlots.length; i++) {
+                if (opponentHandSlots[i].heldLetterTile !== null) {
+                    handIndex = i;
+                    break;
+                }
+            }
+
+            if (handIndex === -1) {
+                // No tiles in hand, end turn
+                this.switchTurn();
+                return;
+            }
+
+            // Pick a random column (0 to GRID_COLS - 1)
+            const randomCol = Math.floor(Math.random() * GRID_COLS);
+            // Place at top row of that column (row 0)
+            const boardIndex = randomCol; // Top row index = column index
+
+            // Check if the top slot of that column is empty
+            if (this.getBoardTile(boardIndex) === null) {
+                const tile = opponentHandSlots[handIndex].heldLetterTile;
+                if (tile) {
+                    this.setBoardSlot(boardIndex, tile);
+                    this.setOpponentHandSlot(handIndex, null);
+                }
+            }
+
+            // End opponent turn
+            this.switchTurn();
         }
     };
 }

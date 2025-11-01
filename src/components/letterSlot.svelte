@@ -56,7 +56,11 @@
 
         // Only allow drops to empty board slots from hand
         if (slotType === "board" && !tile && dragState.sourceType === "hand") {
-            gameState.moveFromHandToBoard(dragState.sourceIndex, index);
+            const success = gameState.moveFromHandToBoard(dragState.sourceIndex, index);
+            if (success) {
+                // End player turn after placing a tile
+                gameState.endPlayerTurn();
+            }
         }
         // Allow moving back from board to empty hand slot
         else if (slotType === "hand" && !tile && dragState.sourceType === "board") {
@@ -89,7 +93,11 @@
                 const targetType = slotElement.getAttribute('data-slot-type') as "hand" | "board";
 
                 if (targetType === "board" && dragState.sourceType === "hand" && targetIndex >= 0) {
-                    gameState.moveFromHandToBoard(dragState.sourceIndex, targetIndex);
+                    const success = gameState.moveFromHandToBoard(dragState.sourceIndex, targetIndex);
+                    if (success) {
+                        // End player turn after placing a tile
+                        gameState.endPlayerTurn();
+                    }
                 } else if (targetType === "hand" && dragState.sourceType === "board" && targetIndex >= 0) {
                     gameState.moveFromBoardToHand(dragState.sourceIndex, targetIndex);
                 }
