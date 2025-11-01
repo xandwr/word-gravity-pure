@@ -42,6 +42,8 @@ function createGameState() {
     const playerScore = $state({ value: 0 });
     const opponentScore = $state({ value: 0 });
 
+    const currentPlayerTurn = $state("player");
+
     const playerSwapsRemaining = $state({ value: 5 });
 
     return {
@@ -52,6 +54,10 @@ function createGameState() {
 
         get playerHandSlots() {
             return playerHandSlots;
+        },
+
+        get currentPlayerTurn() {
+            return currentPlayerTurn;
         },
 
         // Readonly access to hand slots
