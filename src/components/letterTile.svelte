@@ -88,13 +88,13 @@
 
 <div
     id="letterTile"
-    class="aspect-square rounded-xl border-4 {bgColor()} {animationClass} flex flex-col items-center justify-center w-10 h-10 p-8"
+    class="aspect-square rounded-xl border-2 sm:border-4 {bgColor()} {animationClass} flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4"
     style="opacity: {opacity};"
 >
-    <h class="text-4xl font-bold">{tile.letter}</h>
-    <span class="flex flex-row gap-1 items-center">
-        <h class="text-md font-semibold">{tile.baseScore}</h>
-        <p class="text-sm">x</p>
-        <h class="text-md font-semibold">{tile.multiplier}</h>
+    <h class="text-xl sm:text-2xl md:text-4xl font-bold">{tile.letter}</h>
+    <span class="flex flex-row gap-0.5 sm:gap-1 items-center text-xs sm:text-sm md:text-md">
+        <h class="font-semibold">{tile.baseScore}</h>
+        <p>x</p>
+        <h class="font-semibold">{tile.multiplier}</h>
     </span>
 </div>

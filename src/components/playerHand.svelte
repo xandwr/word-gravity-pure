@@ -91,10 +91,10 @@
 </script>
 
 <div>
-    <div class="flex gap-x-1">
+    <div class="flex flex-col sm:flex-row gap-2 items-center justify-center">
         <div
             id="handSlots"
-            class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit"
+            class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit mx-auto"
         >
             {#each gameState.playerHandSlots as slot, index}
                 <LetterSlot
@@ -110,7 +110,7 @@
                 id="swapButton"
                 role="button"
                 tabindex="0"
-                class="aspect-square rounded-xl border-4 flex flex-col items-center justify-center p-4 {isSwapHover
+                class="aspect-square rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-[80px] sm:min-w-[100px] {isSwapHover
                     ? 'bg-blue-500 border-blue-700'
                     : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0
                     ? 'opacity-50 cursor-not-allowed'
@@ -119,9 +119,9 @@
                 ondragleave={handleSwapDragLeave}
                 ondrop={handleSwapDrop}
             >
-                <h1 class="text-4xl">🔁</h1>
-                <h1 class="text-xl font-bold">Swap</h1>
-                <span class="flex gap-1">
+                <h1 class="text-2xl sm:text-3xl md:text-4xl">🔁</h1>
+                <h1 class="text-sm sm:text-base md:text-xl font-bold">Swap</h1>
+                <span class="flex gap-0.5 sm:gap-1 text-xs sm:text-sm">
                     <h1 class="font-semibold">Remaining:</h1>
                     <h1 class="font-bold">{gameState.playerSwapsRemaining}</h1>
                 </span>
@@ -129,7 +129,7 @@
         </div>
     </div>
 
-    <div class="text-xl p-1 font-bold flex gap-1 justify-center">
+    <div class="text-sm sm:text-base md:text-xl p-1 font-bold flex gap-1 justify-center">
         <h2>Letters Remaining:</h2>
         <h2>{gameState.playerBag.length}</h2>
     </div>
