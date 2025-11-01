@@ -58,20 +58,31 @@
         isDragOver = false;
 
         const dragState = gameState.getDragState();
-        if (!dragState.tile || dragState.sourceIndex === null || dragState.sourceType === null) {
+        if (
+            !dragState.tile ||
+            dragState.sourceIndex === null ||
+            dragState.sourceType === null
+        ) {
             return;
         }
 
         // Only allow drops to empty board slots from hand
         if (slotType === "board" && !tile && dragState.sourceType === "hand") {
-            const success = gameState.moveFromHandToBoard(dragState.sourceIndex, index);
+            const success = gameState.moveFromHandToBoard(
+                dragState.sourceIndex,
+                index,
+            );
             if (success) {
                 // End player turn after placing a tile
                 gameState.endPlayerTurn();
             }
         }
         // Allow moving back from board to empty hand slot
-        else if (slotType === "hand" && !tile && dragState.sourceType === "board") {
+        else if (
+            slotType === "hand" &&
+            !tile &&
+            dragState.sourceType === "board"
+        ) {
             gameState.moveFromBoardToHand(dragState.sourceIndex, index);
         }
 
@@ -87,17 +98,24 @@
         const dragState = gameState.getDragState();
 
         if (!tile) {
-            if (!dragState.tile || dragState.sourceIndex === null || dragState.sourceType === null) {
+            if (
+                !dragState.tile ||
+                dragState.sourceIndex === null ||
+                dragState.sourceType === null
+            ) {
                 gameState.endDrag();
                 return;
             }
 
             // Check if touch ended over this slot
             const touch = e.changedTouches[0];
-            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+            const element = document.elementFromPoint(
+                touch.clientX,
+                touch.clientY,
+            );
 
             // Check for swap button first
-            const swapButton = element?.closest('#swapButton');
+            const swapButton = element?.closest("#swapButton");
             if (swapButton && dragState.sourceType === "hand") {
                 if (gameState.playerSwapsRemaining > 0) {
                     gameState.swapPlayerTile(dragState.sourceIndex);
@@ -106,20 +124,38 @@
                 return;
             }
 
-            const slotElement = element?.closest('[data-slot-index]');
+            const slotElement = element?.closest("[data-slot-index]");
 
             if (slotElement) {
-                const targetIndex = parseInt(slotElement.getAttribute('data-slot-index') || '-1');
-                const targetType = slotElement.getAttribute('data-slot-type') as "hand" | "board";
+                const targetIndex = parseInt(
+                    slotElement.getAttribute("data-slot-index") || "-1",
+                );
+                const targetType = slotElement.getAttribute(
+                    "data-slot-type",
+                ) as "hand" | "board";
 
-                if (targetType === "board" && dragState.sourceType === "hand" && targetIndex >= 0) {
-                    const success = gameState.moveFromHandToBoard(dragState.sourceIndex, targetIndex);
+                if (
+                    targetType === "board" &&
+                    dragState.sourceType === "hand" &&
+                    targetIndex >= 0
+                ) {
+                    const success = gameState.moveFromHandToBoard(
+                        dragState.sourceIndex,
+                        targetIndex,
+                    );
                     if (success) {
                         // End player turn after placing a tile
                         gameState.endPlayerTurn();
                     }
-                } else if (targetType === "hand" && dragState.sourceType === "board" && targetIndex >= 0) {
-                    gameState.moveFromBoardToHand(dragState.sourceIndex, targetIndex);
+                } else if (
+                    targetType === "hand" &&
+                    dragState.sourceType === "board" &&
+                    targetIndex >= 0
+                ) {
+                    gameState.moveFromBoardToHand(
+                        dragState.sourceIndex,
+                        targetIndex,
+                    );
                 }
             }
         }
@@ -130,7 +166,9 @@
 
 <div
     id="letterSlot"
-    class="aspect-square rounded-xl border-4 flex flex-col items-center justify-center w-10 h-10 p-8 shadow-md {isDragOver ? 'bg-blue-300 border-blue-500' : 'bg-black/20'}"
+    class="aspect-square rounded-xl border-4 flex flex-col items-center justify-center w-10 h-10 p-8 shadow-md {isDragOver
+        ? 'bg-blue-300 border-blue-500'
+        : 'bg-black/20'}"
     data-slot-index={index}
     data-slot-type={slotType}
     role="button"
