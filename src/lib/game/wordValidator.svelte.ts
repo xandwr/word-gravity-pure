@@ -29,7 +29,10 @@ class WordValidator {
     private previousWords = $state<ValidWord[]>([]); // Track words from previous validation
 
     constructor() {
-        this.loadDictionary();
+        // Only load dictionary on client side
+        if (typeof window !== 'undefined') {
+            this.loadDictionary();
+        }
     }
 
     get loaded(): boolean {
@@ -104,31 +107,41 @@ class WordValidator {
 
         // Check horizontal words (left-to-right and right-to-left)
         for (let row = 0; row < rows; row++) {
-            for (let startCol = 0; startCol < cols; startCol++) {
-                // Left-to-right
+            let col = 0;
+            while (col < cols) {
+                // Skip empty slots
+                if (!getTile(row, col)) {
+                    col++;
+                    continue;
+                }
+
+                // Found start of a word - collect all consecutive tiles
                 let word = "";
                 let indices: number[] = [];
+                let startCol = col;
 
-                for (let col = startCol; col < cols; col++) {
+                while (col < cols) {
                     const tile = getTile(row, col);
                     if (!tile) break;
 
                     word += tile.letter;
                     indices.push(getIndex(row, col));
+                    col++;
                 }
 
-                // Only consider words with 2+ letters
-                if (word.length >= 2 && this.isValidWord(word)) {
-                    foundWords.push({
-                        word,
-                        direction: "horizontal",
-                        tileIndices: indices,
-                        owner: currentPlayer // Will be updated later based on previous state
-                    });
-                }
+                // Only consider words with 3+ letters
+                if (word.length >= 3) {
+                    // Left-to-right
+                    if (this.isValidWord(word)) {
+                        foundWords.push({
+                            word,
+                            direction: "horizontal",
+                            tileIndices: indices,
+                            owner: currentPlayer // Will be updated later based on previous state
+                        });
+                    }
 
-                // Right-to-left (reverse)
-                if (word.length >= 2) {
+                    // Right-to-left (reverse)
                     const reversedWord = word.split("").reverse().join("");
                     if (this.isValidWord(reversedWord)) {
                         foundWords.push({
@@ -144,31 +157,41 @@ class WordValidator {
 
         // Check vertical words (top-to-bottom and bottom-to-top)
         for (let col = 0; col < cols; col++) {
-            for (let startRow = 0; startRow < rows; startRow++) {
-                // Top-to-bottom
+            let row = 0;
+            while (row < rows) {
+                // Skip empty slots
+                if (!getTile(row, col)) {
+                    row++;
+                    continue;
+                }
+
+                // Found start of a word - collect all consecutive tiles
                 let word = "";
                 let indices: number[] = [];
+                let startRow = row;
 
-                for (let row = startRow; row < rows; row++) {
+                while (row < rows) {
                     const tile = getTile(row, col);
                     if (!tile) break;
 
                     word += tile.letter;
                     indices.push(getIndex(row, col));
+                    row++;
                 }
 
-                // Only consider words with 2+ letters
-                if (word.length >= 2 && this.isValidWord(word)) {
-                    foundWords.push({
-                        word,
-                        direction: "vertical",
-                        tileIndices: indices,
-                        owner: currentPlayer // Will be updated later based on previous state
-                    });
-                }
+                // Only consider words with 3+ letters
+                if (word.length >= 3) {
+                    // Top-to-bottom
+                    if (this.isValidWord(word)) {
+                        foundWords.push({
+                            word,
+                            direction: "vertical",
+                            tileIndices: indices,
+                            owner: currentPlayer // Will be updated later based on previous state
+                        });
+                    }
 
-                // Bottom-to-top (reverse)
-                if (word.length >= 2) {
+                    // Bottom-to-top (reverse)
                     const reversedWord = word.split("").reverse().join("");
                     if (this.isValidWord(reversedWord)) {
                         foundWords.push({
