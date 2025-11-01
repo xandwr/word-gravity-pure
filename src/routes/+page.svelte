@@ -16,6 +16,41 @@
         <h1 class="font-bold text-2xl sm:text-3xl md:text-4xl">Word Gravity</h1>
     </header>
 
+    {#if gameState.isGameOver}
+        <div
+            class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+        >
+            <div
+                class="bg-white rounded-lg p-6 sm:p-8 max-w-md mx-4 shadow-2xl"
+            >
+                <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">
+                    Game Over!
+                </h2>
+                <p class="text-center mb-6">{gameState.gameOverReason}</p>
+                <div class="flex flex-col gap-2 mb-6">
+                    <div class="flex justify-between text-lg">
+                        <span class="font-semibold">Your Score:</span>
+                        <span class="font-bold text-green-600"
+                            >{gameState.playerScore}</span
+                        >
+                    </div>
+                    <div class="flex justify-between text-lg">
+                        <span class="font-semibold">Opponent Score:</span>
+                        <span class="font-bold text-red-600"
+                            >{gameState.opponentScore}</span
+                        >
+                    </div>
+                </div>
+                <button
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+                    onclick={() => window.location.reload()}
+                >
+                    Play Again
+                </button>
+            </div>
+        </div>
+    {/if}
+
     <div class="flex flex-col">
         <div class="w-full h-full p-2 sm:p-3 md:p-4 flex justify-center">
             <WordGrid />
@@ -27,7 +62,15 @@
             <!-- animated caution-tape background -->
             <div
                 class="absolute inset-0 bg-size-[40px_40px] animate-banner"
-                style="background-image: linear-gradient(45deg, {gameState.currentPlayerTurn === 'player' ? '#22c55e' : '#ef4444'} 25%, transparent 25%, transparent 50%, {gameState.currentPlayerTurn === 'player' ? '#22c55e' : '#ef4444'} 50%, {gameState.currentPlayerTurn === 'player' ? '#22c55e' : '#ef4444'} 75%, transparent 75%, transparent)"
+                style="background-image: linear-gradient(45deg, {gameState.currentPlayerTurn ===
+                'player'
+                    ? '#22c55e'
+                    : '#ef4444'} 25%, transparent 25%, transparent 50%, {gameState.currentPlayerTurn ===
+                'player'
+                    ? '#22c55e'
+                    : '#ef4444'} 50%, {gameState.currentPlayerTurn === 'player'
+                    ? '#22c55e'
+                    : '#ef4444'} 75%, transparent 75%, transparent)"
             ></div>
 
             <h1 class="relative z-10 font-semibold">Current Turn:</h1>

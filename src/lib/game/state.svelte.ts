@@ -16,7 +16,8 @@ export function createTile(letter: string, baseScore: number): TileData {
         baseScore,
         multiplier: 1,
         claimedBy: null,
-        fadingOut: false
+        fadingOut: false,
+        hasLanded: false
     };
 }
 
@@ -66,6 +67,10 @@ function createGameState() {
     const currentPlayerTurn = $state<{ value: "player" | "opponent" }>({ value: "player" });
 
     const playerSwapsRemaining = $state({ value: 5 });
+
+    // Game over state
+    const isGameOver = $state({ value: false });
+    const gameOverReason = $state<{ value: string | null }>({ value: null });
 
     // Drag state - tracks what tile is being dragged and from where
     const dragState = $state<{
@@ -139,6 +144,14 @@ function createGameState() {
 
         get playerSwapsRemaining() {
             return playerSwapsRemaining.value;
+        },
+
+        get isGameOver() {
+            return isGameOver.value;
+        },
+
+        get gameOverReason() {
+            return gameOverReason.value;
         },
 
         // Methods to update the state
@@ -508,10 +521,20 @@ function createGameState() {
             // Wait for fade delay + fade duration to complete, then clean up tiles
             await new Promise(resolve => setTimeout(resolve, FADE_DELAY + FADE_DURATION));
 
-            // Delete all faded tiles (do not return to bag)
+            // Return all faded tiles to the player's bag and clear from board
             for (let i = 0; i < boardSlots.length; i++) {
                 const tile = boardSlots[i].heldLetterTile;
                 if (tile && tile.fadingOut) {
+                    // Reset tile state for reuse (but keep multiplier!)
+                    tile.fadingOut = false;
+                    tile.fadeStartTime = undefined;
+                    tile.claimedBy = null;
+                    tile.hasLanded = false; // Reset landing flag for when tile is drawn again
+
+                    // Return to player's bag
+                    playerBag.push(tile);
+
+                    // Remove from board
                     boardSlots[i].heldLetterTile = null;
                 }
             }
@@ -538,11 +561,37 @@ function createGameState() {
 
                     // If current slot has a tile and slot below is empty
                     if (currentTile !== null && belowTile === null) {
+                        // Mark tile as moving (reset landing flag)
+                        currentTile.hasLanded = false;
+
                         // Move tile down one slot
                         boardSlots[belowIndex].heldLetterTile = currentTile;
                         boardSlots[currentIndex].heldLetterTile = null;
                         moved = true;
                     }
+                    // If current tile exists and can't move down (landed)
+                    else if (currentTile !== null && belowTile !== null && !currentTile.hasLanded) {
+                        // Tile has just landed - apply +1 multiplier to all tiles below
+                        currentTile.hasLanded = true;
+
+                        for (let belowRow = row + 1; belowRow < GRID_ROWS; belowRow++) {
+                            const belowIdx = belowRow * GRID_COLS + col;
+                            const tileBelow = boardSlots[belowIdx].heldLetterTile;
+                            if (tileBelow !== null) {
+                                tileBelow.multiplier += 1;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Handle bottom row tiles (they land on the floor)
+            for (let col = 0; col < GRID_COLS; col++) {
+                const bottomIndex = (GRID_ROWS - 1) * GRID_COLS + col;
+                const bottomTile = boardSlots[bottomIndex].heldLetterTile;
+
+                if (bottomTile !== null && !bottomTile.hasLanded) {
+                    bottomTile.hasLanded = true;
                 }
             }
 
@@ -563,10 +612,31 @@ function createGameState() {
             // Pass the player who just made a move (before turn switch)
             wordValidator.validateBoard(boardSlots, currentPlayerTurn.value, GRID_COLS, GRID_ROWS);
 
+            // Check for game over condition
+            this.checkGameOver();
+
             // If there's a pending turn switch, execute it now
             if (pendingTurnSwitch.value) {
                 pendingTurnSwitch.value = false;
                 this.executeTurnSwitch();
+            }
+        },
+
+        // Check if game is over (board full + no valid words)
+        checkGameOver() {
+            // Check if board is full
+            const isBoardFull = boardSlots.every(slot => slot.heldLetterTile !== null);
+
+            if (isBoardFull) {
+                // Check if there are any claimable words
+                const hasClaimableWords = wordValidator.words.length > 0;
+
+                if (!hasClaimableWords) {
+                    // Game over!
+                    isGameOver.value = true;
+                    gameOverReason.value = "Board is full with no claimable words!";
+                    this.stopGravity();
+                }
             }
         },
 
