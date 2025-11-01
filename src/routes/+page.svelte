@@ -1,7 +1,7 @@
 <script>
-    import LetterSlot from "../components/letterSlot.svelte";
+    import WordGrid from "../components/wordGrid.svelte";
 </script>
 
 <main>
-    <LetterSlot />
+    <WordGrid />
 </main>
