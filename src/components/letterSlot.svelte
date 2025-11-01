@@ -1,4 +1,6 @@
-<!-- letterSlot.svelte -->
+<!-- 
+    components/letterSlot.svelte
+-->
 
 <script>
     import LetterTile from "./letterTile.svelte";

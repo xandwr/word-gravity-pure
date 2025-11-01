@@ -1,3 +1,7 @@
+/*
+    $lib/game/state.ts
+*/
+
 import { nanoid } from "nanoid";
 import type { TileData } from "./types";
 

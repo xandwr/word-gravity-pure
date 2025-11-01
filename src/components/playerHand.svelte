@@ -1,3 +1,7 @@
+<!-- 
+    components/playerHand.svelte
+-->
+
 <script>
     import LetterSlot from "./letterSlot.svelte";
 </script>
@@ -8,7 +12,7 @@
             <LetterSlot {index} />
         {/each}
     </div>
-    
+
     <div
         id="swapButton"
         class="aspect-square rounded-xl border-4 bg-blue-200 flex flex-col items-center justify-center p-4"

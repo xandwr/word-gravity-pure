@@ -1,3 +1,7 @@
+<!-- 
+    components/letterTile.svelte
+-->
+
 <script>
     import { createTile } from "$lib/game/state";
 

@@ -1,3 +1,7 @@
+<!-- 
+    components/wordGrid.svelte
+-->
+
 <script>
     import LetterSlot from "./letterSlot.svelte";
 

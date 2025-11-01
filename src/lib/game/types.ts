@@ -1,3 +1,7 @@
+/*
+    $lib/game/types.ts
+*/
+
 // Represents a letter tile instance
 export type TileData = Readonly<{
     id: string;

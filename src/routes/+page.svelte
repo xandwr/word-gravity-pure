@@ -1,3 +1,7 @@
+<!-- 
+    +page.svelte
+-->
+
 <script>
     import WordGrid from "../components/wordGrid.svelte";
     import PlayerHand from "../components/playerHand.svelte";
