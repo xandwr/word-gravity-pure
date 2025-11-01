@@ -41,7 +41,8 @@ function createGameState() {
     // Game metadata
     const playerScore = $state({ value: 0 });
     const opponentScore = $state({ value: 0 });
-    const swapsRemaining = $state({ value: 5 });
+
+    const playerSwapsRemaining = $state({ value: 5 });
 
     return {
         // Readonly access to board slots
@@ -73,8 +74,8 @@ function createGameState() {
             return opponentScore.value;
         },
 
-        get swapsRemaining() {
-            return swapsRemaining.value;
+        get playerSwapsRemaining() {
+            return playerSwapsRemaining.value;
         },
 
         // Methods to update the state
@@ -118,9 +119,9 @@ function createGameState() {
             opponentScore.value = score;
         },
 
-        decrementSwaps() {
-            if (swapsRemaining.value > 0) {
-                swapsRemaining.value--;
+        decrementPlayerSwaps() {
+            if (playerSwapsRemaining.value > 0) {
+                playerSwapsRemaining.value--;
             }
         },
 

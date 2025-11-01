@@ -39,7 +39,7 @@
                 <h1 class="text-xl font-bold">Swap</h1>
                 <span class="flex gap-1">
                     <h1 class="font-semibold">Remaining:</h1>
-                    <h1 class="font-bold">{gameState.swapsRemaining}</h1>
+                    <h1 class="font-bold">{gameState.playerSwapsRemaining}</h1>
                 </span>
             </div>
         </div>
@@ -47,6 +47,6 @@
 
     <div class="text-xl bg-green-200 p-1 font-bold flex gap-1 justify-center">
         <h2>Letters Remaining:</h2>
-        <h2>0</h2>
+        <h2>{playerBag.length}</h2>
     </div>
 </div>
