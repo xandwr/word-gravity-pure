@@ -207,6 +207,10 @@ function createGameState() {
             }
         },
 
+        incrementPlayerSwaps() {
+            playerSwapsRemaining.value++;
+        },
+
         // Swap a tile from player's hand
         swapPlayerTile(handIndex: number): boolean {
             if (playerSwapsRemaining.value <= 0) {
@@ -541,6 +545,9 @@ function createGameState() {
 
             // Mark board as unsettled to trigger gravity
             isBoardSettled.value = false;
+
+            // Award a swap for claiming a valid word
+            this.incrementPlayerSwaps();
 
             isClaimingInProgress.value = false;
         },
