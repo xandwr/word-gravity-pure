@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(if [ -d \"app/play\" ])",
+      "Bash(then echo \"exists\")",
+      "Bash(else echo \"does not exist\")",
+      "Bash(fi)",
+      "Bash(npm run dev:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
