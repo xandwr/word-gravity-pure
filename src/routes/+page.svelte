@@ -47,10 +47,5 @@
         <div class="bg-purple-500/20 w-full h-full p-4 flex justify-center">
             <PlayerHand />
         </div>
-
-        <div class="text-xl bg-green-200 p-1 font-bold flex gap-1 justify-center">
-            <h2>Letters Remaining:</h2>
-            <h2>0</h2>
-        </div>
     </div>
 </main>
