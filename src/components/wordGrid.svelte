@@ -6,7 +6,7 @@
     const totalSlots = GRID_COLS * GRID_ROWS;
 </script>
 
-<div class="grid grid-cols-7 grid-rows-6 gap-1 w-fit h-fit">
+<div class="grid grid-cols-7 grid-rows-6 gap-px w-fit h-fit">
     {#each Array(GRID_COLS * GRID_ROWS) as _, index}
         <LetterSlot {index} />
     {/each}
