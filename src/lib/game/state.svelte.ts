@@ -163,6 +163,36 @@ function createGameState() {
             }
         },
 
+        // Swap a tile from player's hand
+        swapPlayerTile(handIndex: number): boolean {
+            if (playerSwapsRemaining.value <= 0) {
+                return false;
+            }
+
+            const oldTile = this.getPlayerHandTile(handIndex);
+            if (!oldTile) {
+                return false;
+            }
+
+            // Put the old tile back in the bag
+            playerBag.push(oldTile);
+
+            // Draw a new tile from the bag
+            const newTile = this.playerDrawTile();
+            if (newTile) {
+                this.setPlayerHandSlot(handIndex, newTile);
+            } else {
+                // If no tiles available, just clear the slot
+                this.setPlayerHandSlot(handIndex, null);
+            }
+
+            // Decrement swaps and end turn
+            this.decrementPlayerSwaps();
+            this.endPlayerTurn();
+
+            return true;
+        },
+
         // Utility method to get a tile from board
         getBoardTile(index: number): TileData | null {
             return boardSlots[index]?.heldLetterTile ?? null;

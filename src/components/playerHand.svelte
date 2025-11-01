@@ -25,6 +25,53 @@
             });
         }
     });
+
+    let isSwapHover = $state(false);
+
+    function handleSwapDragOver(e: DragEvent) {
+        e.preventDefault();
+        if (e.dataTransfer) {
+            e.dataTransfer.dropEffect = "move";
+        }
+        isSwapHover = true;
+    }
+
+    function handleSwapDragLeave() {
+        isSwapHover = false;
+    }
+
+    function handleSwapDrop(e: DragEvent) {
+        e.preventDefault();
+        isSwapHover = false;
+
+        const dragState = gameState.getDragState();
+        if (!dragState.tile || dragState.sourceIndex === null || dragState.sourceType !== "hand") {
+            return;
+        }
+
+        // Only allow swapping tiles from hand
+        if (gameState.playerSwapsRemaining > 0) {
+            gameState.swapPlayerTile(dragState.sourceIndex);
+        }
+
+        gameState.endDrag();
+    }
+
+    function handleSwapTouchEnd(e: TouchEvent) {
+        const dragState = gameState.getDragState();
+        if (!dragState.tile || dragState.sourceIndex === null || dragState.sourceType !== "hand") {
+            return;
+        }
+
+        // Check if touch ended over the swap button
+        const touch = e.changedTouches[0];
+        const element = document.elementFromPoint(touch.clientX, touch.clientY);
+        const swapButton = element?.closest('#swapButton');
+
+        if (swapButton && gameState.playerSwapsRemaining > 0) {
+            gameState.swapPlayerTile(dragState.sourceIndex);
+        }
+    }
 </script>
 
 <div>
@@ -41,7 +88,12 @@
         <div class="flex flex-col items-center justify-center">
             <div
                 id="swapButton"
-                class="aspect-square rounded-xl border-4 bg-blue-200 flex flex-col items-center justify-center p-4"
+                role="button"
+                tabindex="0"
+                class="aspect-square rounded-xl border-4 flex flex-col items-center justify-center p-4 {isSwapHover ? 'bg-blue-500 border-blue-700' : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}"
+                ondragover={handleSwapDragOver}
+                ondragleave={handleSwapDragLeave}
+                ondrop={handleSwapDrop}
             >
                 <h1 class="text-4xl">🔁</h1>
                 <h1 class="text-xl font-bold">Swap</h1>

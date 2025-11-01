@@ -76,8 +76,9 @@
     }
 
     function handleTouchEnd(e: TouchEvent) {
+        const dragState = gameState.getDragState();
+
         if (!tile) {
-            const dragState = gameState.getDragState();
             if (!dragState.tile || dragState.sourceIndex === null || dragState.sourceType === null) {
                 gameState.endDrag();
                 return;
@@ -86,6 +87,17 @@
             // Check if touch ended over this slot
             const touch = e.changedTouches[0];
             const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+            // Check for swap button first
+            const swapButton = element?.closest('#swapButton');
+            if (swapButton && dragState.sourceType === "hand") {
+                if (gameState.playerSwapsRemaining > 0) {
+                    gameState.swapPlayerTile(dragState.sourceIndex);
+                }
+                gameState.endDrag();
+                return;
+            }
+
             const slotElement = element?.closest('[data-slot-index]');
 
             if (slotElement) {
