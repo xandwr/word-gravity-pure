@@ -4,7 +4,7 @@
 
 <script lang="ts">
     import LetterTile from "./letterTile.svelte";
-    import type { TileData } from "$lib/game/types";
+    import type { TileData, TileHighlight } from "$lib/game/types";
     import { gameState } from "$lib/game/state.svelte";
 
     interface Props {
@@ -14,6 +14,14 @@
     }
 
     let { index, tile = null, slotType }: Props = $props();
+
+    // Get highlight for board tiles
+    const highlight = $derived<TileHighlight>(() => {
+        if (slotType === "board" && tile) {
+            return gameState.validator.getHighlight(index);
+        }
+        return "none";
+    });
 
     let isDragOver = $state(false);
 
@@ -137,6 +145,6 @@
     ontouchend={handleTouchEnd}
 >
     {#if tile}
-        <LetterTile {tile} />
+        <LetterTile {tile} highlight={highlight()} />
     {/if}
 </div>

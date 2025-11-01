@@ -13,4 +13,7 @@ export type TileData = Readonly<{
 // This is a container that can either hold nothing or a TileData object
 export type TileContainer = {
     heldLetterTile: TileData | null;
-}
+};
+
+// Highlight types for validated tiles
+export type TileHighlight = "none" | "horizontal" | "vertical" | "intersection";

@@ -7,6 +7,7 @@ import type { TileData, TileContainer } from "./types";
 import { playerBag } from "./playerLetterBag.svelte";
 import { opponentBag } from "./opponentLetterBag.svelte";
 import { drawFromBag } from "./letterBag.svelte";
+import { wordValidator } from "./wordValidator.svelte";
 
 export function createTile(letter: string, baseScore: number): TileData {
     return {
@@ -33,6 +34,10 @@ function createGameState() {
 
     // Gravity interval ID for cleanup
     let gravityIntervalId: number | null = null;
+
+    // Board settlement tracking
+    const isBoardSettled = $state({ value: true });
+    const pendingTurnSwitch = $state({ value: false });
 
     // Player hand - 8 slots
     const playerHandSlots = $state<TileContainer[]>(
@@ -71,6 +76,15 @@ function createGameState() {
         // Readonly access to board slots
         get board() {
             return boardSlots;
+        },
+
+        get boardSettled() {
+            return isBoardSettled.value;
+        },
+
+        // Access to word validator
+        get validator() {
+            return wordValidator;
         },
 
         get playerHandSlots() {
@@ -233,6 +247,8 @@ function createGameState() {
             if (tile && this.getBoardTile(boardIndex) === null) {
                 this.setBoardSlot(boardIndex, tile);
                 this.setPlayerHandSlot(handIndex, null);
+                // Mark board as unsettled when placing a tile
+                isBoardSettled.value = false;
                 return true;
             }
             return false;
@@ -251,16 +267,29 @@ function createGameState() {
 
         // Turn management
         switchTurn() {
+            // Only switch turns if board has settled
+            if (isBoardSettled.value) {
+                this.executeTurnSwitch();
+            } else {
+                // Mark that we want to switch turns once board settles
+                pendingTurnSwitch.value = true;
+            }
+        },
+
+        executeTurnSwitch() {
             currentPlayerTurn.value = currentPlayerTurn.value === "player" ? "opponent" : "player";
+
+            // If switching to opponent, trigger their move after a brief delay
+            if (currentPlayerTurn.value === "opponent") {
+                setTimeout(() => {
+                    this.makeOpponentMove();
+                }, 500);
+            }
         },
 
         endPlayerTurn() {
             if (currentPlayerTurn.value === "player") {
                 this.switchTurn();
-                // Trigger opponent turn after a brief delay
-                setTimeout(() => {
-                    this.makeOpponentMove();
-                }, 500);
             }
         },
 
@@ -294,10 +323,12 @@ function createGameState() {
                 if (tile) {
                     this.setBoardSlot(boardIndex, tile);
                     this.setOpponentHandSlot(handIndex, null);
+                    // Mark board as unsettled when placing a tile
+                    isBoardSettled.value = false;
                 }
             }
 
-            // End opponent turn
+            // End opponent turn (will wait for board to settle)
             this.switchTurn();
         },
 
@@ -325,7 +356,27 @@ function createGameState() {
                 }
             }
 
+            // If nothing moved, board has settled
+            if (!moved && !isBoardSettled.value) {
+                isBoardSettled.value = true;
+                this.onBoardSettled();
+            } else if (moved) {
+                isBoardSettled.value = false;
+            }
+
             return moved;
+        },
+
+        // Called when the board settles after gravity
+        onBoardSettled() {
+            // Validate the board and find all valid words
+            wordValidator.validateBoard(boardSlots, GRID_COLS, GRID_ROWS);
+
+            // If there's a pending turn switch, execute it now
+            if (pendingTurnSwitch.value) {
+                pendingTurnSwitch.value = false;
+                this.executeTurnSwitch();
+            }
         },
 
         // Start the gravity tick system
