@@ -37,6 +37,16 @@
         return currentWave?.includes(index) ?? false;
     });
 
+    // Check if this tile is currently being dragged
+    const isDragging = $derived(() => {
+        const dragState = gameState.getDragState();
+        return (
+            dragState.tile?.id === tile?.id &&
+            dragState.sourceIndex === index &&
+            dragState.sourceType === slotType
+        );
+    });
+
     function handleDragStart(e: DragEvent) {
         if (!tile || !canInteract) return;
 
@@ -49,8 +59,145 @@
     }
 
     function handleTouchStart(e: TouchEvent) {
-        if (!tile || !canInteract) return;
+        console.log("Touch start:", {
+            tile: tile?.letter,
+            slotType,
+            index,
+            canInteract,
+        });
+        if (!tile || !canInteract) {
+            console.log(
+                "Touch start blocked:",
+                !tile ? "no tile" : "can't interact",
+            );
+            return;
+        }
+        e.preventDefault(); // Prevent scrolling while dragging
         gameState.startDrag(tile, slotType, index);
+        console.log("Drag started, added global listeners");
+
+        // Add global touchmove and touchend listeners
+        const handleGlobalTouchMove = (e: TouchEvent) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(
+                touch.clientX,
+                touch.clientY,
+            );
+            const slotElement = element?.closest("[data-slot-index]");
+
+            // Update isDragOver for this slot
+            if (slotElement) {
+                const hoveredIndex = parseInt(
+                    slotElement.getAttribute("data-slot-index") || "-1",
+                );
+                isDragOver = hoveredIndex === index && !tile;
+            } else {
+                isDragOver = false;
+            }
+        };
+
+        const handleGlobalTouchEnd = (e: TouchEvent) => {
+            console.log("Global touch end");
+
+            // Get current drag state
+            const currentDragState = gameState.getDragState();
+            if (!currentDragState.tile) {
+                gameState.endDrag();
+                document.removeEventListener(
+                    "touchmove",
+                    handleGlobalTouchMove,
+                );
+                document.removeEventListener("touchend", handleGlobalTouchEnd);
+                return;
+            }
+
+            // Process the drop at the touch position
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(
+                touch.clientX,
+                touch.clientY,
+            );
+
+            // Check for swap button first
+            const swapButton = element?.closest("#swapButton");
+            if (swapButton && currentDragState.sourceType === "hand") {
+                if (gameState.playerSwapsRemaining > 0) {
+                    gameState.swapPlayerTile(currentDragState.sourceIndex ?? 0);
+                }
+                gameState.endDrag();
+                document.removeEventListener(
+                    "touchmove",
+                    handleGlobalTouchMove,
+                );
+                document.removeEventListener("touchend", handleGlobalTouchEnd);
+                return;
+            }
+
+            const slotElement = element?.closest("[data-slot-index]");
+            console.log("Slot element found:", slotElement);
+
+            if (slotElement) {
+                const targetIndex = parseInt(
+                    slotElement.getAttribute("data-slot-index") || "-1",
+                );
+                const targetType = slotElement.getAttribute(
+                    "data-slot-type",
+                ) as "hand" | "board";
+
+                console.log("Drop target:", {
+                    targetIndex,
+                    targetType,
+                    sourceType: currentDragState.sourceType,
+                    sourceIndex: currentDragState.sourceIndex,
+                });
+
+                if (
+                    targetType === "board" &&
+                    currentDragState.sourceType === "hand" &&
+                    targetIndex >= 0
+                ) {
+                    console.log("Attempting move from hand to board");
+                    const boardSlot = gameState.board[targetIndex];
+                    // Only allow drop on empty slots
+                    if (!boardSlot.heldLetterTile) {
+                        const success = gameState.moveFromHandToBoard(
+                            currentDragState.sourceIndex ?? 0,
+                            targetIndex,
+                        );
+                        console.log("Move success:", success);
+                        if (success) {
+                            gameState.endPlayerTurn();
+                        }
+                    }
+                } else if (
+                    targetType === "hand" &&
+                    currentDragState.sourceType === "board" &&
+                    targetIndex >= 0
+                ) {
+                    console.log("Attempting move from board to hand");
+                    const handSlot = gameState.playerHandSlots[targetIndex];
+                    // Only allow drop on empty slots
+                    if (!handSlot.heldLetterTile) {
+                        gameState.moveFromBoardToHand(
+                            currentDragState.sourceIndex ?? 0,
+                            targetIndex,
+                        );
+                    }
+                }
+            }
+
+            gameState.endDrag();
+            document.removeEventListener("touchmove", handleGlobalTouchMove);
+            document.removeEventListener("touchend", handleGlobalTouchEnd);
+        };
+
+        document.addEventListener("touchmove", handleGlobalTouchMove, {
+            passive: false,
+        });
+        document.addEventListener("touchend", handleGlobalTouchEnd, {
+            passive: false,
+        });
     }
 
     function handleDragOver(e: DragEvent) {
@@ -130,6 +277,7 @@
 
     function handleTouchEnd(e: TouchEvent) {
         const dragState = gameState.getDragState();
+        console.log("handleTouchEnd called", { hasTile: !!tile, dragState });
 
         if (!tile) {
             if (
@@ -137,20 +285,24 @@
                 dragState.sourceIndex === null ||
                 dragState.sourceType === null
             ) {
+                console.log("No drag state, ending");
                 gameState.endDrag();
                 return;
             }
 
             // Check if touch ended over this slot
             const touch = e.changedTouches[0];
+            console.log("Touch position:", touch.clientX, touch.clientY);
             const element = document.elementFromPoint(
                 touch.clientX,
                 touch.clientY,
             );
+            console.log("Element at touch:", element);
 
             // Check for swap button first
             const swapButton = element?.closest("#swapButton");
             if (swapButton && dragState.sourceType === "hand") {
+                console.log("Found swap button");
                 if (gameState.playerSwapsRemaining > 0) {
                     gameState.swapPlayerTile(dragState.sourceIndex);
                 }
@@ -159,6 +311,7 @@
             }
 
             const slotElement = element?.closest("[data-slot-index]");
+            console.log("Slot element found:", slotElement);
 
             if (slotElement) {
                 const targetIndex = parseInt(
@@ -168,15 +321,24 @@
                     "data-slot-type",
                 ) as "hand" | "board";
 
+                console.log("Drop target:", {
+                    targetIndex,
+                    targetType,
+                    sourceType: dragState.sourceType,
+                    sourceIndex: dragState.sourceIndex,
+                });
+
                 if (
                     targetType === "board" &&
                     dragState.sourceType === "hand" &&
                     targetIndex >= 0
                 ) {
+                    console.log("Attempting move from hand to board");
                     const success = gameState.moveFromHandToBoard(
                         dragState.sourceIndex,
                         targetIndex,
                     );
+                    console.log("Move success:", success);
                     if (success) {
                         // End player turn after placing a tile
                         gameState.endPlayerTurn();
@@ -186,15 +348,33 @@
                     dragState.sourceType === "board" &&
                     targetIndex >= 0
                 ) {
+                    console.log("Attempting move from board to hand");
                     gameState.moveFromBoardToHand(
                         dragState.sourceIndex,
                         targetIndex,
                     );
                 }
+            } else {
+                console.log("No slot element found at touch position");
             }
+        } else {
+            console.log("This slot has a tile, not processing drop");
         }
 
         gameState.endDrag();
+    }
+
+    // Svelte action to add touch event listeners with passive: false
+    function touchHandlers(node: HTMLElement) {
+        node.addEventListener("touchstart", handleTouchStart, {
+            passive: false,
+        });
+
+        return {
+            destroy() {
+                node.removeEventListener("touchstart", handleTouchStart);
+            },
+        };
     }
 </script>
 
@@ -213,12 +393,16 @@
     ondragleave={handleDragLeave}
     ondrop={handleDrop}
     ondragend={handleDragEnd}
-    ontouchstart={handleTouchStart}
-    ontouchend={handleTouchEnd}
+    use:touchHandlers
     onclick={handleClick}
     onkeydown={handleKeyDown}
 >
     {#if tile}
-        <LetterTile {tile} {highlight} isClaimWave={isInClaimWave()} />
+        <LetterTile
+            {tile}
+            {highlight}
+            isClaimWave={isInClaimWave()}
+            isDragging={isDragging()}
+        />
     {/if}
 </div>

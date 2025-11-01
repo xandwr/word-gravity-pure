@@ -9,9 +9,15 @@
         tile: TileData;
         highlight?: TileHighlight;
         isClaimWave?: boolean; // If this tile is in the current claiming wave
+        isDragging?: boolean; // If this tile is currently being dragged
     }
 
-    let { tile, highlight = "none", isClaimWave = false }: Props = $props();
+    let {
+        tile,
+        highlight = "none",
+        isClaimWave = false,
+        isDragging = false,
+    }: Props = $props();
 
     // State for animated opacity
     let opacity = $state(1);
@@ -82,17 +88,23 @@
         }
     });
 
-    // Add pulsing animation during claiming wave
-    const animationClass = $derived(isClaimWave ? "animate-pulse scale-110" : "");
+    // Add pulsing animation during claiming wave or scale effect when dragging
+    const animationClass = $derived(() => {
+        if (isClaimWave) return "animate-pulse scale-110";
+        if (isDragging) return "scale-110 opacity-75 shadow-2xl";
+        return "";
+    });
 </script>
 
 <div
     id="letterTile"
-    class="aspect-square rounded-xl border-2 sm:border-4 {bgColor()} {animationClass} flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4"
+    class="aspect-square rounded-xl border-2 sm:border-4 {bgColor()} {animationClass()} flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4 transition-transform duration-150"
     style="opacity: {opacity};"
 >
     <h class="text-xl sm:text-2xl md:text-4xl font-bold">{tile.letter}</h>
-    <span class="flex flex-row gap-0.5 sm:gap-1 items-center text-xs sm:text-sm md:text-md">
+    <span
+        class="flex flex-row gap-0.5 sm:gap-1 items-center text-xs sm:text-sm md:text-md"
+    >
         <h class="font-semibold">{tile.baseScore}</h>
         <p>x</p>
         <h class="font-semibold">{tile.multiplier}</h>

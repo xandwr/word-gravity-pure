@@ -1,1 +1,29 @@
 @import 'tailwindcss';
+
+/* Touch optimization for mobile drag-and-drop */
+#letterSlot {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+#letterTile {
+    touch-action: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    /* Allow slot to handle events but tile is just visual */
+    pointer-events: none;
+}
+
+#letterTile * {
+    pointer-events: none;
+}
+
+/* Prevent text selection during dragging */
+body {
+    -webkit-user-select: none;
+    user-select: none;
+    overscroll-behavior: contain;
+}
