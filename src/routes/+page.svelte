@@ -57,7 +57,7 @@
         </div>
 
         <div
-            class="relative flex items-center gap-1 text-sm sm:text-base md:text-xl justify-center sm:p-4 overflow-hidden rounded-md"
+            class="relative flex justify-center px-2 py-0.5 border-y-4 border-black/20 overflow-hidden"
         >
             <!-- animated caution-tape background -->
             <div
@@ -65,27 +65,26 @@
                 style="background-image: linear-gradient(45deg, {gameState.currentPlayerTurn ===
                 'player'
                     ? '#22c55e'
-                    : '#ef4444'} 25%, transparent 25%, transparent 50%, {gameState.currentPlayerTurn ===
+                    : '#ef4444'} 35%, transparent 35%, transparent 50%, {gameState.currentPlayerTurn ===
                 'player'
                     ? '#22c55e'
                     : '#ef4444'} 50%, {gameState.currentPlayerTurn === 'player'
                     ? '#22c55e'
-                    : '#ef4444'} 75%, transparent 75%, transparent)"
+                    : '#ef4444'} 85%, transparent 85%, transparent)"
             ></div>
 
-            <h1 class="relative z-10 font-semibold">Current Turn:</h1>
-            <h1 class="relative z-10 font-bold uppercase">
-                {gameState.currentPlayerTurn}
-            </h1>
-        </div>
-
-        <div
-            class="flex justify-center px-2 py-0.5 bg-gray-400/40 border-y-4 border-black/20"
-        >
             <div
-                class="flex flex-col sm:flex-row justify-center sm:justify-between gap-2 sm:gap-4 w-full max-w-md"
+                class="relative z-10 flex flex-row justify-center sm:justify-between items-center gap-2 sm:gap-4 w-full max-w-md"
             >
                 <PlayerInfoPanel player="player" />
+
+                <div
+                    class="flex items-center gap-1 text-xs sm:text-sm font-bold uppercase whitespace-nowrap"
+                >
+                    <span>Turn:</span>
+                    <span>{gameState.currentPlayerTurn}</span>
+                </div>
+
                 <PlayerInfoPanel player="opponent" />
             </div>
         </div>
@@ -109,6 +108,6 @@
     }
     .animate-banner {
         animation: bannerScroll 1s linear infinite;
-        opacity: 0.2; /* adjust so text stays readable */
+        opacity: 0.5; /* adjust so text stays readable */
     }
 </style>
