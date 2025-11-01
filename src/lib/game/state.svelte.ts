@@ -32,7 +32,7 @@ function createGameState() {
     );
 
     // Player hand - 8 slots
-    const handSlots = $state<TileContainer[]>(
+    const playerHandSlots = $state<TileContainer[]>(
         Array.from({ length: HAND_SIZE }, () => ({
             heldLetterTile: null
         }))
@@ -50,9 +50,13 @@ function createGameState() {
             return boardSlots;
         },
 
+        get playerHandSlots() {
+            return playerHandSlots;
+        },
+
         // Readonly access to hand slots
-        get hand() {
-            return handSlots;
+        get playerHand() {
+            return;
         },
 
         // Player bag
@@ -85,9 +89,9 @@ function createGameState() {
             }
         },
 
-        setHandSlot(index: number, tile: TileData | null) {
-            if (index >= 0 && index < handSlots.length) {
-                handSlots[index].heldLetterTile = tile;
+        setPlayerHandSlot(index: number, tile: TileData | null) {
+            if (index >= 0 && index < playerHandSlots.length) {
+                playerHandSlots[index].heldLetterTile = tile;
             }
         },
 
@@ -131,8 +135,8 @@ function createGameState() {
         },
 
         // Utility method to get a tile from hand
-        getHandTile(index: number): TileData | null {
-            return handSlots[index]?.heldLetterTile ?? null;
+        getPlayerHandTile(index: number): TileData | null {
+            return playerHandSlots[index]?.heldLetterTile ?? null;
         }
     };
 }

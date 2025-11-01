@@ -6,6 +6,7 @@
     import WordGrid from "../components/wordGrid.svelte";
     import PlayerHand from "../components/playerHand.svelte";
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
+    import PlayerInfoPanel from "../components/playerInfoPanel.svelte";
 </script>
 
 <main class="flex flex-col justify-between">
@@ -22,25 +23,8 @@
 
         <div class="flex justify-center bg-orange-500/50">
             <div class="flex justify-between w-sm">
-                <div
-                    class="border-4 px-8 py-2 rounded-xl flex flex-col items-center bg-green-400"
-                >
-                    <h1 class="font-bold text-xl">You</h1>
-                    <span class="flex gap-1">
-                        <h2 class="font-semibold">Letters:</h2>
-                        <h2 id="playerScoreText" class="font-bold">0 / {HAND_CONFIG.SIZE}</h2>
-                    </span>
-                </div>
-
-                <div
-                    class="border-4 px-8 py-2 rounded-xl flex flex-col items-center bg-red-400"
-                >
-                    <h1 class="font-bold text-xl">Opponent</h1>
-                    <span class="flex gap-1">
-                        <h2 class="font-semibold">Letters:</h2>
-                        <h2 id="opponentScoreText" class="font-bold">0 / {HAND_CONFIG.SIZE}</h2>
-                    </span>
-                </div>
+                <PlayerInfoPanel player="You" />
+                <PlayerInfoPanel player="Opponent" />
             </div>
         </div>
 

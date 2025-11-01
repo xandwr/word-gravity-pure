@@ -5,7 +5,6 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import LetterSlot from "./letterSlot.svelte";
-    import { playerBag } from "$lib/game/playerLetterBag.svelte";
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
 
     // Populate the player's hand when the component mounts
@@ -13,7 +12,7 @@
         const tiles = gameState.playerFreshHand();
         if (tiles) {
             tiles.forEach((tile, index) => {
-                gameState.setHandSlot(index, tile);
+                gameState.setPlayerHandSlot(index, tile);
             });
         }
     });
@@ -25,7 +24,7 @@
             id="handSlots"
             class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit"
         >
-            {#each gameState.hand as slot, index}
+            {#each gameState.playerHandSlots as slot, index}
                 <LetterSlot {index} tile={slot.heldLetterTile} />
             {/each}
         </div>
@@ -47,6 +46,6 @@
 
     <div class="text-xl bg-green-200 p-1 font-bold flex gap-1 justify-center">
         <h2>Letters Remaining:</h2>
-        <h2>{playerBag.length}</h2>
+        <h2>{gameState.playerBag.length}</h2>
     </div>
 </div>
