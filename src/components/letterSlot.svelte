@@ -19,7 +19,7 @@
     // Always show highlights from the player's perspective
     const highlight = $derived<TileHighlight>(
         slotType === "board" && tile
-            ? gameState.validator.getHighlight(index, "player")
+            ? gameState.validator.getHighlight(index, "player", gameState.board)
             : "none",
     );
 

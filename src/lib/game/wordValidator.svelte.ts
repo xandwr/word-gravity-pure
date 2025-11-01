@@ -293,12 +293,19 @@ class WordValidator {
 
     /**
      * Get highlights for a specific player's perspective
+     * Note: Only highlights UNCLAIMED tiles - claimed tiles are handled separately in the UI
      */
-    getHighlightsForPlayer(player: Player): Map<number, TileHighlight> {
+    getHighlightsForPlayer(player: Player, board: Array<{ heldLetterTile: TileData | null }>): Map<number, TileHighlight> {
         const highlights = new Map<number, TileHighlight>();
 
         for (const validWord of this.validWords) {
             for (const index of validWord.tileIndices) {
+                // Skip tiles that are already claimed by anyone
+                const tile = board[index]?.heldLetterTile;
+                if (tile?.claimedBy !== null) {
+                    continue;
+                }
+
                 const current = highlights.get(index);
 
                 // If this word is owned by opponent, mark tile as opponent-owned
@@ -332,8 +339,8 @@ class WordValidator {
     /**
      * Get highlight type for a specific board tile from player's perspective
      */
-    getHighlight(boardIndex: number, viewingPlayer: Player): TileHighlight {
-        const highlights = this.getHighlightsForPlayer(viewingPlayer);
+    getHighlight(boardIndex: number, viewingPlayer: Player, board: Array<{ heldLetterTile: TileData | null }>): TileHighlight {
+        const highlights = this.getHighlightsForPlayer(viewingPlayer, board);
         return highlights.get(boardIndex) ?? "none";
     }
 
