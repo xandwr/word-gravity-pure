@@ -9,7 +9,7 @@
     import PlayerInfoPanel from "../components/playerInfoPanel.svelte";
 </script>
 
-<main class="flex flex-col justify-between overflow-x-hidden">
+<main class="flex flex-col min-h-screen overflow-x-hidden">
     <header
         class="flex flex-col items-center bg-blue-800 text-white p-2 sm:p-3 border-b-2 sm:border-b-4 border-blue-950 shadow-lg"
     >
@@ -51,7 +51,7 @@
         </div>
     {/if}
 
-    <div class="flex flex-col">
+    <div class="flex flex-col flex-1">
         <div class="w-full h-full p-2 sm:p-3 md:p-4 flex justify-center">
             <WordGrid />
         </div>
@@ -89,10 +89,13 @@
             </div>
         </div>
 
-        <div
-            class="w-full h-full p-2 sm:p-3 md:p-4 flex justify-center bg-gray-500/10"
-        >
-            <PlayerHand />
+        <div class="relative flex-1">
+            <!-- Background panel from player info to bottom of screen -->
+            <div class="absolute inset-0 bg-gray-500/10"></div>
+
+            <div class="relative w-full p-2 sm:p-3 md:p-4 flex justify-center">
+                <PlayerHand />
+            </div>
         </div>
     </div>
 </main>
