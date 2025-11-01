@@ -7,7 +7,10 @@
     import { gameState, BOARD_CONFIG } from "$lib/game/state.svelte";
 </script>
 
-<div class="grid grid-cols-{BOARD_CONFIG.COLS} grid-rows-{BOARD_CONFIG.ROWS} gap-px w-fit h-fit">
+<div
+    class="grid gap-px w-fit h-fit"
+    style="grid-template-columns: repeat({BOARD_CONFIG.COLS}, minmax(0, 1fr)); grid-template-rows: repeat({BOARD_CONFIG.ROWS}, minmax(0, 1fr));"
+>
     {#each gameState.board as slot, index}
         <LetterSlot {index} tile={slot.heldLetterTile} slotType="board" />
     {/each}
