@@ -46,6 +46,17 @@ function createGameState() {
 
     const playerSwapsRemaining = $state({ value: 5 });
 
+    // Drag state - tracks what tile is being dragged and from where
+    const dragState = $state<{
+        tile: TileData | null;
+        sourceType: "hand" | "board" | null;
+        sourceIndex: number | null;
+    }>({
+        tile: null,
+        sourceType: null,
+        sourceIndex: null
+    });
+
     return {
         // Readonly access to board slots
         get board() {
@@ -143,6 +154,45 @@ function createGameState() {
         // Utility method to get a tile from hand
         getPlayerHandTile(index: number): TileData | null {
             return playerHandSlots[index]?.heldLetterTile ?? null;
+        },
+
+        // Drag and drop methods
+        startDrag(tile: TileData, sourceType: "hand" | "board", sourceIndex: number) {
+            dragState.tile = tile;
+            dragState.sourceType = sourceType;
+            dragState.sourceIndex = sourceIndex;
+        },
+
+        endDrag() {
+            dragState.tile = null;
+            dragState.sourceType = null;
+            dragState.sourceIndex = null;
+        },
+
+        getDragState() {
+            return dragState;
+        },
+
+        // Move tile from hand to board
+        moveFromHandToBoard(handIndex: number, boardIndex: number) {
+            const tile = this.getPlayerHandTile(handIndex);
+            if (tile && this.getBoardTile(boardIndex) === null) {
+                this.setBoardSlot(boardIndex, tile);
+                this.setPlayerHandSlot(handIndex, null);
+                return true;
+            }
+            return false;
+        },
+
+        // Move tile from board back to hand
+        moveFromBoardToHand(boardIndex: number, handIndex: number) {
+            const tile = this.getBoardTile(boardIndex);
+            if (tile && this.getPlayerHandTile(handIndex) === null) {
+                this.setPlayerHandSlot(handIndex, tile);
+                this.setBoardSlot(boardIndex, null);
+                return true;
+            }
+            return false;
         }
     };
 }
