@@ -92,10 +92,7 @@
 
 <div>
     <div class="flex flex-row gap-1 sm:gap-2 items-center justify-center">
-        <div
-            id="handSlots"
-            class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit"
-        >
+        <div id="handSlots" class="grid grid-cols-4 grid-rows-2 gap-1.5">
             {#each gameState.playerHandSlots as slot, index}
                 <LetterSlot
                     {index}
@@ -129,7 +126,9 @@
         </div>
     </div>
 
-    <div class="text-base sm:text-base md:text-xl p-1 flex gap-1 justify-center">
+    <div
+        class="text-base sm:text-base md:text-xl p-1 flex gap-1 justify-center"
+    >
         <h2>Letters Remaining:</h2>
         <h2 class="font-semibold">{gameState.playerBag.length}</h2>
     </div>

@@ -4,6 +4,7 @@
 
 <script lang="ts">
     import type { TileData, TileHighlight } from "$lib/game/types";
+    import { PLAYER_COLORS } from "$lib/game/constants";
 
     interface Props {
         tile: TileData;
@@ -61,16 +62,16 @@
 
     // Determine background color based on claim status and highlight
     const bgColor = $derived(() => {
-        // Fading out tiles
+        // Fading out tiles (player always claims them)
         if (tile.fadingOut) {
-            return "bg-green-400 text-green-950 border-green-600";
+            return PLAYER_COLORS.player.claimedTile;
         }
 
         // Claimed tiles get a distinct locked appearance
         if (tile.claimedBy === "player") {
-            return "bg-green-400 text-green-950 border-green-600";
+            return PLAYER_COLORS.player.claimedTile;
         } else if (tile.claimedBy === "opponent") {
-            return "bg-gray-400 text-gray-950 border-gray-600";
+            return PLAYER_COLORS.opponent.claimedTile;
         }
 
         // Unclaimed tiles show highlight colors

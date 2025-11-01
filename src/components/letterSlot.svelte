@@ -339,7 +339,7 @@
 
 <div
     id="letterSlot"
-    class="aspect-square rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4 shadow-md {isDragOver
+    class="aspect-square rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center w-12.5 h-12.5 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4 shadow-md {isDragOver
         ? 'bg-blue-300 border-blue-500'
         : 'bg-black/20'}"
     data-slot-index={index}

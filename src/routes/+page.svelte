@@ -7,6 +7,7 @@
     import PlayerHand from "../components/playerHand.svelte";
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
     import PlayerInfoPanel from "../components/playerInfoPanel.svelte";
+    import { PLAYER_COLORS } from "$lib/game/constants";
 </script>
 
 <main class="flex flex-col min-h-screen overflow-x-hidden">
@@ -62,15 +63,13 @@
             <!-- animated caution-tape background -->
             <div
                 class="absolute inset-0 bg-size-[40px_40px] animate-banner"
-                style="background-image: linear-gradient(45deg, {gameState.currentPlayerTurn ===
-                'player'
-                    ? '#22c55e'
-                    : '#ef4444'} 35%, transparent 35%, transparent 50%, {gameState.currentPlayerTurn ===
-                'player'
-                    ? '#22c55e'
-                    : '#ef4444'} 50%, {gameState.currentPlayerTurn === 'player'
-                    ? '#22c55e'
-                    : '#ef4444'} 85%, transparent 85%, transparent)"
+                style="background-image: linear-gradient(45deg, {PLAYER_COLORS[
+                    gameState.currentPlayerTurn
+                ]
+                    .primary} 35%, transparent 35%, transparent 50%, {PLAYER_COLORS[
+                    gameState.currentPlayerTurn
+                ].primary} 50%, {PLAYER_COLORS[gameState.currentPlayerTurn]
+                    .primary} 85%, transparent 85%, transparent)"
             ></div>
 
             <div
@@ -93,7 +92,7 @@
             <!-- Background panel from player info to bottom of screen -->
             <div class="absolute inset-0 bg-gray-500/10"></div>
 
-            <div class="relative w-full p-2 sm:p-3 md:p-4 flex justify-center">
+            <div class="relative px-1 py-2 sm:p-3 md:p-4 flex justify-center">
                 <PlayerHand />
             </div>
         </div>

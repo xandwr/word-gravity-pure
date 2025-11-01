@@ -4,6 +4,7 @@
 
 <script lang="ts">
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
+    import { PLAYER_COLORS } from "$lib/game/constants";
 
     interface Props {
         player: "player" | "opponent";
@@ -26,12 +27,12 @@
         player === "player" ? gameState.playerScore : gameState.opponentScore,
     );
 
-    let displayName = $derived(player === "player" ? "You" : "Opponent");
-    let bgColor = $derived(player === "player" ? "bg-green-400" : "bg-red-400");
+    let displayName = $derived(PLAYER_COLORS[player].name);
+    let bgColor = $derived(PLAYER_COLORS[player].tailwind);
 </script>
 
 <div
-    class="border-2 sm:border-4 px-1 sm:px-6 md:px-8 py-0 sm:py-2 rounded-xl flex flex-col items-center {bgColor}"
+    class="border-2 sm:border-4 px-3 sm:px-6 md:px-8 py-1 sm:py-2 rounded-xl flex flex-col items-center {bgColor}"
 >
     <h1 class="font-bold text-base sm:text-lg md:text-xl">{displayName}</h1>
 
