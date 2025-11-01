@@ -1,5 +1,7 @@
 <script>
-    import LetterTile from "../components/letterTile.svelte";
+    import LetterSlot from "../components/letterSlot.svelte";
 </script>
 
-<LetterTile />
+<main>
+    <LetterSlot />
+</main>
