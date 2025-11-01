@@ -75,6 +75,39 @@ class WordValidator {
     }
 
     /**
+     * Find all valid sub-words within a sequence of tiles
+     * This allows us to preserve ownership of words like "EGG" even when "EGGZ" is invalid
+     */
+    private findValidSubWords(
+        fullWord: string,
+        indices: number[],
+        direction: WordDirection,
+        currentPlayer: Player
+    ): ValidWord[] {
+        const validSubWords: ValidWord[] = [];
+        const len = fullWord.length;
+
+        // Check all possible substrings of length 3 or more
+        for (let start = 0; start < len; start++) {
+            for (let end = start + 3; end <= len; end++) {
+                const subWord = fullWord.substring(start, end);
+                const subIndices = indices.slice(start, end);
+
+                if (this.isValidWord(subWord)) {
+                    validSubWords.push({
+                        word: subWord,
+                        direction,
+                        tileIndices: subIndices,
+                        owner: currentPlayer
+                    });
+                }
+            }
+        }
+
+        return validSubWords;
+    }
+
+    /**
      * Validate the board and find all valid words
      * @param board - Array of tile containers (7 cols x 6 rows)
      * @param currentPlayer - The player who just made a move
@@ -131,6 +164,9 @@ class WordValidator {
 
                 // Only consider words with 3+ letters
                 if (word.length >= 3) {
+                    // Check if the full word is valid
+                    let foundValidWord = false;
+
                     // Left-to-right
                     if (this.isValidWord(word)) {
                         foundWords.push({
@@ -139,6 +175,7 @@ class WordValidator {
                             tileIndices: indices,
                             owner: currentPlayer // Will be updated later based on previous state
                         });
+                        foundValidWord = true;
                     }
 
                     // Right-to-left (reverse)
@@ -150,6 +187,20 @@ class WordValidator {
                             tileIndices: [...indices].reverse(),
                             owner: currentPlayer // Will be updated later based on previous state
                         });
+                        foundValidWord = true;
+                    }
+
+                    // If the full sequence isn't valid, check for all valid sub-words
+                    // This preserves words like "EGG" when "EGGZ" is invalid
+                    if (!foundValidWord) {
+                        // Check forward direction sub-words
+                        const forwardSubWords = this.findValidSubWords(word, indices, "horizontal", currentPlayer);
+                        foundWords.push(...forwardSubWords);
+
+                        // Check reverse direction sub-words
+                        const reversedIndices = [...indices].reverse();
+                        const reverseSubWords = this.findValidSubWords(reversedWord, reversedIndices, "horizontal", currentPlayer);
+                        foundWords.push(...reverseSubWords);
                     }
                 }
             }
@@ -181,6 +232,9 @@ class WordValidator {
 
                 // Only consider words with 3+ letters
                 if (word.length >= 3) {
+                    // Check if the full word is valid
+                    let foundValidWord = false;
+
                     // Top-to-bottom
                     if (this.isValidWord(word)) {
                         foundWords.push({
@@ -189,6 +243,7 @@ class WordValidator {
                             tileIndices: indices,
                             owner: currentPlayer // Will be updated later based on previous state
                         });
+                        foundValidWord = true;
                     }
 
                     // Bottom-to-top (reverse)
@@ -200,6 +255,20 @@ class WordValidator {
                             tileIndices: [...indices].reverse(),
                             owner: currentPlayer // Will be updated later based on previous state
                         });
+                        foundValidWord = true;
+                    }
+
+                    // If the full sequence isn't valid, check for all valid sub-words
+                    // This preserves words like "EGG" when "EGGZ" is invalid
+                    if (!foundValidWord) {
+                        // Check forward direction sub-words
+                        const forwardSubWords = this.findValidSubWords(word, indices, "vertical", currentPlayer);
+                        foundWords.push(...forwardSubWords);
+
+                        // Check reverse direction sub-words
+                        const reversedIndices = [...indices].reverse();
+                        const reverseSubWords = this.findValidSubWords(reversedWord, reversedIndices, "vertical", currentPlayer);
+                        foundWords.push(...reverseSubWords);
                     }
                 }
             }
@@ -228,10 +297,18 @@ class WordValidator {
             // Create a key to identify this word by its tile positions
             const key = this.getWordKey(word);
 
-            // Look for a matching word in previous validation
-            const previousWord = this.previousWords.find(prev => {
-                const prevKey = this.getWordKey(prev);
-                // Check if this word is a subset or exact match of indices
+            // Look for an EXACT match first (same tiles, same word)
+            let previousWord = this.previousWords.find(prev => {
+                return this.arraysEqual(prev.tileIndices, word.tileIndices);
+            });
+
+            // If exact match found, preserve ownership
+            if (previousWord) {
+                return { ...word, owner: previousWord.owner };
+            }
+
+            // No exact match - look for a related word (subset/superset)
+            previousWord = this.previousWords.find(prev => {
                 return this.isWordRelated(prev.tileIndices, word.tileIndices);
             });
 
@@ -241,11 +318,8 @@ class WordValidator {
             } else if (word.tileIndices.length > previousWord.tileIndices.length) {
                 // Word was extended - current player now owns it
                 return { ...word, owner: currentPlayer };
-            } else if (this.arraysEqual(word.tileIndices, previousWord.tileIndices)) {
-                // Same word, unchanged - keep previous owner
-                return { ...word, owner: previousWord.owner };
             } else {
-                // New word (different indices) - current player owns it
+                // Word was reduced (subset of previous) - current player owns it
                 return { ...word, owner: currentPlayer };
             }
         });
