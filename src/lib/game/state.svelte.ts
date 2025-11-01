@@ -370,7 +370,8 @@ function createGameState() {
         // Called when the board settles after gravity
         onBoardSettled() {
             // Validate the board and find all valid words
-            wordValidator.validateBoard(boardSlots, GRID_COLS, GRID_ROWS);
+            // Pass the player who just made a move (before turn switch)
+            wordValidator.validateBoard(boardSlots, currentPlayerTurn.value, GRID_COLS, GRID_ROWS);
 
             // If there's a pending turn switch, execute it now
             if (pendingTurnSwitch.value) {

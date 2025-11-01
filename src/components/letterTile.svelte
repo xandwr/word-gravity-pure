@@ -21,6 +21,8 @@
                 return "bg-orange-300 text-orange-900";
             case "intersection":
                 return "bg-purple-300 text-purple-900";
+            case "opponent-owned":
+                return "bg-red-300 text-red-900";
             default:
                 return "bg-orange-200 text-black";
         }

@@ -16,9 +16,10 @@
     let { index, tile = null, slotType }: Props = $props();
 
     // Get highlight for board tiles - needs to be reactive
+    // Always show highlights from the player's perspective
     const highlight = $derived<TileHighlight>(
         slotType === "board" && tile
-            ? gameState.validator.getHighlight(index)
+            ? gameState.validator.getHighlight(index, "player")
             : "none"
     );
 
