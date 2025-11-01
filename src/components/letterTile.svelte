@@ -96,6 +96,38 @@
         if (isDragging) return "scale-110 opacity-75 shadow-2xl";
         return "";
     });
+
+    // Multiplier color mapping
+    const getMultiplierColor = (mult: number): string => {
+        if (mult <= 1) return "#ffffff";
+        if (mult === 2) return "#b4e1ff";
+        if (mult === 3) return "#7ef0a0";
+        if (mult === 4) return "#f9f871";
+        if (mult === 5) return "#ffb347";
+        if (mult === 6) return "#ff7033";
+        if (mult === 7) return "#ff3333";
+        if (mult === 8) return "#a020f0";
+        return "#a020f0"; // 9+ base color (violet)
+    };
+
+    // Compute letter color and glow
+    const letterColor = $derived(() => getMultiplierColor(tile.multiplier));
+
+    // Add glow for high multipliers (6+)
+    const letterGlow = $derived(() => {
+        if (tile.multiplier >= 6 && tile.multiplier <= 8) {
+            const color = getMultiplierColor(tile.multiplier);
+            return `drop-shadow(0 0 4px ${color}) drop-shadow(0 0 8px ${color})`;
+        }
+        if (tile.multiplier >= 9) {
+            // White glow overlay for transcendent (9+)
+            return `drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #ffffff) drop-shadow(0 0 18px #a020f0)`;
+        }
+        return "none";
+    });
+
+    // Pulse animation for 10+ multipliers
+    const shouldPulse = $derived(() => tile.multiplier >= 10);
 </script>
 
 <div
@@ -103,7 +135,14 @@
     class="aspect-square rounded-xl border-2 sm:border-4 {bgColor()} {animationClass()} flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4 transition-transform duration-150"
     style="opacity: {opacity};"
 >
-    <h class="text-xl sm:text-2xl md:text-4xl font-bold">{tile.letter}</h>
+    <h
+        class="text-xl sm:text-2xl md:text-4xl font-bold letter-stroke {shouldPulse()
+            ? 'mult-pulse'
+            : ''}"
+        style="color: {letterColor()}; filter: {letterGlow()};"
+    >
+        {tile.letter}
+    </h>
     <span
         class="flex flex-row gap-0.5 sm:gap-1 items-center text-xs sm:text-sm md:text-md"
     >
@@ -112,3 +151,29 @@
         <h class="font-semibold">{tile.multiplier}</h>
     </span>
 </div>
+
+<style>
+    .letter-stroke {
+        -webkit-text-stroke: 4px black;
+        stroke: 4px black;
+        paint-order: stroke fill;
+    }
+
+    @keyframes multPulse {
+        0%,
+        100% {
+            color: #a020f0;
+            filter: drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #ffffff)
+                drop-shadow(0 0 18px #a020f0);
+        }
+        50% {
+            color: #ffffff;
+            filter: drop-shadow(0 0 8px #ffffff) drop-shadow(0 0 16px #ffffff)
+                drop-shadow(0 0 24px #a020f0);
+        }
+    }
+
+    .mult-pulse {
+        animation: multPulse 2s ease-in-out infinite;
+    }
+</style>
