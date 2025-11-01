@@ -89,6 +89,14 @@ function createGameState() {
             }
         },
 
+        playerDrawTile(): TileData | null {
+            return null;
+        },
+
+        opponentDrawTile(): TileData | null {
+            return null;
+        },
+
         updatePlayerScore(score: number) {
             playerScore.value = score;
         },
