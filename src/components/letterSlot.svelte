@@ -16,12 +16,10 @@
     let { index, tile = null, slotType }: Props = $props();
 
     // Get highlight for board tiles
-    const highlight = $derived<TileHighlight>(() => {
-        if (slotType === "board" && tile) {
-            return gameState.validator.getHighlight(index);
-        }
-        return "none";
-    });
+    const highlight: TileHighlight =
+        slotType === "board" && tile
+            ? gameState.validator.getHighlight(index)
+            : "none";
 
     let isDragOver = $state(false);
 
@@ -183,6 +181,6 @@
     ontouchend={handleTouchEnd}
 >
     {#if tile}
-        <LetterTile {tile} highlight={highlight()} />
+        <LetterTile {tile} {highlight} />
     {/if}
 </div>
