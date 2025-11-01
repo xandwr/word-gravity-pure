@@ -9,6 +9,8 @@ export type TileData = {
     baseScore: number;
     multiplier: number;
     claimedBy: Player | null; // Which player has claimed this tile (null if unclaimed)
+    fadingOut: boolean; // Whether this tile is in the process of fading out
+    fadeStartTime?: number; // Timestamp when fade started
 };
 
 // This is a container that can either hold nothing or a TileData object

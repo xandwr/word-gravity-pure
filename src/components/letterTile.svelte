@@ -15,6 +15,11 @@
 
     // Determine background color based on claim status and highlight
     const bgColor = $derived(() => {
+        // Fading out tiles
+        if (tile.fadingOut) {
+            return "bg-green-400 text-green-950 border-green-600";
+        }
+
         // Claimed tiles get a distinct locked appearance
         if (tile.claimedBy === "player") {
             return "bg-green-400 text-green-950 border-green-600";
@@ -39,11 +44,18 @@
 
     // Add pulsing animation during claiming wave
     const animationClass = $derived(isClaimWave ? "animate-pulse scale-110" : "");
+
+    // Calculate opacity based on fade state
+    const opacity = $derived(() => {
+        if (!tile.fadingOut) return 1;
+        return 0; // Fade to 0 when fadingOut is true
+    });
 </script>
 
 <div
     id="letterTile"
-    class="aspect-square rounded-xl border-4 {bgColor()} {animationClass} flex flex-col items-center justify-center w-10 h-10 p-8 transition-all duration-200"
+    class="aspect-square rounded-xl border-4 {bgColor()} {animationClass} flex flex-col items-center justify-center w-10 h-10 p-8 transition-all duration-300"
+    style="opacity: {opacity()};"
 >
     <h class="text-4xl font-bold">{tile.letter}</h>
     <span class="flex flex-row gap-1 items-center">

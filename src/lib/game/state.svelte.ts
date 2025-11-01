@@ -15,7 +15,8 @@ export function createTile(letter: string, baseScore: number): TileData {
         letter,
         baseScore,
         multiplier: 1,
-        claimedBy: null
+        claimedBy: null,
+        fadingOut: false
     };
 }
 
@@ -455,33 +456,54 @@ function createGameState() {
 
         /**
          * Animate claiming waves with sequential delays
+         * Scores and fades out tiles immediately as each wave is processed
          */
         async animateClaimingWaves(waves: number[][]) {
             const WAVE_DELAY = 150; // ms between waves
+            const FADE_DURATION = 300; // ms for fade out animation
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];
 
-                // Claim all tiles in this wave
+                // Process each tile in this wave
                 for (const index of wave) {
                     const tile = boardSlots[index].heldLetterTile;
                     if (tile && tile.claimedBy === null) {
+                        // Claim and mark for fading
                         tile.claimedBy = "player";
+                        tile.fadingOut = true;
+                        tile.fadeStartTime = Date.now();
+
+                        // Score immediately
+                        const tileScore = tile.baseScore * tile.multiplier;
+                        playerScore.value += tileScore;
                     }
                 }
 
-                // Store current wave for visual feedback
+                // Store current wave for visual feedback (pulsing effect)
                 claimingWaves[0] = wave;
 
                 // Wait before next wave
-                if (i < waves.length - 1) {
-                    await new Promise(resolve => setTimeout(resolve, WAVE_DELAY));
+                await new Promise(resolve => setTimeout(resolve, WAVE_DELAY));
+            }
+
+            // Clear waves
+            claimingWaves.length = 0;
+
+            // Wait for all fades to complete, then clean up tiles
+            await new Promise(resolve => setTimeout(resolve, FADE_DURATION));
+
+            // Delete all faded tiles (do not return to bag)
+            for (let i = 0; i < boardSlots.length; i++) {
+                const tile = boardSlots[i].heldLetterTile;
+                if (tile && tile.fadingOut) {
+                    boardSlots[i].heldLetterTile = null;
                 }
             }
 
-            // Clear waves and end claiming
-            await new Promise(resolve => setTimeout(resolve, WAVE_DELAY));
-            claimingWaves.length = 0;
+            // Mark board as unsettled to trigger gravity
+            isBoardSettled.value = false;
+
             isClaimingInProgress.value = false;
         },
 
