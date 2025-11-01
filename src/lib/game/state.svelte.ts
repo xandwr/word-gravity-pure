@@ -14,7 +14,8 @@ export function createTile(letter: string, baseScore: number): TileData {
         id: nanoid(),
         letter,
         baseScore,
-        multiplier: 1
+        multiplier: 1,
+        claimedBy: null
     };
 }
 
@@ -38,6 +39,10 @@ function createGameState() {
     // Board settlement tracking
     const isBoardSettled = $state({ value: true });
     const pendingTurnSwitch = $state({ value: false });
+
+    // Claiming animation state
+    const isClaimingInProgress = $state({ value: false });
+    const claimingWaves = $state<number[][]>([]); // Array of arrays, each inner array is a wave of tile indices
 
     // Player hand - 8 slots
     const playerHandSlots = $state<TileContainer[]>(
@@ -80,6 +85,14 @@ function createGameState() {
 
         get boardSettled() {
             return isBoardSettled.value;
+        },
+
+        get isClaimingActive() {
+            return isClaimingInProgress.value;
+        },
+
+        get currentClaimingWaves() {
+            return claimingWaves;
         },
 
         // Access to word validator
@@ -330,6 +343,146 @@ function createGameState() {
 
             // End opponent turn (will wait for board to settle)
             this.switchTurn();
+        },
+
+        // Tile claiming system
+        /**
+         * Attempt to claim tiles starting from a clicked board position
+         * Uses flood fill to find all contiguous tiles that are part of player-owned words
+         */
+        claimTilesFrom(boardIndex: number) {
+            // Can't claim during settling, claiming, or if not player's turn
+            if (!isBoardSettled.value || isClaimingInProgress.value || currentPlayerTurn.value !== "player") {
+                return;
+            }
+
+            const tile = this.getBoardTile(boardIndex);
+            if (!tile || tile.claimedBy !== null) {
+                return; // No tile or already claimed
+            }
+
+            // Check if this tile is part of a player-owned word
+            const playerOwnedIndices = this.getPlayerOwnedTileIndices();
+            if (!playerOwnedIndices.has(boardIndex)) {
+                return; // Not part of a player-owned word
+            }
+
+            // Perform BFS flood fill to find all contiguous player-owned unclaimed tiles
+            const waves = this.floodFillClaim(boardIndex, playerOwnedIndices);
+
+            if (waves.length === 0) {
+                return; // Nothing to claim
+            }
+
+            // Start the claiming animation
+            isClaimingInProgress.value = true;
+            this.animateClaimingWaves(waves);
+        },
+
+        /**
+         * Get all board indices that contain tiles part of player-owned words
+         */
+        getPlayerOwnedTileIndices(): Set<number> {
+            const indices = new Set<number>();
+            const validWords = wordValidator.words;
+
+            for (const word of validWords) {
+                if (word.owner === "player") {
+                    for (const index of word.tileIndices) {
+                        indices.add(index);
+                    }
+                }
+            }
+
+            return indices;
+        },
+
+        /**
+         * BFS flood fill to find contiguous player-owned unclaimed tiles
+         * Returns array of waves (each wave is an array of tile indices at the same distance)
+         */
+        floodFillClaim(startIndex: number, playerOwnedIndices: Set<number>): number[][] {
+            const visited = new Set<number>();
+            const waves: number[][] = [];
+            let currentWave = [startIndex];
+            visited.add(startIndex);
+
+            while (currentWave.length > 0) {
+                const nextWave: number[] = [];
+                waves.push([...currentWave]);
+
+                for (const index of currentWave) {
+                    // Get adjacent indices (up, down, left, right)
+                    const adjacent = this.getAdjacentIndices(index);
+
+                    for (const adjIndex of adjacent) {
+                        if (visited.has(adjIndex)) continue;
+
+                        const tile = this.getBoardTile(adjIndex);
+                        // Include if: has tile, unclaimed, and part of player-owned word
+                        if (tile && tile.claimedBy === null && playerOwnedIndices.has(adjIndex)) {
+                            visited.add(adjIndex);
+                            nextWave.push(adjIndex);
+                        }
+                    }
+                }
+
+                currentWave = nextWave;
+            }
+
+            return waves;
+        },
+
+        /**
+         * Get adjacent board indices (up, down, left, right)
+         */
+        getAdjacentIndices(index: number): number[] {
+            const row = Math.floor(index / GRID_COLS);
+            const col = index % GRID_COLS;
+            const adjacent: number[] = [];
+
+            // Up
+            if (row > 0) adjacent.push((row - 1) * GRID_COLS + col);
+            // Down
+            if (row < GRID_ROWS - 1) adjacent.push((row + 1) * GRID_COLS + col);
+            // Left
+            if (col > 0) adjacent.push(row * GRID_COLS + (col - 1));
+            // Right
+            if (col < GRID_COLS - 1) adjacent.push(row * GRID_COLS + (col + 1));
+
+            return adjacent;
+        },
+
+        /**
+         * Animate claiming waves with sequential delays
+         */
+        async animateClaimingWaves(waves: number[][]) {
+            const WAVE_DELAY = 150; // ms between waves
+
+            for (let i = 0; i < waves.length; i++) {
+                const wave = waves[i];
+
+                // Claim all tiles in this wave
+                for (const index of wave) {
+                    const tile = boardSlots[index].heldLetterTile;
+                    if (tile && tile.claimedBy === null) {
+                        tile.claimedBy = "player";
+                    }
+                }
+
+                // Store current wave for visual feedback
+                claimingWaves[0] = wave;
+
+                // Wait before next wave
+                if (i < waves.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, WAVE_DELAY));
+                }
+            }
+
+            // Clear waves and end claiming
+            await new Promise(resolve => setTimeout(resolve, WAVE_DELAY));
+            claimingWaves.length = 0;
+            isClaimingInProgress.value = false;
         },
 
         // Gravity system - moves tiles down one cell at a time

@@ -3,12 +3,13 @@
 */
 
 // Represents a letter tile instance
-export type TileData = Readonly<{
+export type TileData = {
     id: string;
     letter: string;
     baseScore: number;
     multiplier: number;
-}>;
+    claimedBy: Player | null; // Which player has claimed this tile (null if unclaimed)
+};
 
 // This is a container that can either hold nothing or a TileData object
 export type TileContainer = {

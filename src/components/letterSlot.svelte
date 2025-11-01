@@ -20,13 +20,22 @@
     const highlight = $derived<TileHighlight>(
         slotType === "board" && tile
             ? gameState.validator.getHighlight(index, "player")
-            : "none"
+            : "none",
     );
 
     let isDragOver = $state(false);
 
-    // Block interaction when board is settling
-    const canInteract = $derived(gameState.boardSettled);
+    // Block interaction when board is settling or claiming is in progress
+    const canInteract = $derived(
+        gameState.boardSettled && !gameState.isClaimingActive,
+    );
+
+    // Check if this tile is in the current claiming wave
+    const isInClaimWave = $derived(() => {
+        if (!gameState.isClaimingActive || slotType !== "board") return false;
+        const currentWave = gameState.currentClaimingWaves[0];
+        return currentWave?.includes(index) ?? false;
+    });
 
     function handleDragStart(e: DragEvent) {
         if (!tile || !canInteract) return;
@@ -97,6 +106,26 @@
     function handleDragEnd() {
         isDragOver = false;
         gameState.endDrag();
+    }
+
+    function handleClick() {
+        // Handle claiming on board tiles during player's turn
+        if (slotType === "board" && tile && canInteract) {
+            gameState.claimTilesFrom(index);
+        }
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+        // Handle keyboard activation (Enter or Space) for claiming
+        if (
+            (e.key === "Enter" || e.key === " ") &&
+            slotType === "board" &&
+            tile &&
+            canInteract
+        ) {
+            e.preventDefault(); // Prevent scrolling on Space
+            gameState.claimTilesFrom(index);
+        }
     }
 
     function handleTouchEnd(e: TouchEvent) {
@@ -186,8 +215,10 @@
     ondragend={handleDragEnd}
     ontouchstart={handleTouchStart}
     ontouchend={handleTouchEnd}
+    onclick={handleClick}
+    onkeydown={handleKeyDown}
 >
     {#if tile}
-        <LetterTile {tile} {highlight} />
+        <LetterTile {tile} {highlight} isClaimWave={isInClaimWave()} />
     {/if}
 </div>
