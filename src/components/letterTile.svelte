@@ -81,6 +81,8 @@
                 return "bg-orange-300 text-orange-900 border-orange-400";
             case "intersection":
                 return "bg-purple-300 text-purple-900 border-purple-400";
+            case "both-players":
+                return "bg-pink-500 text-pink-950 border-pink-600";
             case "opponent-owned":
                 return "bg-red-300 text-red-900 border-red-400";
             default:

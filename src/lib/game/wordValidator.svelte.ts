@@ -19,7 +19,7 @@ export type ValidWord = {
     owner: Player; // Who owns this word (last to extend/create it)
 };
 
-export type TileHighlight = "none" | "horizontal" | "vertical" | "intersection" | "opponent-owned";
+export type TileHighlight = "none" | "horizontal" | "vertical" | "intersection" | "opponent-owned" | "both-players";
 
 class WordValidator {
     private dictionary: Set<string> = $state(new Set());
@@ -394,7 +394,28 @@ class WordValidator {
      */
     getHighlightsForPlayer(player: Player, board: Array<{ heldLetterTile: TileData | null }>): Map<number, TileHighlight> {
         const highlights = new Map<number, TileHighlight>();
+        // Track which tiles are owned by player vs opponent
+        const playerOwned = new Set<number>();
+        const opponentOwned = new Set<number>();
 
+        // First pass: collect ownership information for each tile
+        for (const validWord of this.validWords) {
+            for (const index of validWord.tileIndices) {
+                // Skip tiles that are already claimed by anyone
+                const tile = board[index]?.heldLetterTile;
+                if (tile?.claimedBy !== null) {
+                    continue;
+                }
+
+                if (validWord.owner === player) {
+                    playerOwned.add(index);
+                } else {
+                    opponentOwned.add(index);
+                }
+            }
+        }
+
+        // Second pass: determine highlights based on ownership
         for (const validWord of this.validWords) {
             for (const index of validWord.tileIndices) {
                 // Skip tiles that are already claimed by anyone
@@ -404,25 +425,25 @@ class WordValidator {
                 }
 
                 const current = highlights.get(index);
+                const isBothPlayers = playerOwned.has(index) && opponentOwned.has(index);
 
-                // If this word is owned by opponent, mark tile as opponent-owned
-                if (validWord.owner !== player) {
+                // If tile is valid for both players, mark it specially
+                if (isBothPlayers) {
+                    highlights.set(index, "both-players");
+                }
+                // If this word is owned by opponent only
+                else if (validWord.owner !== player) {
                     if (!current || current === "none") {
                         highlights.set(index, "opponent-owned");
-                    } else if (current !== "opponent-owned") {
-                        // Keep opponent-owned if already set
-                        highlights.set(index, "opponent-owned");
                     }
-                } else {
-                    // Word is owned by the player - show direction colors
+                }
+                // Word is owned by the player only - show direction colors
+                else {
                     if (!current || current === "none") {
                         // First time seeing this tile
                         highlights.set(index, validWord.direction);
-                    } else if (current === "opponent-owned") {
-                        // Keep opponent-owned (takes precedence)
-                        highlights.set(index, "opponent-owned");
                     } else if (current !== validWord.direction && current !== "intersection") {
-                        // Tile is part of both horizontal and vertical words
+                        // Tile is part of both horizontal and vertical words (player owned)
                         highlights.set(index, "intersection");
                     }
                     // If current === validWord.direction, keep it as is

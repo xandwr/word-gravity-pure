@@ -19,7 +19,7 @@ export type TileContainer = {
 };
 
 // Highlight types for validated tiles
-export type TileHighlight = "none" | "horizontal" | "vertical" | "intersection" | "opponent-owned";
+export type TileHighlight = "none" | "horizontal" | "vertical" | "intersection" | "opponent-owned" | "both-players";
 
 // Player type
 export type Player = "player" | "opponent";
