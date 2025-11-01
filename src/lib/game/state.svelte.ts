@@ -261,6 +261,13 @@ function createGameState() {
             if (tile && this.getBoardTile(boardIndex) === null) {
                 this.setBoardSlot(boardIndex, tile);
                 this.setPlayerHandSlot(handIndex, null);
+
+                // Automatically draw a replacement tile from the bag
+                const newTile = this.playerDrawTile();
+                if (newTile) {
+                    this.setPlayerHandSlot(handIndex, newTile);
+                }
+
                 // Mark board as unsettled when placing a tile
                 isBoardSettled.value = false;
                 return true;
@@ -337,6 +344,13 @@ function createGameState() {
                 if (tile) {
                     this.setBoardSlot(boardIndex, tile);
                     this.setOpponentHandSlot(handIndex, null);
+
+                    // Automatically draw a replacement tile from the bag
+                    const newTile = this.opponentDrawTile();
+                    if (newTile) {
+                        this.setOpponentHandSlot(handIndex, newTile);
+                    }
+
                     // Mark board as unsettled when placing a tile
                     isBoardSettled.value = false;
                 }
