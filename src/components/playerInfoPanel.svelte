@@ -44,7 +44,9 @@
     </span>
 
     <span class="flex gap-1 text-xs sm:text-sm md:text-base">
-        <h2 class="font-semibold">Score:</h2>
-        <h2 class="font-bold text-nowrap">{score}</h2>
+        <h2 class="font-semibold text-nowrap text-lg sm:text-xl md:text-2xl">Score:</h2>
+        <h2 class="font-bold text-nowrap text-lg sm:text-xl md:text-2xl">
+            {score}
+        </h2>
     </span>
 </div>
