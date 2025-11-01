@@ -3,7 +3,7 @@
 </script>
 
 <div class="flex gap-x-1">
-    <div class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit">
+    <div id="handSlots" class="grid grid-cols-4 grid-rows-2 gap-1 w-fit h-fit">
         {#each Array(8) as _, index}
             <LetterSlot {index} />
         {/each}
