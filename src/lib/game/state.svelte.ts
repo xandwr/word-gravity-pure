@@ -31,6 +31,9 @@ function createGameState() {
         }))
     );
 
+    // Gravity interval ID for cleanup
+    let gravityIntervalId: number | null = null;
+
     // Player hand - 8 slots
     const playerHandSlots = $state<TileContainer[]>(
         Array.from({ length: HAND_SIZE }, () => ({
@@ -296,6 +299,52 @@ function createGameState() {
 
             // End opponent turn
             this.switchTurn();
+        },
+
+        // Gravity system - moves tiles down one cell at a time
+        applyGravity() {
+            let moved = false;
+
+            // Start from the second-to-last row and work upwards
+            // (bottom row can't fall further)
+            for (let row = GRID_ROWS - 2; row >= 0; row--) {
+                for (let col = 0; col < GRID_COLS; col++) {
+                    const currentIndex = row * GRID_COLS + col;
+                    const belowIndex = (row + 1) * GRID_COLS + col; // i + GRID_COLS
+
+                    const currentTile = boardSlots[currentIndex].heldLetterTile;
+                    const belowTile = boardSlots[belowIndex].heldLetterTile;
+
+                    // If current slot has a tile and slot below is empty
+                    if (currentTile !== null && belowTile === null) {
+                        // Move tile down one slot
+                        boardSlots[belowIndex].heldLetterTile = currentTile;
+                        boardSlots[currentIndex].heldLetterTile = null;
+                        moved = true;
+                    }
+                }
+            }
+
+            return moved;
+        },
+
+        // Start the gravity tick system
+        startGravity(intervalMs = 500) {
+            if (gravityIntervalId !== null) {
+                return; // Already running
+            }
+
+            gravityIntervalId = window.setInterval(() => {
+                this.applyGravity();
+            }, intervalMs);
+        },
+
+        // Stop the gravity tick system
+        stopGravity() {
+            if (gravityIntervalId !== null) {
+                clearInterval(gravityIntervalId);
+                gravityIntervalId = null;
+            }
         }
     };
 }

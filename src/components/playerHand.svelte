@@ -24,6 +24,14 @@
                 gameState.setOpponentHandSlot(index, tile);
             });
         }
+
+        // Start gravity system (300ms tick interval)
+        gameState.startGravity(300);
+
+        // Cleanup function to stop gravity when component unmounts
+        return () => {
+            gameState.stopGravity();
+        };
     });
 
     let isSwapHover = $state(false);
