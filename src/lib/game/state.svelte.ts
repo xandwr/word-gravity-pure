@@ -4,6 +4,8 @@
 
 import { nanoid } from "nanoid";
 import type { TileData, TileContainer } from "./types";
+import { playerBag } from "./playerLetterBag.svelte";
+import { opponentBag } from "./opponentLetterBag.svelte";
 
 export function createTile(letter: string, baseScore: number): TileData {
     return {
@@ -49,6 +51,16 @@ function createGameState() {
         // Readonly access to hand slots
         get hand() {
             return handSlots;
+        },
+
+        // Player bag
+        get playerBag() {
+            return playerBag;
+        },
+
+        // Opponent's bag
+        get opponentBag() {
+            return opponentBag;
         },
 
         // Readonly access to scores
