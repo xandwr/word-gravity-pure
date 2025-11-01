@@ -2,7 +2,7 @@
     $lib/game/wordValidator.svelte.ts
 
     Word validation system that:
-    - Loads dictionary from static/words_alpha.txt
+    - Loads dictionary from static/ (currently included are words_alpha and 2of12inf.txt)
     - Finds all valid words on the board (horizontal/vertical, both directions)
     - Tracks which tiles belong to which valid words
     - Provides highlighting information for tiles
@@ -49,7 +49,7 @@ class WordValidator {
 
     private async loadDictionary() {
         try {
-            const response = await fetch("/words_alpha.txt");
+            const response = await fetch("/2of12inf.txt");
             const text = await response.text();
 
             // Split by newlines and normalize to uppercase

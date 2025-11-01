@@ -129,8 +129,8 @@
         </div>
     </div>
 
-    <div class="text-sm sm:text-base md:text-xl p-1 font-bold flex gap-1 justify-center">
+    <div class="text-base sm:text-base md:text-xl p-1 flex gap-1 justify-center">
         <h2>Letters Remaining:</h2>
-        <h2>{gameState.playerBag.length}</h2>
+        <h2 class="font-semibold">{gameState.playerBag.length}</h2>
     </div>
 </div>

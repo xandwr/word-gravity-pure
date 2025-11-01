@@ -26,14 +26,14 @@
             <h1 class="font-bold uppercase">{gameState.currentPlayerTurn}</h1>
         </div>
 
-        <div class="flex justify-center px-2">
+        <div class="flex justify-center px-2 py-0.5 bg-gray-400/40 border-y-4 border-black/20">
             <div class="flex flex-col sm:flex-row justify-center sm:justify-between gap-2 sm:gap-4 w-full max-w-md">
                 <PlayerInfoPanel player="player" />
                 <PlayerInfoPanel player="opponent" />
             </div>
         </div>
 
-        <div class="w-full h-full p-2 sm:p-3 md:p-4 flex justify-center">
+        <div class="w-full h-full p-2 sm:p-3 md:p-4 flex justify-center bg-gray-500/10">
             <PlayerHand />
         </div>
     </div>
