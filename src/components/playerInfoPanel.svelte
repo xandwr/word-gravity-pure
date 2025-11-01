@@ -12,21 +12,25 @@
     let { player }: Props = $props();
 
     // Compute number of letters currently in hand
-    let lettersInHand = $derived(player === "player"
-        ? gameState.playerHandSlots.filter(slot => slot.heldLetterTile !== null).length
-        : gameState.opponentHandSlots.filter(slot => slot.heldLetterTile !== null).length);
+    let lettersInHand = $derived(
+        player === "player"
+            ? gameState.playerHandSlots.filter(
+                  (slot) => slot.heldLetterTile !== null,
+              ).length
+            : gameState.opponentHandSlots.filter(
+                  (slot) => slot.heldLetterTile !== null,
+              ).length,
+    );
 
-    let score = $derived(player === "player"
-        ? gameState.playerScore
-        : gameState.opponentScore);
+    let score = $derived(
+        player === "player" ? gameState.playerScore : gameState.opponentScore,
+    );
 
     let displayName = $derived(player === "player" ? "You" : "Opponent");
     let bgColor = $derived(player === "player" ? "bg-green-400" : "bg-red-400");
 </script>
 
-<div
-    class="border-4 px-8 py-2 rounded-xl flex flex-col items-center {bgColor}"
->
+<div class="border-4 px-8 py-2 rounded-xl flex flex-col items-center {bgColor}">
     <h1 class="font-bold text-xl">{displayName}</h1>
 
     <span class="flex gap-1">
