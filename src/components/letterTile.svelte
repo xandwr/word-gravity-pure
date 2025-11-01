@@ -13,6 +13,46 @@
 
     let { tile, highlight = "none", isClaimWave = false }: Props = $props();
 
+    // State for animated opacity
+    let opacity = $state(1);
+
+    // Effect to handle fade animation
+    $effect(() => {
+        if (!tile.fadingOut || !tile.fadeStartTime) {
+            opacity = 1;
+            return;
+        }
+
+        const FADE_DELAY = 400; // ms to wait before starting fade
+        const FADE_DURATION = 300; // ms for fade animation
+
+        // Animation loop to update opacity
+        let animationFrameId: number;
+
+        const updateOpacity = () => {
+            const elapsed = Date.now() - tile.fadeStartTime!;
+
+            if (elapsed < FADE_DELAY) {
+                opacity = 1; // Stay visible during delay
+                animationFrameId = requestAnimationFrame(updateOpacity);
+            } else if (elapsed < FADE_DELAY + FADE_DURATION) {
+                // Lerp from 1 to 0 during fade duration
+                const fadeProgress = (elapsed - FADE_DELAY) / FADE_DURATION;
+                opacity = 1 - fadeProgress;
+                animationFrameId = requestAnimationFrame(updateOpacity);
+            } else {
+                opacity = 0; // Fade complete
+            }
+        };
+
+        animationFrameId = requestAnimationFrame(updateOpacity);
+
+        // Cleanup
+        return () => {
+            cancelAnimationFrame(animationFrameId);
+        };
+    });
+
     // Determine background color based on claim status and highlight
     const bgColor = $derived(() => {
         // Fading out tiles
@@ -44,18 +84,12 @@
 
     // Add pulsing animation during claiming wave
     const animationClass = $derived(isClaimWave ? "animate-pulse scale-110" : "");
-
-    // Calculate opacity based on fade state
-    const opacity = $derived(() => {
-        if (!tile.fadingOut) return 1;
-        return 0; // Fade to 0 when fadingOut is true
-    });
 </script>
 
 <div
     id="letterTile"
-    class="aspect-square rounded-xl border-4 {bgColor()} {animationClass} flex flex-col items-center justify-center w-10 h-10 p-8 transition-all duration-300"
-    style="opacity: {opacity()};"
+    class="aspect-square rounded-xl border-4 {bgColor()} {animationClass} flex flex-col items-center justify-center w-10 h-10 p-8"
+    style="opacity: {opacity};"
 >
     <h class="text-4xl font-bold">{tile.letter}</h>
     <span class="flex flex-row gap-1 items-center">

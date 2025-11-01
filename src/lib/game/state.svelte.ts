@@ -460,6 +460,7 @@ function createGameState() {
          */
         async animateClaimingWaves(waves: number[][]) {
             const WAVE_DELAY = 150; // ms between waves
+            const FADE_DELAY = 400; // ms to wait before starting fade (matches letterTile)
             const FADE_DURATION = 300; // ms for fade out animation
 
             for (let i = 0; i < waves.length; i++) {
@@ -490,8 +491,8 @@ function createGameState() {
             // Clear waves
             claimingWaves.length = 0;
 
-            // Wait for all fades to complete, then clean up tiles
-            await new Promise(resolve => setTimeout(resolve, FADE_DURATION));
+            // Wait for fade delay + fade duration to complete, then clean up tiles
+            await new Promise(resolve => setTimeout(resolve, FADE_DELAY + FADE_DURATION));
 
             // Delete all faded tiles (do not return to bag)
             for (let i = 0; i < boardSlots.length; i++) {
