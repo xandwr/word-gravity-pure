@@ -4,6 +4,7 @@
 
 <script lang="ts">
     import LetterSlot from "./letterSlot.svelte";
+    import { playerBag } from "$lib/game/playerLetterBag.svelte";
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
 </script>
 
