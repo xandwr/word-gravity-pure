@@ -6,6 +6,7 @@ import { nanoid } from "nanoid";
 import type { TileData, TileContainer } from "./types";
 import { playerBag } from "./playerLetterBag.svelte";
 import { opponentBag } from "./opponentLetterBag.svelte";
+import { drawFromBag } from "./letterBag.svelte";
 
 export function createTile(letter: string, baseScore: number): TileData {
     return {
@@ -90,11 +91,23 @@ function createGameState() {
         },
 
         playerDrawTile(): TileData | null {
-            return null;
+            const tile = drawFromBag(playerBag, 1)[0];
+            return tile;
         },
 
         opponentDrawTile(): TileData | null {
-            return null;
+            const tile = drawFromBag(opponentBag, 1)[0];
+            return tile;
+        },
+
+        playerFreshHand(): TileData[] | null {
+            const hand = drawFromBag(playerBag, 8);
+            return hand;
+        },
+
+        opponentFreshHand(): TileData[] | null {
+            const hand = drawFromBag(opponentBag, 8);
+            return hand;
         },
 
         updatePlayerScore(score: number) {
