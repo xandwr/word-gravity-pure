@@ -15,19 +15,19 @@
         
         <div class="flex justify-center bg-orange-500/50">
             <div class="flex justify-between w-sm">
-                <div class="border-4 px-8 py-2 rounded-xl flex flex-col items-center">
-                    <h1 class="font-bold text-xl underline">You</h1>
+                <div class="border-4 px-8 py-2 rounded-xl flex flex-col items-center bg-green-400">
+                    <h1 class="font-bold text-xl">You</h1>
                     <span class="flex gap-1">
                         <h2 class="font-semibold">Letters:</h2>
-                        <h2 class="font-bold">0 / 0</h2>
+                        <h2 id="playerScoreText" class="font-bold">0 / 0</h2>
                     </span>
                 </div>
 
-                <div class="border-4 px-8 py-2 rounded-xl flex flex-col items-center">
-                    <h1 class="font-bold text-xl underline">World</h1>
+                <div class="border-4 px-8 py-2 rounded-xl flex flex-col items-center bg-red-400">
+                    <h1 class="font-bold text-xl">Opponent</h1>
                     <span class="flex gap-1">
                         <h2 class="font-semibold">Letters:</h2>
-                        <h2 class="font-bold">0 / 0</h2>
+                        <h2 id="opponentScoreText" class="font-bold">0 / 0</h2>
                     </span>
                 </div>
             </div>
