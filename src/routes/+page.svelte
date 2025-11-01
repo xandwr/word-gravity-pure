@@ -79,10 +79,10 @@
                 <PlayerInfoPanel player="player" />
 
                 <div
-                    class="flex items-center gap-1 text-xs sm:text-sm font-bold uppercase whitespace-nowrap"
+                    class="flex items-center gap-1 text-sm uppercase whitespace-nowrap bg-gray-800/20 border-2 border-black/10 p-2 rounded-xl"
                 >
-                    <span>Turn:</span>
-                    <span>{gameState.currentPlayerTurn}</span>
+                    <span class="font-semibold">Turn:</span>
+                    <span class="font-bold">{gameState.currentPlayerTurn}</span>
                 </div>
 
                 <PlayerInfoPanel player="opponent" />
