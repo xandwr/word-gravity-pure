@@ -23,8 +23,8 @@
 
         <div class="flex justify-center bg-orange-500/50">
             <div class="flex justify-between w-sm">
-                <PlayerInfoPanel player="You" />
-                <PlayerInfoPanel player="Opponent" />
+                <PlayerInfoPanel player="player" />
+                <PlayerInfoPanel player="opponent" />
             </div>
         </div>
 
