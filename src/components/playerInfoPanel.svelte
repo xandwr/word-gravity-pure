@@ -30,7 +30,7 @@
     let bgColor = $derived(player === "player" ? "bg-green-400" : "bg-red-400");
 </script>
 
-<div class="border-2 sm:border-4 px-3 sm:px-6 md:px-8 py-1 sm:py-2 rounded-xl flex flex-col items-center {bgColor}">
+<div class="border-2 sm:border-4 px-1 sm:px-6 md:px-8 py-0 sm:py-2 rounded-xl flex flex-col items-center {bgColor}">
     <h1 class="font-bold text-base sm:text-lg md:text-xl">{displayName}</h1>
 
     <span class="flex gap-1 text-xs sm:text-sm md:text-base">

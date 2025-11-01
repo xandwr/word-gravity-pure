@@ -21,7 +21,7 @@
             <WordGrid />
         </div>
 
-        <div class="flex items-center gap-1 text-sm sm:text-base md:text-xl justify-center p-2">
+        <div class="flex items-center gap-1 text-sm sm:text-base md:text-xl justify-center sm:p-4">
             <h1 class="">Current Turn:</h1>
             <h1 class="font-bold uppercase">{gameState.currentPlayerTurn}</h1>
         </div>
