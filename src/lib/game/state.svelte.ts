@@ -344,7 +344,8 @@ function createGameState() {
                 opponentHandSlots,
                 playerOwnedIndices,
                 opponentOwnedIndices,
-                AI_CONFIG.AGGRESSIVENESS
+                AI_CONFIG.AGGRESSIVENESS,
+                AI_CONFIG.DEBUG_LOGGING
             );
 
             if (!bestAction) {
