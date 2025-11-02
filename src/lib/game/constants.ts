@@ -19,6 +19,19 @@ export type PlayerType = 'player' | 'opponent';
 
 // AI Configuration
 export const AI_CONFIG = {
-    // Probability (0-1) that AI will attempt to claim words each turn
-    CLAIM_CHANCE: 0.50
+    // Aggressiveness level (0-1)
+    // 0.0 = Pure offense (maximize own score)
+    // 0.5 = Balanced (mix of scoring and blocking)
+    // 1.0 = Maximum disruption (prioritize ruining player's words)
+    AGGRESSIVENESS: 0.5,
+
+    // Enable AI decision logging to console
+    DEBUG_LOGGING: false
+} as const;
+
+// AI Difficulty Presets
+export const AI_DIFFICULTY = {
+    EASY: { AGGRESSIVENESS: 0.2 },
+    MEDIUM: { AGGRESSIVENESS: 0.5 },
+    HARD: { AGGRESSIVENESS: 0.8 }
 } as const;

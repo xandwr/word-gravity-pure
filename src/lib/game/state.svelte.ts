@@ -9,6 +9,7 @@ import { opponentBag } from "./opponentLetterBag.svelte";
 import { drawFromBag } from "./letterBag.svelte";
 import { wordValidator } from "./wordValidator.svelte";
 import { AI_CONFIG } from "./constants";
+import { findBestAction } from "./aiStrategy.svelte";
 
 export function createTile(letter: string, baseScore: number): TileData {
     return {
@@ -329,65 +330,70 @@ function createGameState() {
             }
         },
 
-        // AI opponent logic
+        // AI opponent logic - Intelligent strategic decision-making
         makeOpponentMove() {
             if (currentPlayerTurn.value !== "opponent") return;
 
-            // First, check if AI should attempt to claim words (configurable chance)
-            const shouldAttemptClaim = Math.random() < AI_CONFIG.CLAIM_CHANCE;
+            // Get player and opponent owned tile indices
+            const playerOwnedIndices = this.getPlayerOwnedTileIndices();
+            const opponentOwnedIndices = this.getOpponentOwnedTileIndices();
 
-            if (shouldAttemptClaim) {
-                const opponentOwnedIndices = this.getOpponentOwnedTileIndices();
+            // Use intelligent AI to find best action
+            const bestAction = findBestAction(
+                boardSlots,
+                opponentHandSlots,
+                playerOwnedIndices,
+                opponentOwnedIndices,
+                AI_CONFIG.AGGRESSIVENESS
+            );
 
-                if (opponentOwnedIndices.size > 0) {
-                    // Convert Set to Array and pick a random tile from opponent-owned words
-                    const ownedTiles = Array.from(opponentOwnedIndices);
-                    const randomTileIndex = ownedTiles[Math.floor(Math.random() * ownedTiles.length)];
-
-                    // Attempt to claim from this tile
-                    this.claimTilesFromOpponent(randomTileIndex);
-
-                    // If claiming started, don't place a tile this turn
-                    // The claiming animation will handle ending the turn via board settling
-                    if (isClaimingInProgress.value) {
-                        return;
-                    }
+            if (!bestAction) {
+                // No valid actions, end turn
+                if (AI_CONFIG.DEBUG_LOGGING) {
+                    console.log("[AI] No valid actions available");
                 }
-            }
-
-            // If no claiming happened, proceed with normal tile placement
-            // Find a non-null tile from opponent's hand
-            let handIndex = -1;
-            for (let i = 0; i < opponentHandSlots.length; i++) {
-                if (opponentHandSlots[i].heldLetterTile !== null) {
-                    handIndex = i;
-                    break;
-                }
-            }
-
-            if (handIndex === -1) {
-                // No tiles in hand, end turn
                 this.switchTurn();
                 return;
             }
 
-            // Pick a random column (0 to GRID_COLS - 1)
-            const randomCol = Math.floor(Math.random() * GRID_COLS);
-            // Place at top row of that column (row 0)
-            const boardIndex = randomCol; // Top row index = column index
+            // Log AI decision
+            if (AI_CONFIG.DEBUG_LOGGING) {
+                console.log(`[AI] Best action: ${bestAction.type} (score: ${bestAction.score.toFixed(1)})`);
+                if (bestAction.type === "place" && bestAction.placement) {
+                    console.log(`[AI] Placement reasoning:`, bestAction.placement.reasoning);
+                } else if (bestAction.type === "claim" && bestAction.claim) {
+                    console.log(`[AI] Claim reasoning:`, bestAction.claim.reasoning);
+                }
+            }
 
-            // Check if the top slot of that column is empty
-            if (this.getBoardTile(boardIndex) === null) {
+            // Execute the chosen action
+            if (bestAction.type === "claim" && bestAction.claim) {
+                // Claim tiles
+                this.claimTilesFromOpponent(bestAction.claim.boardIndex);
+
+                // If claiming started, the animation will handle ending the turn
+                if (isClaimingInProgress.value) {
+                    return;
+                }
+            } else if (bestAction.type === "place" && bestAction.placement) {
+                // Place tile
+                const { handIndex, column } = bestAction.placement;
                 const tile = opponentHandSlots[handIndex].heldLetterTile;
+
                 if (tile) {
-                    this.setBoardSlot(boardIndex, tile);
-                    this.setOpponentHandSlot(handIndex, null);
+                    const boardIndex = column; // Top row index = column index
 
-                    // Don't draw replacement tile yet - tile may be claimed and returned to bag
-                    // Replacement tiles will be drawn at end of turn instead
+                    // Check if the top slot of that column is empty
+                    if (this.getBoardTile(boardIndex) === null) {
+                        this.setBoardSlot(boardIndex, tile);
+                        this.setOpponentHandSlot(handIndex, null);
 
-                    // Mark board as unsettled when placing a tile
-                    isBoardSettled.value = false;
+                        // Don't draw replacement tile yet - tile may be claimed and returned to bag
+                        // Replacement tiles will be drawn at end of turn instead
+
+                        // Mark board as unsettled when placing a tile
+                        isBoardSettled.value = false;
+                    }
                 }
             }
 
