@@ -280,11 +280,8 @@ function createGameState() {
                 this.setBoardSlot(boardIndex, tile);
                 this.setPlayerHandSlot(handIndex, null);
 
-                // Automatically draw a replacement tile from the bag
-                const newTile = this.playerDrawTile();
-                if (newTile) {
-                    this.setPlayerHandSlot(handIndex, newTile);
-                }
+                // Don't draw replacement tile yet - tile may be claimed and returned to bag
+                // Replacement tiles will be drawn at end of turn instead
 
                 // Mark board as unsettled when placing a tile
                 isBoardSettled.value = false;
@@ -386,11 +383,8 @@ function createGameState() {
                     this.setBoardSlot(boardIndex, tile);
                     this.setOpponentHandSlot(handIndex, null);
 
-                    // Automatically draw a replacement tile from the bag
-                    const newTile = this.opponentDrawTile();
-                    if (newTile) {
-                        this.setOpponentHandSlot(handIndex, newTile);
-                    }
+                    // Don't draw replacement tile yet - tile may be claimed and returned to bag
+                    // Replacement tiles will be drawn at end of turn instead
 
                     // Mark board as unsettled when placing a tile
                     isBoardSettled.value = false;
@@ -757,6 +751,9 @@ function createGameState() {
 
         // Called when the board settles after gravity
         onBoardSettled() {
+            // Refill the current player's hand before switching turns
+            this.refillCurrentPlayerHand();
+
             // Validate the board and find all valid words
             // Pass the player who just made a move (before turn switch)
             wordValidator.validateBoard(boardSlots, currentPlayerTurn.value, GRID_COLS, GRID_ROWS);
@@ -768,6 +765,31 @@ function createGameState() {
             if (pendingTurnSwitch.value) {
                 pendingTurnSwitch.value = false;
                 this.executeTurnSwitch();
+            }
+        },
+
+        // Refill the current player's hand with tiles from their bag
+        refillCurrentPlayerHand() {
+            if (currentPlayerTurn.value === "player") {
+                // Fill empty slots in player's hand
+                for (let i = 0; i < playerHandSlots.length; i++) {
+                    if (playerHandSlots[i].heldLetterTile === null) {
+                        const newTile = this.playerDrawTile();
+                        if (newTile) {
+                            this.setPlayerHandSlot(i, newTile);
+                        }
+                    }
+                }
+            } else {
+                // Fill empty slots in opponent's hand
+                for (let i = 0; i < opponentHandSlots.length; i++) {
+                    if (opponentHandSlots[i].heldLetterTile === null) {
+                        const newTile = this.opponentDrawTile();
+                        if (newTile) {
+                            this.setOpponentHandSlot(i, newTile);
+                        }
+                    }
+                }
             }
         },
 
