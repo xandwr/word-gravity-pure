@@ -23,7 +23,7 @@ export const AI_CONFIG = {
     // 0.0 = Pure offense, patient strategy (builds words, waits for high multipliers)
     // 0.5 = Balanced (good mix of scoring and strategic blocking)
     // 1.0 = Maximum chaos (aggressive claiming, ruthless blocking, fast-paced)
-    AGGRESSIVENESS: 0.5,
+    AGGRESSIVENESS: 1.0,
 
     // Enable AI decision logging to console (useful for debugging AI behavior)
     DEBUG_LOGGING: true
