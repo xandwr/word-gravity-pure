@@ -16,3 +16,9 @@ export const PLAYER_COLORS = {
 } as const;
 
 export type PlayerType = 'player' | 'opponent';
+
+// AI Configuration
+export const AI_CONFIG = {
+    // Probability (0-1) that AI will attempt to claim words each turn
+    CLAIM_CHANCE: 0.50
+} as const;

@@ -8,6 +8,7 @@ import { playerBag } from "./playerLetterBag.svelte";
 import { opponentBag } from "./opponentLetterBag.svelte";
 import { drawFromBag } from "./letterBag.svelte";
 import { wordValidator } from "./wordValidator.svelte";
+import { AI_CONFIG } from "./constants";
 
 export function createTile(letter: string, baseScore: number): TileData {
     return {
@@ -335,6 +336,29 @@ function createGameState() {
         makeOpponentMove() {
             if (currentPlayerTurn.value !== "opponent") return;
 
+            // First, check if AI should attempt to claim words (configurable chance)
+            const shouldAttemptClaim = Math.random() < AI_CONFIG.CLAIM_CHANCE;
+
+            if (shouldAttemptClaim) {
+                const opponentOwnedIndices = this.getOpponentOwnedTileIndices();
+
+                if (opponentOwnedIndices.size > 0) {
+                    // Convert Set to Array and pick a random tile from opponent-owned words
+                    const ownedTiles = Array.from(opponentOwnedIndices);
+                    const randomTileIndex = ownedTiles[Math.floor(Math.random() * ownedTiles.length)];
+
+                    // Attempt to claim from this tile
+                    this.claimTilesFromOpponent(randomTileIndex);
+
+                    // If claiming started, don't place a tile this turn
+                    // The claiming animation will handle ending the turn via board settling
+                    if (isClaimingInProgress.value) {
+                        return;
+                    }
+                }
+            }
+
+            // If no claiming happened, proceed with normal tile placement
             // Find a non-null tile from opponent's hand
             let handIndex = -1;
             for (let i = 0; i < opponentHandSlots.length; i++) {
@@ -420,6 +444,24 @@ function createGameState() {
 
             for (const word of validWords) {
                 if (word.owner === "player") {
+                    for (const index of word.tileIndices) {
+                        indices.add(index);
+                    }
+                }
+            }
+
+            return indices;
+        },
+
+        /**
+         * Get all board indices that contain tiles part of opponent-owned words
+         */
+        getOpponentOwnedTileIndices(): Set<number> {
+            const indices = new Set<number>();
+            const validWords = wordValidator.words;
+
+            for (const word of validWords) {
+                if (word.owner === "opponent") {
                     for (const index of word.tileIndices) {
                         indices.add(index);
                     }
@@ -550,6 +592,106 @@ function createGameState() {
             this.incrementPlayerSwaps();
 
             isClaimingInProgress.value = false;
+        },
+
+        /**
+         * Opponent claims tiles starting from a board position
+         * Similar to claimTilesFrom but for the opponent
+         */
+        claimTilesFromOpponent(boardIndex: number) {
+            // Can't claim during settling or if claiming in progress
+            if (!isBoardSettled.value || isClaimingInProgress.value) {
+                return;
+            }
+
+            const tile = this.getBoardTile(boardIndex);
+            if (!tile || tile.claimedBy !== null) {
+                return; // No tile or already claimed
+            }
+
+            // Check if this tile is part of an opponent-owned word
+            const opponentOwnedIndices = this.getOpponentOwnedTileIndices();
+            if (!opponentOwnedIndices.has(boardIndex)) {
+                return; // Not part of an opponent-owned word
+            }
+
+            // Perform BFS flood fill to find all contiguous opponent-owned unclaimed tiles
+            const waves = this.floodFillClaim(boardIndex, opponentOwnedIndices);
+
+            if (waves.length === 0) {
+                return; // Nothing to claim
+            }
+
+            // Start the claiming animation for opponent
+            isClaimingInProgress.value = true;
+            this.animateOpponentClaimingWaves(waves);
+        },
+
+        /**
+         * Animate opponent claiming waves with sequential delays
+         * Scores and fades out tiles immediately as each wave is processed
+         */
+        async animateOpponentClaimingWaves(waves: number[][]) {
+            const WAVE_DELAY = 150; // ms between waves
+            const FADE_DELAY = 400; // ms to wait before starting fade (matches letterTile)
+            const FADE_DURATION = 300; // ms for fade out animation
+
+            for (let i = 0; i < waves.length; i++) {
+                const wave = waves[i];
+
+                // Process each tile in this wave
+                for (const index of wave) {
+                    const tile = boardSlots[index].heldLetterTile;
+                    if (tile && tile.claimedBy === null) {
+                        // Claim and mark for fading
+                        tile.claimedBy = "opponent";
+                        tile.fadingOut = true;
+                        tile.fadeStartTime = Date.now();
+
+                        // Score immediately for opponent
+                        const tileScore = tile.baseScore * tile.multiplier;
+                        opponentScore.value += tileScore;
+                    }
+                }
+
+                // Store current wave for visual feedback (pulsing effect)
+                claimingWaves[0] = wave;
+
+                // Wait before next wave
+                await new Promise(resolve => setTimeout(resolve, WAVE_DELAY));
+            }
+
+            // Clear waves
+            claimingWaves.length = 0;
+
+            // Wait for fade delay + fade duration to complete, then clean up tiles
+            await new Promise(resolve => setTimeout(resolve, FADE_DELAY + FADE_DURATION));
+
+            // Return all faded tiles to the opponent's bag and clear from board
+            for (let i = 0; i < boardSlots.length; i++) {
+                const tile = boardSlots[i].heldLetterTile;
+                if (tile && tile.fadingOut) {
+                    // Reset tile state for reuse (but keep multiplier!)
+                    tile.fadingOut = false;
+                    tile.fadeStartTime = undefined;
+                    tile.claimedBy = null;
+                    tile.hasLanded = false; // Reset landing flag for when tile is drawn again
+
+                    // Return to opponent's bag
+                    opponentBag.push(tile);
+
+                    // Remove from board
+                    boardSlots[i].heldLetterTile = null;
+                }
+            }
+
+            // Mark board as unsettled to trigger gravity
+            isBoardSettled.value = false;
+
+            isClaimingInProgress.value = false;
+
+            // Switch turn back to player after opponent claims
+            this.switchTurn();
         },
 
         // Gravity system - moves tiles down one cell at a time
