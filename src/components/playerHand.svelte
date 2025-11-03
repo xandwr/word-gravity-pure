@@ -40,6 +40,14 @@
     let showSwapMenu = $state(false);
     let swapHandIndex = $state<number | null>(null);
 
+    // Derived state: should the swap box pulse when dragging?
+    let shouldPulse = $derived.by(() => {
+        const dragState = gameState.getDragState();
+        const isDraggingFromHand = dragState.tile && dragState.sourceType === "hand";
+        const swapAvailable = gameState.playerSwapsUsedThisTurn < 1 && gameState.playerSwapsRemaining > 0;
+        return isDraggingFromHand && swapAvailable;
+    });
+
     function handleSwapDragOver(e: DragEvent) {
         e.preventDefault();
         if (e.dataTransfer) {
@@ -130,11 +138,13 @@
                 id="swapButton"
                 role="button"
                 tabindex="0"
-                class="h-full rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-20 sm:min-w-[100px] {isSwapHover
+                class="h-full rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-20 sm:min-w-[100px] transition-all duration-300 {isSwapHover
                     ? 'bg-blue-500 border-blue-700'
                     : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0 || gameState.playerSwapsUsedThisTurn >= 1
                     ? 'opacity-50 cursor-not-allowed'
-                    : 'cursor-pointer'}"
+                    : 'cursor-pointer'} {shouldPulse
+                    ? 'animate-pulse shadow-[0_0_20px_rgba(59,130,246,0.8)] border-blue-400'
+                    : ''}"
                 ondragover={handleSwapDragOver}
                 ondragleave={handleSwapDragLeave}
                 ondrop={handleSwapDrop}
