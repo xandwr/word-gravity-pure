@@ -18,8 +18,8 @@
 
     <!-- desktop nav -->
     <nav class="hidden md:flex gap-4">
-        <a href="/" class="hover:underline">Play</a>
-        <a href="/leaderboard" class="hover:underline">Leaderboard</a>
+        <a href="/" class="hover:underline">Endless</a>
+        <a href="/leaderboard" class="hover:underline">Leaderboard (coming soon)</a>
     </nav>
 </header>
 
@@ -28,8 +28,7 @@
     <nav
         class="md:hidden flex flex-col bg-blue-100 border-t border-blue-300 p-4 gap-2"
     >
-        <a href="/" class="hover:underline">Home</a>
-        <a href="/" class="hover:underline">Leaderboard</a>
-        <a href="/" class="hover:underline">Daily</a>
+        <a href="/" class="hover:underline">Endless</a>
+        <a href="/leaderboard" class="hover:underline">Leaderboard (coming soon)</a>
     </nav>
 {/if}
