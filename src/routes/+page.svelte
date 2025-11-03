@@ -53,6 +53,10 @@
     }
 </script>
 
+<svelte:head>
+    <title>Word Gravity | Endless</title>
+</svelte:head>
+
 <div class="flex flex-col h-[calc(100vh-80px)] overflow-hidden">
     {#if gameState.isGameOver}
         <div
@@ -143,7 +147,11 @@
         </div>
     {/if}
 
-    <div class="flex flex-col flex-1 min-h-0">
+    <div class="relative flex flex-col flex-1 min-h-0">
+        <div id="gameBackground" class="absolute inset-0 -z-10">
+            
+        </div>
+        
         <div class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-center overflow-auto">
             <WordGrid />
         </div>

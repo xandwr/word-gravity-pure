@@ -4,7 +4,9 @@
 </script>
 
 <header class="bg-blue-200 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-900/20">
-    <h1 class="text-3xl sm:text-4xl font-bold text-neutral-900/33">Word Gravity</h1>
+    <h1 class="text-3xl sm:text-4xl font-bold text-neutral-800 tracking-tight">
+        <a href="/">Word Gravity</a>
+    </h1>
 
     <div class="flex items-center gap-8">
         <!-- lightbulb how-to-play button -->
