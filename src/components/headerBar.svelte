@@ -1,6 +1,10 @@
-<script>
+<script lang="ts">
+    import { page } from '$app/state';
+
     let menuOpen = $state(false);
     let howToPlayOpen = $state(false);
+
+    const currentPath = $derived(page.url.pathname);
 </script>
 
 <header class="bg-blue-900 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-600">
@@ -32,8 +36,8 @@
 
         <!-- desktop nav -->
         <nav class="hidden md:flex gap-4 text-white">
-            <a href="/" class="hover:underline">Endless</a>
-            <a href="/leaderboard" class="hover:underline">Leaderboard (coming soon)</a>
+            <a href="/" class="hover:underline {currentPath === '/' ? 'font-bold underline' : ''}">Endless</a>
+            <a href="/leaderboard" class="hover:underline {currentPath === '/leaderboard' ? 'font-bold underline' : ''}">Leaderboard (coming soon)</a>
         </nav>
     </div>
 </header>
@@ -43,8 +47,8 @@
     <nav
         class="md:hidden flex flex-col text-white bg-blue-100 border-t border-blue-300 p-4 gap-2"
     >
-        <a href="/" class="hover:underline">Endless</a>
-        <a href="/leaderboard" class="hover:underline">Leaderboard (coming soon)</a>
+        <a href="/" class="hover:underline {currentPath === '/' ? 'font-bold underline' : ''}">Endless</a>
+        <a href="/leaderboard" class="hover:underline {currentPath === '/leaderboard' ? 'font-bold underline' : ''}">Leaderboard (coming soon)</a>
     </nav>
 {/if}
 
