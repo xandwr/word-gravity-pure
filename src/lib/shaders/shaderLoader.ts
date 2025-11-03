@@ -106,9 +106,9 @@ export async function loadShaderProgram(
 export function setupFullScreenQuad(gl: WebGLRenderingContext, program: WebGLProgram): void {
     const vertices = new Float32Array([
         -1, -1,
-         1, -1,
-        -1,  1,
-         1,  1,
+        1, -1,
+        -1, 1,
+        1, 1,
     ]);
 
     const buffer = gl.createBuffer();
@@ -127,10 +127,12 @@ export function createShaderAnimation(
     gl: WebGLRenderingContext,
     program: WebGLProgram,
     canvas: HTMLCanvasElement,
-    updateUniforms?: (time: number) => void
+    updateUniforms?: (time: number) => void,
+    getOpacity?: () => number // optional callback for dynamic opacity
 ): () => void {
     const resolutionLocation = gl.getUniformLocation(program, 'resolution');
     const timeLocation = gl.getUniformLocation(program, 'time');
+    const opacityLocation = gl.getUniformLocation(program, 'opacity');
 
     // Resize handler
     function resize() {
@@ -150,10 +152,16 @@ export function createShaderAnimation(
     let animationId: number;
 
     function render() {
-        const time = (Date.now() - startTime) * 0.001; // Convert to seconds
+        const time = (Date.now() - startTime) * 0.001; // seconds
 
         if (timeLocation) {
             gl.uniform1f(timeLocation, time);
+        }
+
+        // update opacity uniform dynamically
+        if (opacityLocation) {
+            const opacity = getOpacity ? getOpacity() : 0.5;
+            gl.uniform1f(opacityLocation, opacity);
         }
 
         if (updateUniforms) {
@@ -169,7 +177,7 @@ export function createShaderAnimation(
 
     render();
 
-    // Return cleanup function
+    // Cleanup
     return () => {
         window.removeEventListener('resize', resize);
         cancelAnimationFrame(animationId);

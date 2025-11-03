@@ -74,6 +74,9 @@ function createGameState() {
         sourceIndex: null
     });
 
+    // Background shader opacity control
+    const bgOpacity = $state({ value: 0.3 });
+
     return {
         // Readonly access to board slots
         get board() {
@@ -122,6 +125,11 @@ function createGameState() {
         // Reactive bag count getter
         get bagCount() {
             return sharedBag.length;
+        },
+
+        // Background shader opacity
+        get backgroundOpacity() {
+            return bgOpacity.value;
         },
 
         // Readonly access to scores

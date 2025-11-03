@@ -14,6 +14,7 @@
         setupFullScreenQuad,
         createShaderAnimation,
     } from "$lib/shaders/shaderLoader";
+    import { fade } from "svelte/transition";
 
     let username = $state("");
     let submitting = $state(false);
@@ -66,20 +67,30 @@
         if (!canvas) return;
 
         const gl =
-            canvas.getContext("webgl") ||
-            (canvas.getContext("experimental-webgl") as WebGLRenderingContext);
+            canvas.getContext("webgl", {
+                alpha: true,
+                premultipliedAlpha: false,
+            }) ||
+            (canvas.getContext("experimental-webgl", {
+                alpha: true,
+                premultipliedAlpha: false,
+            }) as WebGLRenderingContext);
         if (!gl) {
             console.error("WebGL not supported");
             return;
         }
+
+        // Enable blending for opacity to work
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
         let cleanup: (() => void) | undefined;
 
         // Load shader program from files
         loadShaderProgram(
             gl,
-            "/shaders/gradient/vert.vert",
-            "/shaders/gradient/frag.frag",
+            "/shaders/paint/vert.vert",
+            "/shaders/paint/frag.frag",
         ).then((shaderProgram) => {
             if (!shaderProgram) {
                 console.error("Failed to load shader program");
@@ -92,8 +103,14 @@
             // Set up full-screen quad
             setupFullScreenQuad(gl, program);
 
-            // Start animation
-            cleanup = createShaderAnimation(gl, program, canvas);
+            // Start animation with opacity callback
+            cleanup = createShaderAnimation(
+                gl,
+                program,
+                canvas,
+                undefined, // no custom updateUniforms
+                () => gameState.backgroundOpacity, // provide opacity value from game state
+            );
         });
 
         // Return cleanup function

@@ -8,7 +8,7 @@
 </script>
 
 <header
-    class="bg-blue-900 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-600"
+    class="bg-blue-900/10 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-600/10"
 >
     <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">
         <a href="/">Word Gravity</a>
@@ -31,9 +31,9 @@
             onclick={() => (menuOpen = !menuOpen)}
             aria-label="Toggle menu"
         >
-            <span class="w-6 h-0.5 bg-black"></span>
-            <span class="w-6 h-0.5 bg-black"></span>
-            <span class="w-6 h-0.5 bg-black"></span>
+            <span class="w-6 h-0.5 bg-white"></span>
+            <span class="w-6 h-0.5 bg-white"></span>
+            <span class="w-6 h-0.5 bg-white"></span>
         </button>
 
         <!-- desktop nav -->

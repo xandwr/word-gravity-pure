@@ -258,11 +258,13 @@
             if (swapButton && currentDragState.sourceType === "hand") {
                 // Trigger the swap button's touch end handler
                 if (swapButton instanceof HTMLElement) {
-                    swapButton.dispatchEvent(new TouchEvent("touchend", {
-                        changedTouches: [touch],
-                        bubbles: true,
-                        cancelable: true
-                    }));
+                    swapButton.dispatchEvent(
+                        new TouchEvent("touchend", {
+                            changedTouches: [touch],
+                            bubbles: true,
+                            cancelable: true,
+                        }),
+                    );
                 }
                 touchStartPos = null;
                 hasMoved = false;
