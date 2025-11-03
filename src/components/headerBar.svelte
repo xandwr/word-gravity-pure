@@ -3,8 +3,8 @@
     let howToPlayOpen = $state(false);
 </script>
 
-<header class="bg-blue-200 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-900/20">
-    <h1 class="text-3xl sm:text-4xl font-bold text-neutral-800 tracking-tight">
+<header class="bg-blue-900 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-600">
+    <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">
         <a href="/">Word Gravity</a>
     </h1>
 
@@ -31,7 +31,7 @@
         </button>
 
         <!-- desktop nav -->
-        <nav class="hidden md:flex gap-4">
+        <nav class="hidden md:flex gap-4 text-white">
             <a href="/" class="hover:underline">Endless</a>
             <a href="/leaderboard" class="hover:underline">Leaderboard (coming soon)</a>
         </nav>
@@ -41,7 +41,7 @@
 <!-- mobile dropdown -->
 {#if menuOpen}
     <nav
-        class="md:hidden flex flex-col bg-blue-100 border-t border-blue-300 p-4 gap-2"
+        class="md:hidden flex flex-col text-white bg-blue-100 border-t border-blue-300 p-4 gap-2"
     >
         <a href="/" class="hover:underline">Endless</a>
         <a href="/leaderboard" class="hover:underline">Leaderboard (coming soon)</a>

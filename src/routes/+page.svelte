@@ -8,6 +8,12 @@
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
     import PlayerInfoPanel from "../components/playerInfoPanel.svelte";
     import { PLAYER_COLORS } from "$lib/game/constants";
+    import { onMount } from "svelte";
+    import {
+        loadShaderProgram,
+        setupFullScreenQuad,
+        createShaderAnimation,
+    } from "$lib/shaders/shaderLoader";
 
     let username = $state("");
     let submitting = $state(false);
@@ -51,6 +57,50 @@
             submitting = false;
         }
     }
+
+    // WebGL shader setup
+    onMount(() => {
+        const canvas = document.getElementById(
+            "gameBackgroundCanvas",
+        ) as HTMLCanvasElement;
+        if (!canvas) return;
+
+        const gl =
+            canvas.getContext("webgl") ||
+            (canvas.getContext("experimental-webgl") as WebGLRenderingContext);
+        if (!gl) {
+            console.error("WebGL not supported");
+            return;
+        }
+
+        let cleanup: (() => void) | undefined;
+
+        // Load shader program from files
+        loadShaderProgram(
+            gl,
+            "/src/lib/shaders/gradient.vert",
+            "/src/lib/shaders/gradient.frag",
+        ).then((shaderProgram) => {
+            if (!shaderProgram) {
+                console.error("Failed to load shader program");
+                return;
+            }
+
+            const { program } = shaderProgram;
+            gl.useProgram(program);
+
+            // Set up full-screen quad
+            setupFullScreenQuad(gl, program);
+
+            // Start animation
+            cleanup = createShaderAnimation(gl, program, canvas);
+        });
+
+        // Return cleanup function
+        return () => {
+            if (cleanup) cleanup();
+        };
+    });
 </script>
 
 <svelte:head>
@@ -149,10 +199,15 @@
 
     <div class="relative flex flex-col flex-1 min-h-0">
         <div class="absolute inset-0 -z-10">
-            <canvas id="gameBackgroundCanvas" class="absolute inset-0 -z-10"></canvas>
+            <canvas
+                id="gameBackgroundCanvas"
+                class="absolute inset-0 -z-10 w-full h-full"
+            ></canvas>
         </div>
-        
-        <div class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-center overflow-auto">
+
+        <div
+            class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-center overflow-auto"
+        >
             <WordGrid />
         </div>
 
@@ -181,8 +236,14 @@
                         class="flex items-center gap-1 text-xl uppercase whitespace-nowrap"
                     >
                         <span class="font-semibold">Turn:</span>
-                        <span class="font-bold drop-shadow-[0px_1px_1px_black]" style="color: {PLAYER_COLORS[gameState.currentPlayerTurn].primary};"
-                            >{gameState.currentPlayerTurn == "player" ? "You" : "Them"}</span
+                        <span
+                            class="font-bold drop-shadow-[0px_1px_1px_black]"
+                            style="color: {PLAYER_COLORS[
+                                gameState.currentPlayerTurn
+                            ].primary};"
+                            >{gameState.currentPlayerTurn == "player"
+                                ? "You"
+                                : "Them"}</span
                         >
                     </div>
                     <div
