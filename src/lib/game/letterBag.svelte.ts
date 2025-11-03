@@ -2,8 +2,20 @@
     $lib/game/letterBag.svelte.ts
 */
 
+import { nanoid } from "nanoid";
 import type { TileData } from "$lib/game/types";
-import { createTile } from "$lib/game/state.svelte";
+
+export function createTile(letter: string, baseScore: number): TileData {
+    return {
+        id: nanoid(),
+        letter,
+        baseScore,
+        multiplier: 1,
+        claimedBy: null,
+        fadingOut: false,
+        hasLanded: false
+    };
+}
 
 export const LETTER_SCORES: Record<string, number> = {
     A: 1, B: 3, C: 3, D: 2, E: 1, F: 4, G: 2, H: 4,
@@ -19,9 +31,47 @@ export const LETTER_COUNTS: Record<string, number> = {
     Y: 2, Z: 1,
 };
 
-// Create the full bag reactively
-export function createLetterBag() {
-    const bag = $state<TileData[]>([]);
+// Seeded random number generator for deterministic bag shuffling
+class SeededRandom {
+    private seed: number;
+
+    constructor(seed: number) {
+        this.seed = seed;
+    }
+
+    // Linear congruential generator
+    next(): number {
+        this.seed = (this.seed * 9301 + 49297) % 233280;
+        return this.seed / 233280;
+    }
+}
+
+// Get daily seed based on current date (days since epoch)
+export function getDailySeed(): number {
+    const now = new Date();
+    const epochStart = new Date(1970, 0, 1);
+    const daysSinceEpoch = Math.floor((now.getTime() - epochStart.getTime()) / (1000 * 60 * 60 * 24));
+    return daysSinceEpoch;
+}
+
+// Shuffle array using seeded random
+function shuffleWithSeed<T>(array: T[], seed: number): T[] {
+    const rng = new SeededRandom(seed);
+    const shuffled = [...array];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(rng.next() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled;
+}
+
+// Create the full bag with deterministic daily seed
+export function createLetterBag(seed?: number) {
+    const bag: TileData[] = [];
+
+    // Create all tiles
     for (const letter of Object.keys(LETTER_COUNTS)) {
         const count = LETTER_COUNTS[letter];
         const score = LETTER_SCORES[letter] ?? 0;
@@ -29,7 +79,12 @@ export function createLetterBag() {
             bag.push(createTile(letter, score));
         }
     }
-    return bag;
+
+    // Shuffle with daily seed for deterministic order
+    const dailySeed = seed ?? getDailySeed();
+    const shuffledBag = shuffleWithSeed(bag, dailySeed);
+
+    return shuffledBag;
 }
 
 // Generic draw from bag logic

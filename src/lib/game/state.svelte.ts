@@ -2,26 +2,15 @@
     $lib/game/state.svelte.ts
 */
 
-import { nanoid } from "nanoid";
 import type { TileData, TileContainer } from "./types";
-import { playerBag } from "./playerLetterBag.svelte";
-import { opponentBag } from "./opponentLetterBag.svelte";
-import { drawFromBag } from "./letterBag.svelte";
+import { sharedBag } from "./sharedLetterBag.svelte";
+import { drawFromBag, createTile } from "./letterBag.svelte";
 import { wordValidator } from "./wordValidator.svelte";
 import { AI_CONFIG } from "./constants";
 import { findBestAction } from "./aiStrategy.svelte";
 
-export function createTile(letter: string, baseScore: number): TileData {
-    return {
-        id: nanoid(),
-        letter,
-        baseScore,
-        multiplier: 1,
-        claimedBy: null,
-        fadingOut: false,
-        hasLanded: false
-    };
-}
+// Re-export createTile for backwards compatibility
+export { createTile } from "./letterBag.svelte";
 
 // Constants for game layout
 const GRID_COLS = 7;
@@ -125,14 +114,9 @@ function createGameState() {
             return;
         },
 
-        // Player bag
-        get playerBag() {
-            return playerBag;
-        },
-
-        // Opponent's bag
-        get opponentBag() {
-            return opponentBag;
+        // Shared bag (both players draw from this)
+        get sharedBag() {
+            return sharedBag;
         },
 
         // Readonly access to scores
@@ -176,22 +160,22 @@ function createGameState() {
         },
 
         playerDrawTile(): TileData | null {
-            const tile = drawFromBag(playerBag, 1)[0];
+            const tile = drawFromBag(sharedBag, 1)[0];
             return tile;
         },
 
         opponentDrawTile(): TileData | null {
-            const tile = drawFromBag(opponentBag, 1)[0];
+            const tile = drawFromBag(sharedBag, 1)[0];
             return tile;
         },
 
         playerFreshHand(): TileData[] | null {
-            const hand = drawFromBag(playerBag, 8);
+            const hand = drawFromBag(sharedBag, 8);
             return hand;
         },
 
         opponentFreshHand(): TileData[] | null {
-            const hand = drawFromBag(opponentBag, 8);
+            const hand = drawFromBag(sharedBag, 8);
             return hand;
         },
 
@@ -224,8 +208,8 @@ function createGameState() {
                 return false;
             }
 
-            // Put the old tile back in the bag
-            playerBag.push(oldTile);
+            // Put the old tile back in the shared bag
+            sharedBag.push(oldTile);
 
             // Draw a new tile from the bag
             const newTile = this.playerDrawTile();
@@ -236,9 +220,8 @@ function createGameState() {
                 this.setPlayerHandSlot(handIndex, null);
             }
 
-            // Decrement swaps and end turn
+            // Decrement swaps (no longer ends turn)
             this.decrementPlayerSwaps();
-            this.endPlayerTurn();
 
             return true;
         },
@@ -568,20 +551,11 @@ function createGameState() {
             // Wait for fade delay + fade duration to complete, then clean up tiles
             await new Promise(resolve => setTimeout(resolve, FADE_DELAY + FADE_DURATION));
 
-            // Return all faded tiles to the player's bag and clear from board
+            // Destroy all faded tiles (no longer return to bag)
             for (let i = 0; i < boardSlots.length; i++) {
                 const tile = boardSlots[i].heldLetterTile;
                 if (tile && tile.fadingOut) {
-                    // Reset tile state for reuse (but keep multiplier!)
-                    tile.fadingOut = false;
-                    tile.fadeStartTime = undefined;
-                    tile.claimedBy = null;
-                    tile.hasLanded = false; // Reset landing flag for when tile is drawn again
-
-                    // Return to player's bag
-                    playerBag.push(tile);
-
-                    // Remove from board
+                    // Tiles are destroyed - just remove from board
                     boardSlots[i].heldLetterTile = null;
                 }
             }
@@ -668,20 +642,11 @@ function createGameState() {
             // Wait for fade delay + fade duration to complete, then clean up tiles
             await new Promise(resolve => setTimeout(resolve, FADE_DELAY + FADE_DURATION));
 
-            // Return all faded tiles to the opponent's bag and clear from board
+            // Destroy all faded tiles (no longer return to bag)
             for (let i = 0; i < boardSlots.length; i++) {
                 const tile = boardSlots[i].heldLetterTile;
                 if (tile && tile.fadingOut) {
-                    // Reset tile state for reuse (but keep multiplier!)
-                    tile.fadingOut = false;
-                    tile.fadeStartTime = undefined;
-                    tile.claimedBy = null;
-                    tile.hasLanded = false; // Reset landing flag for when tile is drawn again
-
-                    // Return to opponent's bag
-                    opponentBag.push(tile);
-
-                    // Remove from board
+                    // Tiles are destroyed - just remove from board
                     boardSlots[i].heldLetterTile = null;
                 }
             }
@@ -809,13 +774,63 @@ function createGameState() {
                 // Check if there are any claimable words
                 const hasClaimableWords = wordValidator.words.length > 0;
 
-                if (!hasClaimableWords) {
-                    // Game over!
-                    isGameOver.value = true;
-                    gameOverReason.value = "Board is full with no claimable words!";
-                    this.stopGravity();
+                if (hasClaimableWords) {
+                    // Auto-claim all words for their owners
+                    this.autoClaimAllWords();
+                } else {
+                    // No claimable words - destroy all tiles and continue
+                    this.clearBoard();
                 }
+                return; // Don't check end condition yet, let game continue
             }
+
+            // Check if game should end: bag empty AND both hands empty
+            const isBagEmpty = sharedBag.length === 0;
+            const isPlayerHandEmpty = playerHandSlots.every(slot => slot.heldLetterTile === null);
+            const isOpponentHandEmpty = opponentHandSlots.every(slot => slot.heldLetterTile === null);
+
+            if (isBagEmpty && isPlayerHandEmpty && isOpponentHandEmpty) {
+                // Game over - no more tiles available
+                isGameOver.value = true;
+                if (playerScore.value > opponentScore.value) {
+                    gameOverReason.value = `You win! ${playerScore.value} - ${opponentScore.value}`;
+                } else if (opponentScore.value > playerScore.value) {
+                    gameOverReason.value = `AI wins! ${opponentScore.value} - ${playerScore.value}`;
+                } else {
+                    gameOverReason.value = `Tie game! ${playerScore.value} - ${opponentScore.value}`;
+                }
+                this.stopGravity();
+            }
+        },
+
+        // Auto-claim all words on the board for their respective owners
+        autoClaimAllWords() {
+            // Find all player-owned words
+            const playerWords = wordValidator.words.filter(w => w.owner === "player");
+            const opponentWords = wordValidator.words.filter(w => w.owner === "opponent");
+
+            // Claim player words
+            if (playerWords.length > 0) {
+                const firstPlayerWord = playerWords[0];
+                const firstTileIndex = firstPlayerWord.positions[0];
+                this.claimTilesFrom(firstTileIndex);
+            }
+
+            // Claim opponent words
+            if (opponentWords.length > 0) {
+                const firstOpponentWord = opponentWords[0];
+                const firstTileIndex = firstOpponentWord.positions[0];
+                this.opponentClaimTiles(firstTileIndex);
+            }
+        },
+
+        // Clear all tiles from the board (destroy them)
+        clearBoard() {
+            for (let i = 0; i < boardSlots.length; i++) {
+                boardSlots[i].heldLetterTile = null;
+            }
+            // Mark board as unsettled to trigger re-validation
+            isBoardSettled.value = false;
         },
 
         // Start the gravity tick system

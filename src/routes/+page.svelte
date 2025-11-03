@@ -1,22 +1,65 @@
-<!-- 
+<!--
     +page.svelte
 -->
 
-<script>
+<script lang="ts">
     import WordGrid from "../components/wordGrid.svelte";
     import PlayerHand from "../components/playerHand.svelte";
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
     import PlayerInfoPanel from "../components/playerInfoPanel.svelte";
     import { PLAYER_COLORS } from "$lib/game/constants";
+
+    let username = $state("");
+    let submitting = $state(false);
+    let submitSuccess = $state(false);
+    let submitError = $state("");
+    let playerRank = $state<number | null>(null);
+
+    async function submitScore() {
+        if (!username.trim()) {
+            submitError = "Please enter a username";
+            return;
+        }
+
+        submitting = true;
+        submitError = "";
+
+        try {
+            const response = await fetch("/api/leaderboard", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username: username.trim(),
+                    score: gameState.playerScore,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                submitSuccess = true;
+                playerRank = data.rank;
+            } else {
+                submitError = data.error || "Failed to submit score";
+            }
+        } catch (error) {
+            submitError = "Network error. Please try again.";
+            console.error("Submit error:", error);
+        } finally {
+            submitting = false;
+        }
+    }
 </script>
 
 <div class="flex flex-col min-h-screen overflow-x-hidden">
     {#if gameState.isGameOver}
         <div
-            class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
+            class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
         >
             <div
-                class="bg-white rounded-lg p-6 sm:p-8 max-w-md mx-4 shadow-2xl"
+                class="bg-white rounded-lg p-6 sm:p-8 max-w-md w-full shadow-2xl"
             >
                 <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">
                     Game Over!
@@ -36,6 +79,60 @@
                         >
                     </div>
                 </div>
+
+                {#if !submitSuccess}
+                    <div class="mb-4">
+                        <label
+                            for="username"
+                            class="block text-sm font-semibold mb-2"
+                        >
+                            Submit your score to the leaderboard:
+                        </label>
+                        <input
+                            id="username"
+                            type="text"
+                            bind:value={username}
+                            placeholder="Enter your username"
+                            maxlength="20"
+                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
+                            disabled={submitting}
+                        />
+                        {#if submitError}
+                            <p class="text-red-600 text-sm mt-2">
+                                {submitError}
+                            </p>
+                        {/if}
+                    </div>
+
+                    <button
+                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                        onclick={submitScore}
+                        disabled={submitting || !username.trim()}
+                    >
+                        {submitting ? "Submitting..." : "Submit Score"}
+                    </button>
+                {:else}
+                    <div
+                        class="mb-4 p-4 bg-green-100 border-2 border-green-500 rounded-lg text-center"
+                    >
+                        <p class="text-green-800 font-bold mb-1">
+                            Score submitted!
+                        </p>
+                        {#if playerRank !== null}
+                            <p class="text-green-700">
+                                You ranked #{playerRank} on the leaderboard!
+                            </p>
+                        {/if}
+                    </div>
+
+                    <a
+                        href="/leaderboard"
+                        class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors text-center mb-3"
+                    >
+                        View Leaderboard
+                    </a>
+                {/if}
+
                 <button
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
                     onclick={() => window.location.reload()}
@@ -71,11 +168,23 @@
             >
                 <PlayerInfoPanel player="player" />
 
-                <div
-                    class="flex items-center gap-1 text-sm uppercase whitespace-nowrap bg-gray-800/20 border-2 border-black/10 p-2 rounded-xl"
-                >
-                    <span class="font-semibold">Turn:</span>
-                    <span class="font-bold">{gameState.currentPlayerTurn}</span>
+                <div class="flex flex-col items-center gap-1">
+                    <div
+                        class="flex items-center gap-1 text-sm uppercase whitespace-nowrap bg-gray-800/20 border-2 border-black/10 p-2 rounded-xl"
+                    >
+                        <span class="font-semibold">Turn:</span>
+                        <span class="font-bold"
+                            >{gameState.currentPlayerTurn}</span
+                        >
+                    </div>
+                    <div
+                        class="flex items-center gap-1 text-xs whitespace-nowrap bg-gray-800/20 border-2 border-black/10 px-2 py-1 rounded-lg"
+                    >
+                        <span class="font-semibold">Letters:</span>
+                        <span class="font-bold"
+                            >{gameState.sharedBag.length}</span
+                        >
+                    </div>
                 </div>
 
                 <PlayerInfoPanel player="opponent" />
