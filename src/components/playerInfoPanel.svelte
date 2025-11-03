@@ -8,9 +8,10 @@
 
     interface Props {
         player: "player" | "opponent";
+        playerUsername?: string | null;
     }
 
-    let { player }: Props = $props();
+    let { player, playerUsername = null }: Props = $props();
 
     // Compute number of letters currently in hand
     let lettersInHand = $derived(
@@ -27,7 +28,12 @@
         player === "player" ? gameState.playerScore : gameState.opponentScore,
     );
 
-    let displayName = $derived(PLAYER_COLORS[player].name);
+    // Use cached username if available, otherwise fall back to default name
+    let displayName = $derived(
+        player === "player" && playerUsername
+            ? playerUsername
+            : PLAYER_COLORS[player].name
+    );
     let bgColor = $derived(PLAYER_COLORS[player].tailwind);
 </script>
 

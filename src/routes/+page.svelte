@@ -148,6 +148,13 @@
 </svelte:head>
 
 <div class="flex flex-col h-[calc(100vh-80px)] overflow-hidden">
+    <!-- Username indicator -->
+    {#if username}
+        <div class="bg-blue-900/20 border-b border-blue-300/20 px-4 py-1 text-center">
+            <span class="text-xs text-white/70">Playing as: <span class="font-semibold text-white">{username}</span></span>
+        </div>
+    {/if}
+
     {#if gameState.isGameOver}
         <div
             class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
@@ -269,7 +276,7 @@
             <div
                 class="relative z-10 flex flex-row justify-between items-center gap-2 sm:gap-4 w-full"
             >
-                <PlayerInfoPanel player="player" />
+                <PlayerInfoPanel player="player" playerUsername={username || null} />
 
                 <div class="flex flex-col items-center gap-1 shrink-0">
                     <div
@@ -282,7 +289,7 @@
                                 gameState.currentPlayerTurn
                             ].primary};"
                             >{gameState.currentPlayerTurn == "player"
-                                ? "You"
+                                ? (username || "You")
                                 : "Them"}</span
                         >
                     </div>
