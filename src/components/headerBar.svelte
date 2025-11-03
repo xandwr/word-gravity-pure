@@ -1,8 +1,35 @@
 <script>
+    let menuOpen = $state(false);
 </script>
 
-<header
-    class="flex flex-col items-center bg-blue-800 text-white p-2 sm:p-3 border-b-2 sm:border-b-4 border-blue-950 shadow-lg"
->
-    <h1 class="font-bold text-2xl sm:text-3xl md:text-4xl">Word Gravity</h1>
+<header class="bg-blue-200 flex items-center justify-between p-4">
+    <h1 class="text-xl font-bold">Word Gravity</h1>
+
+    <!-- hamburger button -->
+    <button
+        class="md:hidden flex flex-col justify-center gap-1 p-2 hover:bg-blue-300 rounded"
+        onclick={() => (menuOpen = !menuOpen)}
+        aria-label="Toggle menu"
+    >
+        <span class="w-6 h-0.5 bg-black"></span>
+        <span class="w-6 h-0.5 bg-black"></span>
+        <span class="w-6 h-0.5 bg-black"></span>
+    </button>
+
+    <!-- desktop nav -->
+    <nav class="hidden md:flex gap-4">
+        <a href="/" class="hover:underline">Play</a>
+        <a href="/leaderboard" class="hover:underline">Leaderboard</a>
+    </nav>
 </header>
+
+<!-- mobile dropdown -->
+{#if menuOpen}
+    <nav
+        class="md:hidden flex flex-col bg-blue-100 border-t border-blue-300 p-4 gap-2"
+    >
+        <a href="/" class="hover:underline">Home</a>
+        <a href="/" class="hover:underline">Leaderboard</a>
+        <a href="/" class="hover:underline">Daily</a>
+    </nav>
+{/if}

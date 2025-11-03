@@ -8,12 +8,9 @@
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
     import PlayerInfoPanel from "../components/playerInfoPanel.svelte";
     import { PLAYER_COLORS } from "$lib/game/constants";
-    import HeaderBar from "../components/headerBar.svelte";
 </script>
 
-<main class="flex flex-col min-h-screen overflow-x-hidden">
-    <HeaderBar />
-
+<div class="flex flex-col min-h-screen overflow-x-hidden">
     {#if gameState.isGameOver}
         <div
             class="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
@@ -55,7 +52,7 @@
         </div>
 
         <div
-            class="relative flex justify-center px-2 py-0.5 border-y-4 border-black/20 overflow-hidden"
+            class="relative flex justify-center px-2 py-0.5 border-y-2 border-black/30 overflow-hidden shadow-lg"
         >
             <!-- animated caution-tape background -->
             <div
@@ -94,7 +91,7 @@
             </div>
         </div>
     </div>
-</main>
+</div>
 
 <style>
     @keyframes bannerScroll {
