@@ -970,9 +970,12 @@ function createGameState() {
             // Refill the current player's hand before switching turns
             this.refillCurrentPlayerHand();
 
+            // Get minimum word length from current difficulty
+            const minWordLength = AI_DIFFICULTY[aiDifficulty.value].MIN_LETTERS;
+
             // Validate the board and find all valid words
             // Pass the player who just made a move (before turn switch)
-            wordValidator.validateBoard(boardSlots, currentPlayerTurn.value, GRID_COLS, GRID_ROWS);
+            wordValidator.validateBoard(boardSlots, currentPlayerTurn.value, GRID_COLS, GRID_ROWS, minWordLength);
 
             // Check for game over condition
             this.checkGameOver();

@@ -82,14 +82,15 @@ class WordValidator {
         fullWord: string,
         indices: number[],
         direction: WordDirection,
-        currentPlayer: Player
+        currentPlayer: Player,
+        minWordLength: number
     ): ValidWord[] {
         const validSubWords: ValidWord[] = [];
         const len = fullWord.length;
 
-        // Check all possible substrings of length 3 or more
+        // Check all possible substrings of minimum length or more
         for (let start = 0; start < len; start++) {
-            for (let end = start + 3; end <= len; end++) {
+            for (let end = start + minWordLength; end <= len; end++) {
                 const subWord = fullWord.substring(start, end);
                 const subIndices = indices.slice(start, end);
 
@@ -113,12 +114,14 @@ class WordValidator {
      * @param currentPlayer - The player who just made a move
      * @param cols - Number of columns (default 7)
      * @param rows - Number of rows (default 6)
+     * @param minWordLength - Minimum word length to consider valid (default 3)
      */
     validateBoard(
         board: Array<{ heldLetterTile: TileData | null }>,
         currentPlayer: Player,
         cols: number = 7,
-        rows: number = 6
+        rows: number = 6,
+        minWordLength: number = 3
     ) {
         if (!this.isLoaded) {
             return;
@@ -162,8 +165,8 @@ class WordValidator {
                     col++;
                 }
 
-                // Only consider words with 3+ letters
-                if (word.length >= 3) {
+                // Only consider words with minimum length or more
+                if (word.length >= minWordLength) {
                     // Check if the full word is valid
                     let foundValidWord = false;
 
@@ -194,12 +197,12 @@ class WordValidator {
                     // This preserves words like "EGG" when "EGGZ" is invalid
                     if (!foundValidWord) {
                         // Check forward direction sub-words
-                        const forwardSubWords = this.findValidSubWords(word, indices, "horizontal", currentPlayer);
+                        const forwardSubWords = this.findValidSubWords(word, indices, "horizontal", currentPlayer, minWordLength);
                         foundWords.push(...forwardSubWords);
 
                         // Check reverse direction sub-words
                         const reversedIndices = [...indices].reverse();
-                        const reverseSubWords = this.findValidSubWords(reversedWord, reversedIndices, "horizontal", currentPlayer);
+                        const reverseSubWords = this.findValidSubWords(reversedWord, reversedIndices, "horizontal", currentPlayer, minWordLength);
                         foundWords.push(...reverseSubWords);
                     }
                 }
@@ -230,8 +233,8 @@ class WordValidator {
                     row++;
                 }
 
-                // Only consider words with 3+ letters
-                if (word.length >= 3) {
+                // Only consider words with minimum length or more
+                if (word.length >= minWordLength) {
                     // Check if the full word is valid
                     let foundValidWord = false;
 
@@ -262,12 +265,12 @@ class WordValidator {
                     // This preserves words like "EGG" when "EGGZ" is invalid
                     if (!foundValidWord) {
                         // Check forward direction sub-words
-                        const forwardSubWords = this.findValidSubWords(word, indices, "vertical", currentPlayer);
+                        const forwardSubWords = this.findValidSubWords(word, indices, "vertical", currentPlayer, minWordLength);
                         foundWords.push(...forwardSubWords);
 
                         // Check reverse direction sub-words
                         const reversedIndices = [...indices].reverse();
-                        const reverseSubWords = this.findValidSubWords(reversedWord, reversedIndices, "vertical", currentPlayer);
+                        const reverseSubWords = this.findValidSubWords(reversedWord, reversedIndices, "vertical", currentPlayer, minWordLength);
                         foundWords.push(...reverseSubWords);
                     }
                 }

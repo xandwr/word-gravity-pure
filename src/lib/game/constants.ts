@@ -31,8 +31,20 @@ export const AI_CONFIG = {
 
 // AI Difficulty Presets
 export const AI_DIFFICULTY = {
-    EASY: { AGGRESSIVENESS: 0.1 },      // Passive, focuses only on making words
-    MEDIUM: { AGGRESSIVENESS: 0.5 },    // Smart and balanced - the default
-    HARD: { AGGRESSIVENESS: 0.85 },     // Ruthless and terrifying
-    NIGHTMARE: { AGGRESSIVENESS: 1.0 }  // Pure evil
+    EASY: {
+        AGGRESSIVENESS: 0.1,      // Passive, focuses only on making words
+        MIN_LETTERS: 2
+    },
+    MEDIUM: {
+        AGGRESSIVENESS: 0.5,      // Smart and balanced - the default
+        MIN_LETTERS: 3
+    },
+    HARD: {
+        AGGRESSIVENESS: 0.85,     // Ruthless and terrifying
+        MIN_LETTERS: 4
+    },
+    NIGHTMARE: {
+        AGGRESSIVENESS: 1.0,      // Pure evil
+        MIN_LETTERS: 4
+    }
 } as const;

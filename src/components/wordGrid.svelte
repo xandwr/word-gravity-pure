@@ -5,8 +5,13 @@
 <script lang="ts">
     import LetterSlot from "./letterSlot.svelte";
     import { gameState, BOARD_CONFIG } from "$lib/game/state.svelte";
+    import { AI_DIFFICULTY } from "$lib/game/constants";
 
     const difficulties = ["EASY", "MEDIUM", "HARD", "NIGHTMARE"] as const;
+
+    // Use $derived for proper Svelte 5 reactivity
+    let minLetters = $derived(AI_DIFFICULTY[gameState.aiDifficulty].MIN_LETTERS);
+    let aiSkill = $derived(Math.round(AI_DIFFICULTY[gameState.aiDifficulty].AGGRESSIVENESS * 100));
 
     function handleDifficultyChange(event: Event) {
         const select = event.target as HTMLSelectElement;
@@ -41,9 +46,9 @@
             </select>
         </div>
         <div class="flex flex-row gap-4">
-            <h1>Minimum Letters: 0</h1>
+            <h1>Minimum Letters: {minLetters}</h1>
             <p class="font-light">|</p>
-            <h1>AI Skill: 0</h1>
+            <h1>AI Skill: {aiSkill}</h1>
         </div>
     </div>
 
