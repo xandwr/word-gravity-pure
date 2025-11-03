@@ -57,7 +57,7 @@
 <!-- mobile dropdown -->
 {#if menuOpen}
     <nav
-        class="md:hidden flex flex-col text-white bg-blue-100 border-t border-blue-300 p-4 gap-2"
+        class="md:hidden flex flex-col text-white bg-blue-800 border-t border-blue-900 p-4 gap-2"
     >
         <a
             href="/"
