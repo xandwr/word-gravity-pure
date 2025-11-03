@@ -30,10 +30,93 @@
     let hasMoved = false;
     const MOVE_THRESHOLD = 10; // pixels - movement beyond this is considered a drag
 
+    // Mobile drag preview state
+    let dragPreview: {
+        element: HTMLDivElement | null;
+        x: number;
+        y: number;
+    } = $state({
+        element: null,
+        x: 0,
+        y: 0,
+    });
+
     // Block interaction when board is settling or claiming is in progress
     const canInteract = $derived(
         gameState.boardSettled && !gameState.isClaimingActive,
     );
+
+    // Helper function to create mobile drag preview
+    function createDragPreview(touch: Touch) {
+        if (!tile || dragPreview.element) return;
+
+        const preview = document.createElement("div");
+        preview.id = "mobile-drag-preview";
+        preview.style.position = "fixed";
+        preview.style.pointerEvents = "none";
+        preview.style.zIndex = "9999";
+        preview.style.transform = "translate(-50%, -50%)";
+        preview.style.transition = "none";
+
+        // Create the tile preview using the same component structure
+        preview.innerHTML = `
+            <div class="aspect-square rounded-xl border-2 sm:border-4 bg-orange-200 text-black border-orange-300 flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4 scale-110 opacity-90 shadow-2xl">
+                <h class="text-xl sm:text-2xl md:text-4xl font-bold letter-stroke" style="color: ${getMultiplierColor(tile.multiplier)}; filter: ${getLetterGlow(tile.multiplier)};">
+                    ${tile.letter}
+                </h>
+                <span class="flex flex-row gap-0.5 sm:gap-1 items-center text-xs sm:text-sm md:text-md">
+                    <h class="font-semibold">${tile.baseScore}</h>
+                    <p>x</p>
+                    <h class="font-semibold">${tile.multiplier}</h>
+                </span>
+            </div>
+        `;
+
+        document.body.appendChild(preview);
+        dragPreview.element = preview;
+        updateDragPreviewPosition(touch.clientX, touch.clientY);
+    }
+
+    // Helper function to update preview position
+    function updateDragPreviewPosition(x: number, y: number) {
+        if (dragPreview.element) {
+            dragPreview.element.style.left = `${x}px`;
+            dragPreview.element.style.top = `${y}px`;
+        }
+    }
+
+    // Helper function to destroy drag preview
+    function destroyDragPreview() {
+        if (dragPreview.element) {
+            dragPreview.element.remove();
+            dragPreview.element = null;
+        }
+    }
+
+    // Helper function to get multiplier color (matching letterTile.svelte)
+    function getMultiplierColor(mult: number): string {
+        if (mult <= 1) return "#ffffff";
+        if (mult === 2) return "#b4e1ff";
+        if (mult === 3) return "#7ef0a0";
+        if (mult === 4) return "#f9f871";
+        if (mult === 5) return "#ffb347";
+        if (mult === 6) return "#ff7033";
+        if (mult === 7) return "#ff3333";
+        if (mult === 8) return "#a020f0";
+        return "#a020f0"; // 9+ base color (violet)
+    }
+
+    // Helper function to get letter glow (matching letterTile.svelte)
+    function getLetterGlow(mult: number): string {
+        if (mult >= 6 && mult <= 8) {
+            const color = getMultiplierColor(mult);
+            return `drop-shadow(0 0 4px ${color}) drop-shadow(0 0 8px ${color})`;
+        }
+        if (mult >= 9) {
+            return `drop-shadow(0 0 6px #ffffff) drop-shadow(0 0 12px #ffffff) drop-shadow(0 0 18px #a020f0)`;
+        }
+        return "none";
+    }
 
     // Check if this tile is in the current claiming wave
     const isInClaimWave = $derived(() => {
@@ -97,6 +180,8 @@
                     hasMoved = true;
                     e.preventDefault(); // Prevent scrolling while dragging
                     gameState.startDrag(tile!, slotType, index);
+                    // Create mobile drag preview
+                    createDragPreview(touch);
                     console.log("Drag started after movement detected");
                 }
             }
@@ -104,6 +189,9 @@
             // Only process drag events if we've confirmed this is a drag
             if (hasMoved) {
                 e.preventDefault();
+                // Update preview position
+                updateDragPreviewPosition(touch.clientX, touch.clientY);
+
                 const element = document.elementFromPoint(
                     touch.clientX,
                     touch.clientY,
@@ -129,6 +217,7 @@
             if (!hasMoved) {
                 console.log("Tap detected, triggering claim");
                 touchStartPos = null;
+                destroyDragPreview(); // Clean up preview if any
                 document.removeEventListener(
                     "touchmove",
                     handleGlobalTouchMove,
@@ -147,6 +236,7 @@
             if (!currentDragState.tile) {
                 touchStartPos = null;
                 hasMoved = false;
+                destroyDragPreview(); // Clean up preview
                 gameState.endDrag();
                 document.removeEventListener(
                     "touchmove",
@@ -171,6 +261,7 @@
                 }
                 touchStartPos = null;
                 hasMoved = false;
+                destroyDragPreview(); // Clean up preview
                 gameState.endDrag();
                 document.removeEventListener(
                     "touchmove",
@@ -235,6 +326,7 @@
 
             touchStartPos = null;
             hasMoved = false;
+            destroyDragPreview(); // Clean up preview
             gameState.endDrag();
             document.removeEventListener("touchmove", handleGlobalTouchMove);
             document.removeEventListener("touchend", handleGlobalTouchEnd);
@@ -365,3 +457,11 @@
         />
     {/if}
 </div>
+
+<style>
+    :global(#mobile-drag-preview .letter-stroke) {
+        -webkit-text-stroke: 4px black;
+        stroke: 4px black;
+        paint-order: stroke fill;
+    }
+</style>
