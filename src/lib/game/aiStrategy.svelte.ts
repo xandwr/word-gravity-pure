@@ -758,12 +758,12 @@ export function findBestAction(
     // Find best placement
     const bestPlacement = placements.reduce((best, p) =>
         p.score > best.score ? p : best
-    , { score: -Infinity } as PlacementOption);
+        , { score: -Infinity } as PlacementOption);
 
     // Find best claim
     const bestClaim = claims.reduce((best, c) =>
         c.score > best.score ? c : best
-    , { score: -Infinity } as ClaimOption);
+        , { score: -Infinity } as ClaimOption);
 
     if (debugLogging) {
         console.group('🤖 AI Decision Making');
