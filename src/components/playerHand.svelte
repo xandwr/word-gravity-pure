@@ -5,7 +5,9 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import LetterSlot from "./letterSlot.svelte";
+    import SwapSelectionMenu from "./swapSelectionMenu.svelte";
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
+    import type { TileData } from "$lib/game/types";
 
     // Populate both player and opponent hands when the component mounts
     onMount(() => {
@@ -35,6 +37,8 @@
     });
 
     let isSwapHover = $state(false);
+    let showSwapMenu = $state(false);
+    let swapHandIndex = $state<number | null>(null);
 
     function handleSwapDragOver(e: DragEvent) {
         e.preventDefault();
@@ -63,7 +67,9 @@
 
         // Only allow swapping tiles from hand
         if (gameState.playerSwapsRemaining > 0) {
-            gameState.swapPlayerTile(dragState.sourceIndex);
+            // Store the hand index and show the selection menu
+            swapHandIndex = dragState.sourceIndex;
+            showSwapMenu = true;
         }
 
         gameState.endDrag();
@@ -85,8 +91,23 @@
         const swapButton = element?.closest("#swapButton");
 
         if (swapButton && gameState.playerSwapsRemaining > 0) {
-            gameState.swapPlayerTile(dragState.sourceIndex);
+            // Store the hand index and show the selection menu
+            swapHandIndex = dragState.sourceIndex;
+            showSwapMenu = true;
         }
+    }
+
+    function handleSwapSelect(tile: TileData, bagIndex: number) {
+        if (swapHandIndex !== null) {
+            gameState.swapPlayerTileWithSpecific(swapHandIndex, bagIndex);
+        }
+        showSwapMenu = false;
+        swapHandIndex = null;
+    }
+
+    function handleSwapCancel() {
+        showSwapMenu = false;
+        swapHandIndex = null;
     }
 </script>
 
@@ -102,12 +123,12 @@
             {/each}
         </div>
 
-        <div class="flex items-center justify-center">
+        <div class="flex items-stretch justify-center h-full">
             <div
                 id="swapButton"
                 role="button"
                 tabindex="0"
-                class="aspect-square rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-20 sm:min-w-[100px] {isSwapHover
+                class="h-full rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-20 sm:min-w-[100px] {isSwapHover
                     ? 'bg-blue-500 border-blue-700'
                     : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0
                     ? 'opacity-50 cursor-not-allowed'
@@ -125,4 +146,12 @@
             </div>
         </div>
     </div>
+
+    <!-- Swap selection menu -->
+    {#if showSwapMenu}
+        <SwapSelectionMenu
+            onSelect={handleSwapSelect}
+            onCancel={handleSwapCancel}
+        />
+    {/if}
 </div>

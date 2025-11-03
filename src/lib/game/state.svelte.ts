@@ -231,6 +231,37 @@ function createGameState() {
             return true;
         },
 
+        // Swap a tile from player's hand with a specific tile from the bag
+        swapPlayerTileWithSpecific(handIndex: number, bagIndex: number): boolean {
+            if (playerSwapsRemaining.value <= 0) {
+                return false;
+            }
+
+            const oldTile = this.getPlayerHandTile(handIndex);
+            if (!oldTile) {
+                return false;
+            }
+
+            // Check if bag index is valid
+            if (bagIndex < 0 || bagIndex >= sharedBag.length) {
+                return false;
+            }
+
+            // Get the specific tile from the bag
+            const newTile = sharedBag.splice(bagIndex, 1)[0];
+
+            // Put the old tile back in the shared bag
+            sharedBag.push(oldTile);
+
+            // Set the new tile in the hand
+            this.setPlayerHandSlot(handIndex, newTile);
+
+            // Decrement swaps
+            this.decrementPlayerSwaps();
+
+            return true;
+        },
+
         // Utility method to get a tile from board
         getBoardTile(index: number): TileData | null {
             return boardSlots[index]?.heldLetterTile ?? null;
