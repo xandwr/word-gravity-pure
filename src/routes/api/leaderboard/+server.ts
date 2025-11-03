@@ -7,16 +7,46 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { kv } from '@vercel/kv';
+import { env } from '$env/dynamic/private';
 
 export interface LeaderboardEntry {
     username: string;
     score: number;
     timestamp: number;
     rank?: number;
+    playerId?: string;
 }
 
 const LEADERBOARD_KEY = 'leaderboard:global:alltime';
 const MAX_LEADERBOARD_SIZE = 100; // Keep top 100 scores
+
+// Server secret for signing submissions (change this in production!)
+const SERVER_SECRET = env.LEADERBOARD_SECRET || 'change-me-in-production';
+
+// Ensure environment variables are set for @vercel/kv
+if (env.KV_REST_API_URL) {
+    process.env.KV_REST_API_URL = env.KV_REST_API_URL;
+}
+if (env.KV_REST_API_TOKEN) {
+    process.env.KV_REST_API_TOKEN = env.KV_REST_API_TOKEN;
+}
+
+/**
+ * Generate a simple hash for signature verification
+ * In production, use a proper HMAC library like crypto.subtle
+ */
+async function generateSignature(playerId: string, score: number, timestamp: number): Promise<string> {
+    const data = `${playerId}:${score}:${timestamp}:${SERVER_SECRET}`;
+
+    // Use Web Crypto API for server-side hashing
+    const encoder = new TextEncoder();
+    const dataBuffer = encoder.encode(data);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    return hashHex;
+}
 
 // GET /api/leaderboard - Fetch top scores
 export const GET: RequestHandler = async () => {
@@ -31,11 +61,18 @@ export const GET: RequestHandler = async () => {
         const leaderboard: LeaderboardEntry[] = [];
 
         for (let i = 0; i < topScores.length; i += 2) {
-            const entryData = topScores[i] as string;
+            const entryData = topScores[i];
             const score = topScores[i + 1] as number;
 
             try {
-                const parsed = JSON.parse(entryData);
+                // entryData might be a string or an object depending on how it was stored
+                let parsed: { username: string; timestamp: number };
+                if (typeof entryData === 'string') {
+                    parsed = JSON.parse(entryData);
+                } else {
+                    parsed = entryData as { username: string; timestamp: number };
+                }
+
                 leaderboard.push({
                     username: parsed.username,
                     score: score,
@@ -43,7 +80,7 @@ export const GET: RequestHandler = async () => {
                     rank: leaderboard.length + 1
                 });
             } catch (e) {
-                console.error('Failed to parse leaderboard entry:', e);
+                console.error('Failed to parse leaderboard entry:', e, entryData);
             }
         }
 
@@ -67,7 +104,7 @@ export const GET: RequestHandler = async () => {
 export const POST: RequestHandler = async ({ request }) => {
     try {
         const body = await request.json();
-        const { username, score } = body;
+        const { username, score, playerId } = body;
 
         // Validate input
         if (!username || typeof username !== 'string') {
@@ -80,11 +117,33 @@ export const POST: RequestHandler = async ({ request }) => {
             );
         }
 
+        if (!playerId || typeof playerId !== 'string') {
+            return json(
+                {
+                    success: false,
+                    error: 'Player ID is required'
+                },
+                { status: 400 }
+            );
+        }
+
         if (typeof score !== 'number' || score < 0) {
             return json(
                 {
                     success: false,
                     error: 'Valid score is required'
+                },
+                { status: 400 }
+            );
+        }
+
+        // Basic anti-cheat: reject suspiciously high scores
+        const MAX_REASONABLE_SCORE = 10000;
+        if (score > MAX_REASONABLE_SCORE) {
+            return json(
+                {
+                    success: false,
+                    error: 'Score too high to be legitimate'
                 },
                 { status: 400 }
             );
@@ -102,11 +161,21 @@ export const POST: RequestHandler = async ({ request }) => {
             );
         }
 
-        // Create entry data
+        const timestamp = Date.now();
+
+        // Generate server-side signature for this submission
+        const signature = await generateSignature(playerId, score, timestamp);
+
+        // Create entry data with playerId
         const entryData = JSON.stringify({
             username: sanitizedUsername,
-            timestamp: Date.now()
+            playerId: playerId,
+            timestamp: timestamp,
+            signature: signature
         });
+
+        // Use playerId:timestamp as unique member key to allow multiple scores per player
+        const memberKey = `${playerId}:${timestamp}`;
 
         // Add to sorted set (score is the sorting value)
         await kv.zadd(LEADERBOARD_KEY, {

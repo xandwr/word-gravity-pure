@@ -89,7 +89,7 @@
             >
                 <!-- Table Header -->
                 <div
-                    class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-4 sm:px-6 py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white font-bold"
+                    class="grid grid-cols-[80px_1fr_120px_180px] gap-4 px-4 sm:px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold items-center"
                 >
                     <div class="text-center">Rank</div>
                     <div>Player</div>
@@ -101,7 +101,7 @@
                 <div class="divide-y-2 divide-gray-100">
                     {#each data.leaderboard as entry, index}
                         <div
-                            class="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors border-l-4 {getRankBg(
+                            class="grid grid-cols-[80px_1fr_120px_180px] gap-4 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors border-l-4 items-center {getRankBg(
                                 entry.rank || index + 1,
                             )}"
                         >
@@ -136,7 +136,7 @@
 
                             <!-- Date -->
                             <div
-                                class="text-right text-sm text-gray-500 hidden sm:block"
+                                class="text-right text-sm text-gray-500 hidden sm:block whitespace-nowrap"
                             >
                                 {formatDate(entry.timestamp)}
                             </div>

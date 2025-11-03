@@ -15,12 +15,18 @@
         createShaderAnimation,
     } from "$lib/shaders/shaderLoader";
     import { fade } from "svelte/transition";
+    import {
+        getPlayerId,
+        getUsername,
+        saveUsername,
+    } from "$lib/utils/playerIdentity";
 
     let username = $state("");
     let submitting = $state(false);
     let submitSuccess = $state(false);
     let submitError = $state("");
     let playerRank = $state<number | null>(null);
+    let playerId = $state("");
 
     async function submitScore() {
         if (!username.trim()) {
@@ -32,6 +38,9 @@
         submitError = "";
 
         try {
+            // Save username to localStorage for future games
+            saveUsername(username.trim());
+
             const response = await fetch("/api/leaderboard", {
                 method: "POST",
                 headers: {
@@ -39,6 +48,7 @@
                 },
                 body: JSON.stringify({
                     username: username.trim(),
+                    playerId: playerId,
                     score: gameState.playerScore,
                 }),
             });
@@ -61,6 +71,13 @@
 
     // WebGL shader setup
     onMount(() => {
+        // Load player identity
+        playerId = getPlayerId();
+        const savedUsername = getUsername();
+        if (savedUsername) {
+            username = savedUsername;
+        }
+
         const canvas = document.getElementById(
             "gameBackgroundCanvas",
         ) as HTMLCanvasElement;

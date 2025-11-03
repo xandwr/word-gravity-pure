@@ -1031,12 +1031,36 @@ function createGameState() {
                 return; // Don't check end condition yet, let game continue
             }
 
-            // Check if game should end: bag empty AND both hands empty
+            // Check if game should end: bag empty AND at least one hand is empty
             const isBagEmpty = sharedBag.length === 0;
             const isPlayerHandEmpty = playerHandSlots.every(slot => slot.heldLetterTile === null);
             const isOpponentHandEmpty = opponentHandSlots.every(slot => slot.heldLetterTile === null);
 
-            if (isBagEmpty && isPlayerHandEmpty && isOpponentHandEmpty) {
+            if (isBagEmpty && (isPlayerHandEmpty || isOpponentHandEmpty)) {
+                // If player's hand is empty but opponent still has tiles, give opponent their tiles
+                if (isPlayerHandEmpty && !isOpponentHandEmpty) {
+                    // Add remaining opponent tiles to opponent's score
+                    let remainingTileScore = 0;
+                    opponentHandSlots.forEach(slot => {
+                        if (slot.heldLetterTile) {
+                            remainingTileScore += slot.heldLetterTile.baseScore * slot.heldLetterTile.multiplier;
+                        }
+                    });
+                    opponentScore.value += remainingTileScore;
+                }
+
+                // If opponent's hand is empty but player still has tiles, give player their tiles
+                if (isOpponentHandEmpty && !isPlayerHandEmpty) {
+                    // Add remaining player tiles to player's score
+                    let remainingTileScore = 0;
+                    playerHandSlots.forEach(slot => {
+                        if (slot.heldLetterTile) {
+                            remainingTileScore += slot.heldLetterTile.baseScore * slot.heldLetterTile.multiplier;
+                        }
+                    });
+                    playerScore.value += remainingTileScore;
+                }
+
                 // Game over - no more tiles available
                 isGameOver.value = true;
                 if (playerScore.value > opponentScore.value) {
