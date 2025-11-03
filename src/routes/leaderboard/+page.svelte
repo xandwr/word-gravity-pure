@@ -36,11 +36,11 @@
     <title>Word Gravity | Leaderboard</title>
 </svelte:head>
 
-<div class="bg-white px-4 py-1">
+<div class="px-4 py-1">
     <div class="max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-8 pt-8">
-            <h1 class="text-4xl sm:text-5xl font-bold text-gray-800 mb-2">
+            <h1 class="text-4xl sm:text-5xl font-bold text-white mb-2">
                 Global Leaderboard
             </h1>
         </div>
@@ -59,12 +59,10 @@
         <!-- Leaderboard Content -->
         {#if data.error}
             <div
-                class="bg-red-100 border-2 border-red-400 rounded-lg p-6 text-center"
+                class="border-2 border-red-400 rounded-lg p-6 text-center"
             >
                 <p class="text-red-800 font-semibold">{data.error}</p>
-                <p class="text-red-600 mt-2">
-                    Y'all just wait though...
-                </p>
+                <p class="text-red-600 mt-2">Y'all just wait though...</p>
             </div>
         {:else if data.leaderboard.length === 0}
             <div
@@ -85,11 +83,11 @@
             </div>
         {:else}
             <div
-                class="bg-white rounded-xl shadow-lg overflow-hidden border-2 border-gray-200"
+                class="rounded-xl shadow-lg overflow-hidden border-2 border-gray-200"
             >
                 <!-- Table Header -->
                 <div
-                    class="grid grid-cols-[80px_1fr_120px_180px] gap-4 px-4 sm:px-6 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-bold items-center"
+                    class="grid grid-cols-[50px_1fr_80px] sm:grid-cols-[80px_1fr_120px_180px] gap-2 sm:gap-4 px-3 sm:px-6 py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white font-bold items-center"
                 >
                     <div class="text-center">Rank</div>
                     <div>Player</div>
@@ -101,13 +99,13 @@
                 <div class="divide-y-2 divide-gray-100">
                     {#each data.leaderboard as entry, index}
                         <div
-                            class="grid grid-cols-[80px_1fr_120px_180px] gap-4 px-4 sm:px-6 py-4 hover:bg-gray-50 transition-colors border-l-4 items-center {getRankBg(
+                            class="grid grid-cols-[50px_1fr_80px] sm:grid-cols-[80px_1fr_120px_180px] gap-2 sm:gap-4 px-3 sm:px-6 py-3 sm:py-4 hover:bg-gray-50 transition-colors border-l-4 {getRankBg(
                                 entry.rank || index + 1,
                             )}"
                         >
                             <!-- Rank -->
                             <div
-                                class="text-center font-bold text-xl {getRankColor(
+                                class="text-center font-bold text-lg sm:text-xl {getRankColor(
                                     entry.rank || index + 1,
                                 )}"
                             >
@@ -122,19 +120,24 @@
                                 {/if}
                             </div>
 
-                            <!-- Username -->
-                            <div class="font-semibold text-gray-800 truncate">
-                                {entry.username}
+                            <!-- Username and Date (stacked on mobile) -->
+                            <div class="min-w-0">
+                                <div class="font-semibold text-gray-800 truncate">
+                                    {entry.username}
+                                </div>
+                                <div class="text-xs text-gray-500 sm:hidden truncate">
+                                    {formatDate(entry.timestamp)}
+                                </div>
                             </div>
 
                             <!-- Score -->
                             <div
-                                class="text-right font-bold text-lg text-blue-600"
+                                class="text-right font-bold text-base sm:text-lg text-purple-600"
                             >
                                 {entry.score}
                             </div>
 
-                            <!-- Date -->
+                            <!-- Date (desktop only) -->
                             <div
                                 class="text-right text-sm text-gray-500 hidden sm:block whitespace-nowrap"
                             >
