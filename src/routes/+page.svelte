@@ -78,8 +78,8 @@
         // Load shader program from files
         loadShaderProgram(
             gl,
-            "/shaders/gradient.vert",
-            "/shaders/gradient.frag",
+            "/shaders/gradient/vert.vert",
+            "/shaders/gradient/frag.frag",
         ).then((shaderProgram) => {
             if (!shaderProgram) {
                 console.error("Failed to load shader program");
