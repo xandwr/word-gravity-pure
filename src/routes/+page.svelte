@@ -148,8 +148,8 @@
     {/if}
 
     <div class="relative flex flex-col flex-1 min-h-0">
-        <div id="gameBackground" class="absolute inset-0 -z-10">
-            
+        <div class="absolute inset-0 -z-10">
+            <canvas id="gameBackgroundCanvas" class="absolute inset-0 -z-10"></canvas>
         </div>
         
         <div class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-center overflow-auto">

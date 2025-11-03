@@ -817,15 +817,15 @@ function createGameState() {
             // Claim player words
             if (playerWords.length > 0) {
                 const firstPlayerWord = playerWords[0];
-                const firstTileIndex = firstPlayerWord.positions[0];
+                const firstTileIndex = firstPlayerWord.tileIndices[0];
                 this.claimTilesFrom(firstTileIndex);
             }
 
             // Claim opponent words
             if (opponentWords.length > 0) {
                 const firstOpponentWord = opponentWords[0];
-                const firstTileIndex = firstOpponentWord.positions[0];
-                this.opponentClaimTiles(firstTileIndex);
+                const firstTileIndex = firstOpponentWord.tileIndices[0];
+                this.claimTilesFromOpponent(firstTileIndex);
             }
         },
 
