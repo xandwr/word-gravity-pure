@@ -28,3 +28,42 @@ body {
     user-select: none;
     overscroll-behavior: contain;
 }
+
+/* Swap animation keyframes */
+@keyframes swapToBoard {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(-20px) scale(0.5);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes swapToHand {
+    0% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: translateY(20px) scale(0.5);
+        opacity: 0.7;
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+        opacity: 1;
+    }
+}
+
+.swap-to-board {
+    animation: swapToBoard 0.2s ease-in-out;
+}
+
+.swap-to-hand {
+    animation: swapToHand 0.2s ease-in-out;
+}

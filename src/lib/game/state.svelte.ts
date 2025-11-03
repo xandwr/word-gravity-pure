@@ -75,6 +75,20 @@ function createGameState() {
         sourceIndex: null
     });
 
+    // Swap animation state - tracks tiles currently animating a swap
+    const swapAnimationState = $state<{
+        isSwapping: boolean;
+        handIndex: number | null;
+        boardIndex: number | null;
+    }>({
+        isSwapping: false,
+        handIndex: null,
+        boardIndex: null
+    });
+
+    // Track board indices that were overwritten this turn (for word ownership transfer)
+    const overwrittenTileIndices = $state<Set<number>>(new Set());
+
     // Background shader controls
     const bgOpacity = $state({ value: 0.5 });
     const bgFlashColor = $state<{ value: [number, number, number] }>({ value: [0.0, 0.0, 0.0] });
@@ -300,6 +314,24 @@ function createGameState() {
             return playerSwapsUsedThisTurn.value;
         },
 
+        // Swap animation state getters
+        get isSwapping() {
+            return swapAnimationState.isSwapping;
+        },
+
+        get swappingHandIndex() {
+            return swapAnimationState.handIndex;
+        },
+
+        get swappingBoardIndex() {
+            return swapAnimationState.boardIndex;
+        },
+
+        // Get overwritten tile indices (for word ownership transfer)
+        get overwrittenIndices() {
+            return overwrittenTileIndices;
+        },
+
         get isGameOver() {
             return isGameOver.value;
         },
@@ -480,9 +512,30 @@ function createGameState() {
                 return false;
             }
 
-            // Swap the tiles
-            this.setPlayerHandSlot(handIndex, boardTile);
-            this.setBoardSlot(boardIndex, handTile);
+            // Track that this board position was overwritten (for word ownership transfer)
+            overwrittenTileIndices.add(boardIndex);
+
+            // Set swap animation state
+            swapAnimationState.isSwapping = true;
+            swapAnimationState.handIndex = handIndex;
+            swapAnimationState.boardIndex = boardIndex;
+
+            // Wait for animation to complete before swapping
+            setTimeout(() => {
+                // Swap the tiles
+                this.setPlayerHandSlot(handIndex, boardTile);
+                this.setBoardSlot(boardIndex, handTile);
+
+                // Mark board as unsettled to trigger gravity and validation
+                isBoardSettled.value = false;
+
+                // Reset swap animation state after swap completes
+                setTimeout(() => {
+                    swapAnimationState.isSwapping = false;
+                    swapAnimationState.handIndex = null;
+                    swapAnimationState.boardIndex = null;
+                }, 200); // Short delay to let tiles settle in new positions
+            }, 150); // Animation duration
 
             // Decrement swaps and increment turn counter
             this.decrementPlayerSwaps();
@@ -568,6 +621,9 @@ function createGameState() {
             if (currentPlayerTurn.value === "player") {
                 playerSwapsUsedThisTurn.value = 0;
             }
+
+            // Clear overwritten tile indices when turn switches
+            overwrittenTileIndices.clear();
 
             // If switching to opponent, trigger their move after a brief delay
             if (currentPlayerTurn.value === "opponent") {
@@ -1014,7 +1070,7 @@ function createGameState() {
 
             // Validate the board and find all valid words
             // Pass the player who just made a move (before turn switch)
-            wordValidator.validateBoard(boardSlots, currentPlayerTurn.value, GRID_COLS, GRID_ROWS, minWordLength);
+            wordValidator.validateBoard(boardSlots, currentPlayerTurn.value, GRID_COLS, GRID_ROWS, minWordLength, overwrittenTileIndices);
 
             // Check for game over condition
             this.checkGameOver();

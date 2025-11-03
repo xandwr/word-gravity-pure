@@ -46,6 +46,19 @@
         gameState.boardSettled && !gameState.isClaimingActive,
     );
 
+    // Check if this slot is part of an active swap animation
+    const isSwappingToBoard = $derived(
+        gameState.isSwapping &&
+        slotType === "hand" &&
+        gameState.swappingHandIndex === index
+    );
+
+    const isSwappingToHand = $derived(
+        gameState.isSwapping &&
+        slotType === "board" &&
+        gameState.swappingBoardIndex === index
+    );
+
     // Helper function to create mobile drag preview
     function createDragPreview(touch: Touch) {
         if (!tile || dragPreview.element) return;
@@ -456,7 +469,7 @@
     id="letterSlot"
     class="aspect-square rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center w-12.5 h-12.5 sm:w-16 sm:h-16 md:w-20 md:h-20 p-1 sm:p-2 md:p-4 shadow-md {isDragOver
         ? 'bg-blue-300 border-blue-500'
-        : 'bg-black/20'}"
+        : 'bg-black/20'} {isSwappingToBoard ? 'swap-to-board' : ''} {isSwappingToHand ? 'swap-to-hand' : ''}"
     data-slot-index={index}
     data-slot-type={slotType}
     role="button"

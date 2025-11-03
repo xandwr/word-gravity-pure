@@ -115,13 +115,15 @@ class WordValidator {
      * @param cols - Number of columns (default 7)
      * @param rows - Number of rows (default 6)
      * @param minWordLength - Minimum word length to consider valid (default 3)
+     * @param overwrittenIndices - Set of board indices that were overwritten this turn (for ownership transfer)
      */
     validateBoard(
         board: Array<{ heldLetterTile: TileData | null }>,
         currentPlayer: Player,
         cols: number = 7,
         rows: number = 6,
-        minWordLength: number = 3
+        minWordLength: number = 3,
+        overwrittenIndices: Set<number> = new Set()
     ) {
         if (!this.isLoaded) {
             return;
@@ -281,7 +283,7 @@ class WordValidator {
         const uniqueWords = this.deduplicateWords(foundWords);
 
         // Determine ownership based on previous state
-        const wordsWithOwnership = this.determineOwnership(uniqueWords, currentPlayer);
+        const wordsWithOwnership = this.determineOwnership(uniqueWords, currentPlayer, overwrittenIndices);
 
         // Update state
         this.previousWords = wordsWithOwnership; // Store for next validation
@@ -294,9 +296,18 @@ class WordValidator {
      * A word's ownership changes to current player if:
      * - It's a new word (didn't exist before)
      * - It's been extended (same tiles plus more)
+     * - It contains a tile that was overwritten this turn
      */
-    private determineOwnership(words: ValidWord[], currentPlayer: Player): ValidWord[] {
+    private determineOwnership(words: ValidWord[], currentPlayer: Player, overwrittenIndices: Set<number>): ValidWord[] {
         return words.map(word => {
+            // Check if this word contains any overwritten tiles
+            const containsOverwrittenTile = word.tileIndices.some(index => overwrittenIndices.has(index));
+
+            // If word contains an overwritten tile, current player takes ownership
+            if (containsOverwrittenTile) {
+                return { ...word, owner: currentPlayer };
+            }
+
             // Create a key to identify this word by its tile positions
             const key = this.getWordKey(word);
 

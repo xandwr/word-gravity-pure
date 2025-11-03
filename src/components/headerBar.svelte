@@ -243,7 +243,36 @@
                             <strong>Swap with board:</strong> Drag a hand tile onto any tile on the board to swap them directly
                         </li>
                         <li>
-                            <strong>Strategic use:</strong> Swaps don't end your turn, so use them to set up better plays
+                            <strong>Steal words:</strong> When you swap a tile on the board that's part of an opponent's word, you gain ownership of that word!
+                        </li>
+                        <li>
+                            <strong>Visual feedback:</strong> When dragging a tile, the swap button pulses with a blue glow if you have a swap available
+                        </li>
+                        <li>
+                            <strong>Strategic use:</strong> Swaps don't end your turn, so use them to set up better plays or hijack opponent words
+                        </li>
+                    </ul>
+                </section>
+
+                <hr class="border-t-2 border-gray-300">
+
+                <section>
+                    <h3 class="text-xl font-bold mb-2">Word Ownership</h3>
+                    <p class="mb-2">
+                        Words can change ownership during the game:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li>
+                            <strong>Creating words:</strong> When you place tiles that form a new word, you own it
+                        </li>
+                        <li>
+                            <strong>Extending words:</strong> If you add tiles to an existing word, making it longer, you take ownership
+                        </li>
+                        <li>
+                            <strong>Overwriting tiles:</strong> If you swap a tile that's part of an opponent's word, you steal ownership of that entire word
+                        </li>
+                        <li>
+                            <strong>Example:</strong> If the opponent has "CAT" and you swap the "A" for an "U" (making "CUT"), the word becomes yours!
                         </li>
                     </ul>
                 </section>
