@@ -15,7 +15,7 @@ uniform float spinMod; // dynamic spin speed modifier (0.0-2.0, default 1.0)
 #define COLOUR_1 vec4(0.050, 0.180, 0.400, 1.0) // deep space blue
 #define COLOUR_2 vec4(0.290, 0.050, 0.560, 1.0) // violet nebula core
 #define COLOUR_3 vec4(0.010, 0.020, 0.050, 1.0) // almost-black void
-#define CONTRAST 4.0
+#define CONTRAST 1.0
 #define LIGTHING 0.1
 #define SPIN_AMOUNT 0.5
 #define PIXEL_FILTER 512.0

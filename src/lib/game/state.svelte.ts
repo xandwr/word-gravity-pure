@@ -161,28 +161,34 @@ function createGameState() {
             // Set the flash color and intensity
             bgFlashColor.value = color;
 
-            const startTime = Date.now();
-            const rampUpTime = 0.05; // 5% of duration for instant burst
-            const peakIntensity = 0.7;
+            const startTime = performance.now();
+            const rampUpTime = 0.15; // 15% of duration for gradual burst
+            const peakIntensity = 0.35; // Reduced from 0.7 for more subtle effect
+            let lastTime = startTime;
 
-            const animate = () => {
-                const elapsed = Date.now() - startTime;
+            const animate = (currentTime: number) => {
+                const delta = (currentTime - lastTime) / 1000; // Delta in seconds
+                lastTime = currentTime;
+
+                const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
                 let intensity: number;
                 if (progress < rampUpTime) {
-                    // Instant ramp up (cubic ease-in)
+                    // Gradual ramp up (quadratic ease-in for smoother start)
                     const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
+                    const eased = rampProgress * rampProgress;
                     intensity = peakIntensity * eased;
                 } else {
-                    // Smooth cubic decay
+                    // Smooth quartic decay (slower falloff)
                     const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = 1 - Math.pow(decayProgress, 3.0);
+                    const eased = 1 - Math.pow(decayProgress, 4.0);
                     intensity = peakIntensity * eased;
                 }
 
-                bgFlashIntensity.value = intensity;
+                // Lerp the intensity based on delta time for frame-rate independence
+                const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
+                bgFlashIntensity.value = bgFlashIntensity.value + (intensity - bgFlashIntensity.value) * lerpFactor;
 
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
@@ -196,27 +202,33 @@ function createGameState() {
         // Pulse the contrast modifier
         pulseContrast(targetMod: number = 1.4, duration: number = 1200) {
             const startValue = bgContrastMod.value;
-            const startTime = Date.now();
-            const rampUpTime = 0.1; // 10% of duration for fast ramp up
+            const startTime = performance.now();
+            const rampUpTime = 0.2; // 20% of duration for gradual ramp up
+            let lastTime = startTime;
 
-            const animate = () => {
-                const elapsed = Date.now() - startTime;
+            const animate = (currentTime: number) => {
+                const delta = (currentTime - lastTime) / 1000; // Delta in seconds
+                lastTime = currentTime;
+
+                const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                let value: number;
+                let targetValue: number;
                 if (progress < rampUpTime) {
-                    // Fast ramp up using cubic ease-in
+                    // Gradual ramp up using quadratic ease-in
                     const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    value = startValue + (targetMod - startValue) * eased;
+                    const eased = rampProgress * rampProgress;
+                    targetValue = startValue + (targetMod - startValue) * eased;
                 } else {
-                    // Smooth cubic decay back to normal
+                    // Smooth quartic decay back to normal
                     const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = 1 - Math.pow(decayProgress, 3.0);
-                    value = startValue + (targetMod - startValue) * eased;
+                    const eased = 1 - Math.pow(decayProgress, 4.0);
+                    targetValue = startValue + (targetMod - startValue) * eased;
                 }
 
-                bgContrastMod.value = value;
+                // Lerp the value based on delta time for frame-rate independence
+                const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
+                bgContrastMod.value = bgContrastMod.value + (targetValue - bgContrastMod.value) * lerpFactor;
 
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
@@ -230,27 +242,33 @@ function createGameState() {
         // Pulse the spin speed modifier
         pulseSpin(targetMod: number = 1.6, duration: number = 1400) {
             const startValue = bgSpinMod.value;
-            const startTime = Date.now();
-            const rampUpTime = 0.1; // 10% of duration for fast ramp up
+            const startTime = performance.now();
+            const rampUpTime = 0.2; // 20% of duration for gradual ramp up
+            let lastTime = startTime;
 
-            const animate = () => {
-                const elapsed = Date.now() - startTime;
+            const animate = (currentTime: number) => {
+                const delta = (currentTime - lastTime) / 1000; // Delta in seconds
+                lastTime = currentTime;
+
+                const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                let value: number;
+                let targetValue: number;
                 if (progress < rampUpTime) {
-                    // Fast ramp up using cubic ease-in
+                    // Gradual ramp up using quadratic ease-in
                     const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    value = startValue + (targetMod - startValue) * eased;
+                    const eased = rampProgress * rampProgress;
+                    targetValue = startValue + (targetMod - startValue) * eased;
                 } else {
-                    // Smooth cubic decay back to normal
+                    // Smooth quartic decay back to normal
                     const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = 1 - Math.pow(decayProgress, 3.0);
-                    value = startValue + (targetMod - startValue) * eased;
+                    const eased = 1 - Math.pow(decayProgress, 4.0);
+                    targetValue = startValue + (targetMod - startValue) * eased;
                 }
 
-                bgSpinMod.value = value;
+                // Lerp the value based on delta time for frame-rate independence
+                const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
+                bgSpinMod.value = bgSpinMod.value + (targetValue - bgSpinMod.value) * lerpFactor;
 
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
@@ -329,9 +347,9 @@ function createGameState() {
             if (score > oldScore) {
                 // Convert player color from hex to RGB 0.0-1.0
                 const color = this.hexToRGB('#22c55e'); // green-500
-                this.triggerBackgroundFlash(color, 800);
-                this.pulseContrast(1.3, 500);
-                this.pulseSpin(1.4, 1000);
+                this.triggerBackgroundFlash(color, 1000); // Increased duration for smoother effect
+                this.pulseContrast(1.2, 800); // Reduced from 1.3, shorter duration
+                this.pulseSpin(1.25, 1200); // Reduced from 1.4, shorter duration
             }
         },
 
@@ -343,9 +361,9 @@ function createGameState() {
             if (score > oldScore) {
                 // Convert opponent color from hex to RGB 0.0-1.0
                 const color = this.hexToRGB('#ef4444'); // red-500
-                this.triggerBackgroundFlash(color, 800);
-                this.pulseContrast(1.3, 500);
-                this.pulseSpin(1.4, 1000);
+                this.triggerBackgroundFlash(color, 1000); // Increased duration for smoother effect
+                this.pulseContrast(1.2, 800); // Reduced from 1.3, shorter duration
+                this.pulseSpin(1.25, 1200); // Reduced from 1.4, shorter duration
             }
         },
 
@@ -723,8 +741,8 @@ function createGameState() {
 
             // Trigger shader effects once at the start
             const color = this.hexToRGB('#22c55e'); // green-500
-            this.triggerBackgroundFlash(color);
-            this.pulseContrast();
+            this.triggerBackgroundFlash(color, 1000); // Smoother, longer effect
+            this.pulseContrast(1.2, 800); // More subtle contrast pulse
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];
@@ -819,8 +837,8 @@ function createGameState() {
 
             // Trigger shader effects once at the start
             const color = this.hexToRGB('#ef4444'); // red-500
-            this.triggerBackgroundFlash(color);
-            this.pulseContrast();
+            this.triggerBackgroundFlash(color, 1000); // Smoother, longer effect
+            this.pulseContrast(1.2, 800); // More subtle contrast pulse
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];
