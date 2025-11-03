@@ -102,6 +102,17 @@
                 </section>
 
                 <section>
+                    <h3 class="text-xl font-bold mb-2">Tile Colors:</h3>
+                    <ol class="list-decimal list-inside space-y-2">
+                        <p><span class="font-bold" style="color: #b4e1ff;">Blue</span>: This is part of one of your valid horizontal words</p>
+                        <p><span class="font-bold" style="color: #ffb347;">Orange</span>: This is part of one of your valid vertical words</p>
+                        <p><span class="font-bold" style="color: #a020f0;">Purple</span>: This tile is part of both a horizontal AND vertical word you can claim</p>
+                        <p><span class="font-bold" style="color: #ff3333;">Red</span>: This is one of the opponent's tiles</p>
+                        <p><span class="font-bold" style="color: #ff33aa;">Pink</span>: This is both yours AND your opponent's tile</p>
+                    </ol>
+                </section>
+
+                <section>
                     <h3 class="text-xl font-bold mb-2">Tile Multipliers</h3>
                     <div class="space-y-1">
                         <p><span class="font-bold" style="color: #b4e1ff;">2x</span> - Light Blue</p>
