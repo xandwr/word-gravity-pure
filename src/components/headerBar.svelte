@@ -42,7 +42,7 @@
                 href="/"
                 class="hover:underline {currentPath === '/'
                     ? 'font-bold underline'
-                    : ''}">Endless</a
+                    : ''}">Endless Mode</a
             >
             <a
                 href="/leaderboard"
@@ -57,13 +57,13 @@
 <!-- mobile dropdown -->
 {#if menuOpen}
     <nav
-        class="md:hidden flex flex-col text-white bg-blue-800 border-t border-blue-900 p-4 gap-2"
+        class="md:hidden flex flex-col text-white bg-blue-900/20 border-t border-blue-300/20 p-4 gap-2"
     >
         <a
             href="/"
             class="hover:underline {currentPath === '/'
                 ? 'font-bold underline'
-                : ''}">Endless</a
+                : ''}">Endless Mode</a
         >
         <a
             href="/leaderboard"
