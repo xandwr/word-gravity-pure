@@ -10,9 +10,14 @@
 <header
     class="bg-blue-900/10 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-600/10"
 >
-    <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">
-        <a href="/">Word Gravity</a>
-    </h1>
+    <div class="flex flex-row items-end gap-1">
+        <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight text-nowrap">
+            <a href="/">Word Gravity</a>
+        </h1>
+        <h3 class="text-xs sm:text-sm sm:translate-y-0.5 font-semibold text-neutral-400 tracking-tight">
+            <a href="/">v0.1</a>
+        </h3>
+    </div>
 
     <div class="flex items-center gap-8">
         <!-- lightbulb how-to-play button -->
