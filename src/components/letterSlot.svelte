@@ -303,8 +303,8 @@
                 ) {
                     console.log("Attempting move from hand to board");
                     const boardSlot = gameState.board[targetIndex];
-                    // Only allow drop on empty slots
                     if (!boardSlot.heldLetterTile) {
+                        // Empty slot - place tile normally
                         const success = gameState.moveFromHandToBoard(
                             currentDragState.sourceIndex ?? 0,
                             targetIndex,
@@ -313,6 +313,14 @@
                         if (success) {
                             gameState.endPlayerTurn();
                         }
+                    } else {
+                        // Occupied slot - swap tiles
+                        const success = gameState.swapPlayerHandWithBoard(
+                            currentDragState.sourceIndex ?? 0,
+                            targetIndex,
+                        );
+                        console.log("Swap success:", success);
+                        // Don't end turn after swapping
                     }
                 } else if (
                     targetType === "hand" &&
@@ -374,7 +382,7 @@
             return;
         }
 
-        // Only allow drops to empty board slots from hand
+        // Allow drops to empty board slots from hand
         if (slotType === "board" && !tile && dragState.sourceType === "hand") {
             const success = gameState.moveFromHandToBoard(
                 dragState.sourceIndex,
@@ -384,6 +392,14 @@
                 // End player turn after placing a tile
                 gameState.endPlayerTurn();
             }
+        }
+        // NEW: Allow swapping hand tile with occupied board tile
+        else if (slotType === "board" && tile && dragState.sourceType === "hand") {
+            const success = gameState.swapPlayerHandWithBoard(
+                dragState.sourceIndex,
+                index,
+            );
+            // Don't end turn after swapping - swaps are free actions
         }
         // Allow moving back from board to empty hand slot
         else if (

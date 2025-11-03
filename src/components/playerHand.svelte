@@ -132,7 +132,7 @@
                 tabindex="0"
                 class="h-full rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-20 sm:min-w-[100px] {isSwapHover
                     ? 'bg-blue-500 border-blue-700'
-                    : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0
+                    : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0 || gameState.playerSwapsUsedThisTurn >= 1
                     ? 'opacity-50 cursor-not-allowed'
                     : 'cursor-pointer'}"
                 ondragover={handleSwapDragOver}
@@ -143,7 +143,11 @@
                 <h1 class="text-xl sm:text-2xl md:text-4xl">🔁</h1>
                 <h1 class="text-sm sm:text-base md:text-xl font-bold">Swap</h1>
                 <span class="flex gap-0.5 sm:gap-1 text-xs sm:text-sm">
-                    <h1 class="font-semibold">Remaining:</h1>
+                    <h1 class="font-semibold">This turn:</h1>
+                    <h1 class="font-bold">{gameState.playerSwapsUsedThisTurn >= 1 ? "0" : "1"}/1</h1>
+                </span>
+                <span class="flex gap-0.5 sm:gap-1 text-xs sm:text-sm">
+                    <h1 class="font-semibold">Total:</h1>
                     <h1 class="font-bold">{gameState.playerSwapsRemaining}</h1>
                 </span>
             </div>

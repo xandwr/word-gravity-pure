@@ -58,6 +58,7 @@ function createGameState() {
     const currentPlayerTurn = $state<{ value: "player" | "opponent" }>({ value: "player" });
 
     const playerSwapsRemaining = $state({ value: 5 });
+    const playerSwapsUsedThisTurn = $state({ value: 0 });
 
     // Game over state
     const isGameOver = $state({ value: false });
@@ -295,6 +296,10 @@ function createGameState() {
             return playerSwapsRemaining.value;
         },
 
+        get playerSwapsUsedThisTurn() {
+            return playerSwapsUsedThisTurn.value;
+        },
+
         get isGameOver() {
             return isGameOver.value;
         },
@@ -399,7 +404,8 @@ function createGameState() {
 
         // Swap a tile from player's hand
         swapPlayerTile(handIndex: number): boolean {
-            if (playerSwapsRemaining.value <= 0) {
+            // Check if player has swaps remaining and hasn't used one this turn
+            if (playerSwapsRemaining.value <= 0 || playerSwapsUsedThisTurn.value >= 1) {
                 return false;
             }
 
@@ -420,15 +426,17 @@ function createGameState() {
                 this.setPlayerHandSlot(handIndex, null);
             }
 
-            // Decrement swaps (no longer ends turn)
+            // Decrement swaps and increment turn counter
             this.decrementPlayerSwaps();
+            playerSwapsUsedThisTurn.value++;
 
             return true;
         },
 
         // Swap a tile from player's hand with a specific tile from the bag
         swapPlayerTileWithSpecific(handIndex: number, bagIndex: number): boolean {
-            if (playerSwapsRemaining.value <= 0) {
+            // Check if player has swaps remaining and hasn't used one this turn
+            if (playerSwapsRemaining.value <= 0 || playerSwapsUsedThisTurn.value >= 1) {
                 return false;
             }
 
@@ -451,8 +459,34 @@ function createGameState() {
             // Set the new tile in the hand
             this.setPlayerHandSlot(handIndex, newTile);
 
-            // Decrement swaps
+            // Decrement swaps and increment turn counter
             this.decrementPlayerSwaps();
+            playerSwapsUsedThisTurn.value++;
+
+            return true;
+        },
+
+        // Swap a tile from player's hand with a tile on the board
+        swapPlayerHandWithBoard(handIndex: number, boardIndex: number): boolean {
+            // Check if player has swaps remaining and hasn't used one this turn
+            if (playerSwapsRemaining.value <= 0 || playerSwapsUsedThisTurn.value >= 1) {
+                return false;
+            }
+
+            const handTile = this.getPlayerHandTile(handIndex);
+            const boardTile = this.getBoardTile(boardIndex);
+
+            if (!handTile || !boardTile) {
+                return false;
+            }
+
+            // Swap the tiles
+            this.setPlayerHandSlot(handIndex, boardTile);
+            this.setBoardSlot(boardIndex, handTile);
+
+            // Decrement swaps and increment turn counter
+            this.decrementPlayerSwaps();
+            playerSwapsUsedThisTurn.value++;
 
             return true;
         },
@@ -529,6 +563,11 @@ function createGameState() {
 
         executeTurnSwitch() {
             currentPlayerTurn.value = currentPlayerTurn.value === "player" ? "opponent" : "player";
+
+            // Reset swap counter when switching to player
+            if (currentPlayerTurn.value === "player") {
+                playerSwapsUsedThisTurn.value = 0;
+            }
 
             // If switching to opponent, trigger their move after a brief delay
             if (currentPlayerTurn.value === "opponent") {

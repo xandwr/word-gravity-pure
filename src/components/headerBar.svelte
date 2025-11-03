@@ -42,7 +42,7 @@
         </h3>
     </div>
 
-    <div class="flex items-center gap-8">
+    <div class="flex items-center gap-4">
         <!-- lightbulb how-to-play button -->
         <button
             class="text-2xl p-1 hover:bg-blue-300 rounded-xl transition-colors border-2 border-black/20 bg-black/10 outline-1"
@@ -66,6 +66,9 @@
 
         <!-- desktop nav -->
         <nav class="hidden md:flex gap-4 text-white items-center">
+            <!-- Separator before nav links -->
+            <div class="h-6 w-px bg-white/30 mx-2"></div>
+
             {#each navLinks as link, index}
                 {#if index === 2}
                     <div class="h-6 w-px bg-white/30 mx-2"></div>
@@ -175,6 +178,8 @@
                     </p>
                 </section>
 
+                <hr class="border-t-2 border-gray-300">
+
                 <section>
                     <h3 class="text-xl font-bold mb-2">How to Play</h3>
                     <ol class="list-decimal list-inside space-y-2">
@@ -198,6 +203,8 @@
                     </ol>
                 </section>
 
+                <hr class="border-t-2 border-gray-300">
+
                 <section>
                     <h3 class="text-xl font-bold mb-2">Controls</h3>
                     <ul class="list-disc list-inside space-y-2">
@@ -209,12 +216,39 @@
                             <strong>Mobile:</strong> Touch and drag tiles, or tap
                             to claim words
                         </li>
+                    </ul>
+                </section>
+
+                <hr class="border-t-2 border-gray-300">
+
+                <section>
+                    <h3 class="text-xl font-bold mb-2">Swap System</h3>
+                    <p class="mb-2">
+                        Swaps let you exchange unwanted tiles for better options:
+                    </p>
+                    <ul class="list-disc list-inside space-y-2">
                         <li>
-                            <strong>Swap:</strong> Drag tiles to the swap button
-                            to exchange them (limited swaps)
+                            <strong>Start with 5 swaps</strong> - Each game begins with 5 swap uses
+                        </li>
+                        <li>
+                            <strong>Earn more swaps</strong> - Gain +1 swap every time you claim a word
+                        </li>
+                        <li>
+                            <strong>1 swap per turn limit</strong> - You can only use 1 swap per turn, regardless of how many you have
+                        </li>
+                        <li>
+                            <strong>Swap with bag:</strong> Drag a hand tile to the swap button to choose a tile from the bag
+                        </li>
+                        <li>
+                            <strong>Swap with board:</strong> Drag a hand tile onto any tile on the board to swap them directly
+                        </li>
+                        <li>
+                            <strong>Strategic use:</strong> Swaps don't end your turn, so use them to set up better plays
                         </li>
                     </ul>
                 </section>
+
+                <hr class="border-t-2 border-gray-300">
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Tile Colors:</h3>
@@ -248,6 +282,8 @@
                         </p>
                     </ol>
                 </section>
+
+                <hr class="border-t-2 border-gray-300">
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Tile Multipliers</h3>
@@ -294,6 +330,8 @@
                         </p>
                     </div>
                 </section>
+
+                <hr class="border-t-2 border-gray-300">
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Tips</h3>
