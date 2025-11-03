@@ -14,7 +14,7 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-<main class="max-w-4xl m-auto border-x-4">
+<main class="max-w-4xl m-auto sm:border-x-4 border-black/20">
 	<HeaderBar />
 	{@render children()}
 </main>

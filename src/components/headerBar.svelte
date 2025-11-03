@@ -3,13 +3,13 @@
     let howToPlayOpen = $state(false);
 </script>
 
-<header class="bg-blue-200 flex items-center justify-between p-4">
-    <h1 class="text-xl font-bold">Word Gravity</h1>
+<header class="bg-blue-200 flex items-center justify-between p-4 shadow-lg border-b-4 border-double border-blue-900">
+    <h1 class="text-2xl font-semibold">Word Gravity</h1>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-6">
         <!-- lightbulb how-to-play button -->
         <button
-            class="text-2xl p-2 hover:bg-blue-300 rounded transition-colors"
+            class="text-2xl p-1 hover:bg-blue-300 rounded-xl transition-colors border-2 border-black/20 bg-black/10 outline-1"
             onclick={() => (howToPlayOpen = !howToPlayOpen)}
             aria-label="How to Play"
             title="How to Play"

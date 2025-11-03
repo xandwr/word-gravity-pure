@@ -53,7 +53,7 @@
     }
 </script>
 
-<div class="flex flex-col min-h-screen overflow-x-hidden">
+<div class="flex flex-col h-[calc(100vh-80px)] overflow-hidden">
     {#if gameState.isGameOver}
         <div
             class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
@@ -143,8 +143,8 @@
         </div>
     {/if}
 
-    <div class="flex flex-col flex-1">
-        <div class="w-full h-full p-2 sm:p-3 md:p-4 flex justify-center">
+    <div class="flex flex-col flex-1 min-h-0">
+        <div class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-center overflow-auto">
             <WordGrid />
         </div>
 
@@ -189,7 +189,7 @@
             </div>
         </div>
 
-        <div class="relative flex-1">
+        <div class="relative shrink-0">
             <!-- Background panel from player info to bottom of screen -->
             <div class="absolute inset-0 bg-gray-500/10"></div>
 

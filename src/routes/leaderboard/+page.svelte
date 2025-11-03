@@ -50,10 +50,10 @@
         <div class="mb-6">
             <a
                 href="/"
-                class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
+                class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors"
             >
                 <span>←</span>
-                <span>Back to Game</span>
+                <span>Back to Endless</span>
             </a>
         </div>
 
@@ -64,7 +64,7 @@
             >
                 <p class="text-red-800 font-semibold">{data.error}</p>
                 <p class="text-red-600 mt-2">
-                    The leaderboard may not be configured yet.
+                    The leaderboard isn't set up yet.
                 </p>
             </div>
         {:else if data.leaderboard.length === 0}
