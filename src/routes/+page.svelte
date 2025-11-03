@@ -164,21 +164,21 @@
             ></div>
 
             <div
-                class="relative z-10 flex flex-row justify-center sm:justify-between items-center gap-2 sm:gap-4 w-full max-w-md"
+                class="relative z-10 flex flex-row justify-between items-center gap-2 sm:gap-4 w-full"
             >
                 <PlayerInfoPanel player="player" />
 
-                <div class="flex flex-col items-center gap-1">
+                <div class="flex flex-col items-center gap-1 shrink-0">
                     <div
-                        class="flex items-center gap-1 text-sm uppercase whitespace-nowrap bg-gray-800/20 border-2 border-black/10 p-2 rounded-xl"
+                        class="flex items-center gap-1 text-xl uppercase whitespace-nowrap"
                     >
                         <span class="font-semibold">Turn:</span>
-                        <span class="font-bold"
-                            >{gameState.currentPlayerTurn}</span
+                        <span class="font-bold drop-shadow-[0px_1px_1px_black]" style="color: {PLAYER_COLORS[gameState.currentPlayerTurn].primary};"
+                            >{gameState.currentPlayerTurn == "player" ? "You" : "Them"}</span
                         >
                     </div>
                     <div
-                        class="flex items-center gap-1 text-xs whitespace-nowrap bg-gray-800/20 border-2 border-black/10 px-2 py-1 rounded-lg"
+                        class="flex items-center gap-1 text-xs sm:text-base whitespace-nowrap bg-gray-800/20 border-2 border-black/10 px-4 py-1 rounded-lg"
                     >
                         <span class="font-semibold">Letters:</span>
                         <span class="font-bold">{gameState.bagCount}</span>
@@ -210,7 +210,7 @@
         }
     }
     .animate-banner {
-        animation: bannerScroll 1s linear infinite;
-        opacity: 0.5; /* adjust so text stays readable */
+        animation: bannerScroll 2s linear infinite;
+        opacity: 0.15; /* adjust so text stays readable */
     }
 </style>

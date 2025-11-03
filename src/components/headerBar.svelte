@@ -3,10 +3,10 @@
     let howToPlayOpen = $state(false);
 </script>
 
-<header class="bg-blue-200 flex items-center justify-between p-4 shadow-lg border-b-4 border-double border-blue-900">
-    <h1 class="text-2xl font-semibold">Word Gravity</h1>
+<header class="bg-blue-200 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-900/20">
+    <h1 class="text-3xl sm:text-4xl font-bold text-neutral-900/33">Word Gravity</h1>
 
-    <div class="flex items-center gap-6">
+    <div class="flex items-center gap-8">
         <!-- lightbulb how-to-play button -->
         <button
             class="text-2xl p-1 hover:bg-blue-300 rounded-xl transition-colors border-2 border-black/20 bg-black/10 outline-1"
@@ -19,7 +19,7 @@
 
         <!-- hamburger button -->
         <button
-            class="md:hidden flex flex-col justify-center gap-1 p-2 hover:bg-blue-300 rounded"
+            class="md:hidden flex flex-col justify-center gap-1 p-2 aspect-square hover:bg-blue-300 rounded-xl border-2 border-black/20 bg-black/10 outline-1"
             onclick={() => (menuOpen = !menuOpen)}
             aria-label="Toggle menu"
         >

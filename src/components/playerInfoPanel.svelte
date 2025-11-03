@@ -32,20 +32,20 @@
 </script>
 
 <div
-    class="border-2 sm:border-4 px-3 sm:px-6 md:px-8 py-1 sm:py-2 rounded-xl flex flex-col items-center {bgColor}"
+    class="flex-1 border-2 sm:border-4 px-3 sm:px-6 md:px-8 py-1 sm:py-2 rounded-xl flex flex-col items-center {bgColor} min-w-0"
 >
-    <h1 class="font-bold text-base sm:text-lg md:text-xl">{displayName}</h1>
+    <h1 class="font-bold text-base sm:text-lg md:text-xl truncate w-full text-center">{displayName}</h1>
 
-    <span class="flex gap-1 text-xs sm:text-sm md:text-base">
+    <span class="flex gap-1 text-xs overflow-x-auto max-w-full">
         <h2 class="font-semibold">Letters:</h2>
         <h2 class="font-bold text-nowrap">
             {lettersInHand} / {HAND_CONFIG.SIZE}
         </h2>
     </span>
 
-    <span class="flex gap-1 text-xs sm:text-sm md:text-base">
-        <h2 class="font-semibold text-nowrap text-lg sm:text-xl md:text-2xl">Score:</h2>
-        <h2 class="font-bold text-nowrap text-lg sm:text-xl md:text-2xl">
+    <span class="flex gap-1 text-base overflow-x-auto max-w-full">
+        <h2 class="font-semibold text-nowrap">Score:</h2>
+        <h2 class="font-bold text-nowrap">
             {score}
         </h2>
     </span>
