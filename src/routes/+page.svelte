@@ -147,7 +147,7 @@
     <title>Word Gravity | Endless</title>
 </svelte:head>
 
-<div class="flex flex-col h-[calc(100vh-80px)] overflow-hidden">
+<div class="flex flex-col h-[calc(100vh-62px)] overflow-hidden">
     {#if gameState.isGameOver}
         <div
             class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
