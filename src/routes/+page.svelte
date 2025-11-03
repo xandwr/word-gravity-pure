@@ -235,7 +235,7 @@
                     <div
                         class="flex items-center gap-1 text-xl uppercase whitespace-nowrap"
                     >
-                        <span class="font-semibold">Turn:</span>
+                        <span class="font-semibold text-white">Turn:</span>
                         <span
                             class="font-bold drop-shadow-[0px_1px_1px_black]"
                             style="color: {PLAYER_COLORS[
@@ -247,7 +247,7 @@
                         >
                     </div>
                     <div
-                        class="flex items-center gap-1 text-xs sm:text-base whitespace-nowrap bg-gray-800/20 border-2 border-black/10 px-4 py-1 rounded-lg"
+                        class="flex items-center gap-1 text-xs text-white sm:text-base whitespace-nowrap bg-gray-800/20 border-2 border-black/10 px-4 py-1 rounded-lg"
                     >
                         <span class="font-semibold">Letters:</span>
                         <span class="font-bold">{gameState.bagCount}</span>
