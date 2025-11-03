@@ -75,7 +75,7 @@ function createGameState() {
     });
 
     // Background shader controls
-    const bgOpacity = $state({ value: 0.3 });
+    const bgOpacity = $state({ value: 0.5 });
     const bgFlashColor = $state<{ value: [number, number, number] }>({ value: [0.0, 0.0, 0.0] });
     const bgFlashIntensity = $state({ value: 0.0 });
     const bgContrastMod = $state({ value: 1.0 });
@@ -157,20 +157,32 @@ function createGameState() {
         },
 
         // Trigger a color flash on the background shader
-        triggerBackgroundFlash(color: [number, number, number], duration: number = 800) {
+        triggerBackgroundFlash(color: [number, number, number], duration: number = 600) {
             // Set the flash color and intensity
             bgFlashColor.value = color;
-            bgFlashIntensity.value = 0.6; // peak intensity
 
-            // Smoothly animate the flash intensity back to 0
             const startTime = Date.now();
+            const rampUpTime = 0.05; // 5% of duration for instant burst
+            const peakIntensity = 0.7;
+
             const animate = () => {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                // Ease out cubic for smooth decay
-                const eased = 1 - Math.pow(1 - progress, 3);
-                bgFlashIntensity.value = 0.6 * (1 - eased);
+                let intensity: number;
+                if (progress < rampUpTime) {
+                    // Instant ramp up (cubic ease-in)
+                    const rampProgress = progress / rampUpTime;
+                    const eased = rampProgress * rampProgress * rampProgress;
+                    intensity = peakIntensity * eased;
+                } else {
+                    // Smooth cubic decay
+                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
+                    const eased = 1 - Math.pow(decayProgress, 3.0);
+                    intensity = peakIntensity * eased;
+                }
+
+                bgFlashIntensity.value = intensity;
 
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
@@ -182,23 +194,27 @@ function createGameState() {
         },
 
         // Pulse the contrast modifier
-        pulseContrast(targetMod: number = 1.3, duration: number = 500) {
+        pulseContrast(targetMod: number = 1.4, duration: number = 1200) {
             const startValue = bgContrastMod.value;
             const startTime = Date.now();
+            const rampUpTime = 0.1; // 10% of duration for fast ramp up
 
             const animate = () => {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                // Ease in-out for smooth pulse
-                const eased = progress < 0.5
-                    ? 2 * progress * progress
-                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-                // Go to target and back
-                const value = progress < 0.5
-                    ? startValue + (targetMod - startValue) * (eased * 2)
-                    : targetMod - (targetMod - startValue) * ((eased - 0.5) * 2);
+                let value: number;
+                if (progress < rampUpTime) {
+                    // Fast ramp up using cubic ease-in
+                    const rampProgress = progress / rampUpTime;
+                    const eased = rampProgress * rampProgress * rampProgress;
+                    value = startValue + (targetMod - startValue) * eased;
+                } else {
+                    // Smooth cubic decay back to normal
+                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
+                    const eased = 1 - Math.pow(decayProgress, 3.0);
+                    value = startValue + (targetMod - startValue) * eased;
+                }
 
                 bgContrastMod.value = value;
 
@@ -212,21 +228,27 @@ function createGameState() {
         },
 
         // Pulse the spin speed modifier
-        pulseSpin(targetMod: number = 1.5, duration: number = 1000) {
+        pulseSpin(targetMod: number = 1.6, duration: number = 1400) {
             const startValue = bgSpinMod.value;
             const startTime = Date.now();
+            const rampUpTime = 0.1; // 10% of duration for fast ramp up
 
             const animate = () => {
                 const elapsed = Date.now() - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                // Ease out for smooth deceleration
-                const eased = 1 - Math.pow(1 - progress, 3);
-
-                // Go to target and back
-                const value = progress < 0.5
-                    ? startValue + (targetMod - startValue) * (progress * 2)
-                    : targetMod - (targetMod - startValue) * ((progress - 0.5) * 2);
+                let value: number;
+                if (progress < rampUpTime) {
+                    // Fast ramp up using cubic ease-in
+                    const rampProgress = progress / rampUpTime;
+                    const eased = rampProgress * rampProgress * rampProgress;
+                    value = startValue + (targetMod - startValue) * eased;
+                } else {
+                    // Smooth cubic decay back to normal
+                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
+                    const eased = 1 - Math.pow(decayProgress, 3.0);
+                    value = startValue + (targetMod - startValue) * eased;
+                }
 
                 bgSpinMod.value = value;
 
@@ -701,9 +723,8 @@ function createGameState() {
 
             // Trigger shader effects once at the start
             const color = this.hexToRGB('#22c55e'); // green-500
-            this.triggerBackgroundFlash(color, 800);
-            this.pulseContrast(1.3, 500);
-            this.pulseSpin(1.4, 1000);
+            this.triggerBackgroundFlash(color);
+            this.pulseContrast();
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];
@@ -798,9 +819,8 @@ function createGameState() {
 
             // Trigger shader effects once at the start
             const color = this.hexToRGB('#ef4444'); // red-500
-            this.triggerBackgroundFlash(color, 800);
-            this.pulseContrast(1.3, 500);
-            this.pulseSpin(1.4, 1000);
+            this.triggerBackgroundFlash(color);
+            this.pulseContrast();
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];
