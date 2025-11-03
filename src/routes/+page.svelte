@@ -246,7 +246,7 @@
         </div>
 
         <div
-            class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-center overflow-auto"
+            class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-start overflow-auto"
         >
             <WordGrid />
         </div>
