@@ -6,7 +6,7 @@ import type { TileData, TileContainer } from "./types";
 import { sharedBag } from "./sharedLetterBag.svelte";
 import { drawFromBag, createTile } from "./letterBag.svelte";
 import { wordValidator } from "./wordValidator.svelte";
-import { AI_CONFIG } from "./constants";
+import { AI_CONFIG, AI_DIFFICULTY } from "./constants";
 import { findBestAction } from "./aiStrategy.svelte";
 
 // Re-export createTile for backwards compatibility
@@ -80,6 +80,9 @@ function createGameState() {
     const bgFlashIntensity = $state({ value: 0.0 });
     const bgContrastMod = $state({ value: 1.0 });
     const bgSpinMod = $state({ value: 1.0 });
+
+    // AI difficulty setting
+    const aiDifficulty = $state<{ value: 'EASY' | 'MEDIUM' | 'HARD' | 'NIGHTMARE' }>({ value: 'EASY' });
 
     return {
         // Readonly access to board slots
@@ -298,6 +301,15 @@ function createGameState() {
 
         get gameOverReason() {
             return gameOverReason.value;
+        },
+
+        // AI difficulty
+        get aiDifficulty() {
+            return aiDifficulty.value;
+        },
+
+        setAiDifficulty(difficulty: 'EASY' | 'MEDIUM' | 'HARD' | 'NIGHTMARE') {
+            aiDifficulty.value = difficulty;
         },
 
         // Methods to update the state
@@ -540,13 +552,16 @@ function createGameState() {
             const playerOwnedIndices = this.getPlayerOwnedTileIndices();
             const opponentOwnedIndices = this.getOpponentOwnedTileIndices();
 
+            // Get aggressiveness from current difficulty setting
+            const aggressiveness = AI_DIFFICULTY[aiDifficulty.value].AGGRESSIVENESS;
+
             // Use intelligent AI to find best action
             const bestAction = findBestAction(
                 boardSlots,
                 opponentHandSlots,
                 playerOwnedIndices,
                 opponentOwnedIndices,
-                AI_CONFIG.AGGRESSIVENESS,
+                aggressiveness,
                 AI_CONFIG.DEBUG_LOGGING
             );
 

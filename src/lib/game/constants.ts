@@ -2,15 +2,15 @@
 
 export const PLAYER_COLORS = {
     player: {
-        primary: '#22c55e',                              // green-500
-        tailwind: 'bg-green-400',                        // Tailwind class for backgrounds
-        claimedTile: 'bg-green-400 text-green-950 border-green-600', // Claimed tile styles
+        primary: '#22c55e',
+        tailwind: 'bg-green-400/50',
+        claimedTile: 'bg-green-400 text-green-950 border-green-600',
         name: 'You'
     },
     opponent: {
-        primary: '#ef4444',                              // red-500
-        tailwind: 'bg-red-400',                          // Tailwind class for backgrounds
-        claimedTile: 'bg-gray-400 text-gray-950 border-gray-600',    // Claimed tile styles
+        primary: '#ef4444',
+        tailwind: 'bg-red-400/50',
+        claimedTile: 'bg-gray-400 text-gray-950 border-gray-600',
         name: 'Opponent'
     }
 } as const;
