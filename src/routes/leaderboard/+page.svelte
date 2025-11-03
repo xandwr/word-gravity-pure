@@ -36,7 +36,7 @@
     <title>Word Gravity | Leaderboard</title>
 </svelte:head>
 
-<div class="">
+<div class="bg-white px-4 py-1">
     <div class="max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-8 pt-8">
