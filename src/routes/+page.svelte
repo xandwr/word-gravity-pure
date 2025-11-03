@@ -181,9 +181,7 @@
                         class="flex items-center gap-1 text-xs whitespace-nowrap bg-gray-800/20 border-2 border-black/10 px-2 py-1 rounded-lg"
                     >
                         <span class="font-semibold">Letters:</span>
-                        <span class="font-bold"
-                            >{gameState.sharedBag.length}</span
-                        >
+                        <span class="font-bold">{gameState.bagCount}</span>
                     </div>
                 </div>
 

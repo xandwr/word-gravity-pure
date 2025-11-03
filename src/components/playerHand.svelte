@@ -125,9 +125,4 @@
             </div>
         </div>
     </div>
-
-    <div class="text-lg sm:text-xl md:text-2xl p-1 flex gap-1 justify-center">
-        <h2>Letters Remaining:</h2>
-        <h2 class="font-semibold">{gameState.sharedBag.length}</h2>
-    </div>
 </div>

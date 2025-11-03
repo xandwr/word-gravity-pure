@@ -5,4 +5,5 @@
 
 import { createLetterBag } from "$lib/game/letterBag.svelte";
 
-export const sharedBag = createLetterBag();
+// Create reactive bag state
+export const sharedBag = $state(createLetterBag());

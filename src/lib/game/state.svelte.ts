@@ -119,6 +119,11 @@ function createGameState() {
             return sharedBag;
         },
 
+        // Reactive bag count getter
+        get bagCount() {
+            return sharedBag.length;
+        },
+
         // Readonly access to scores
         get playerScore() {
             return playerScore.value;
