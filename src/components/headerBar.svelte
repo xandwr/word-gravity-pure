@@ -1,20 +1,43 @@
 <script lang="ts">
+    import { Fa } from "svelte-fa";
+    import { faDiscord } from "@fortawesome/free-brands-svg-icons";
     import { page } from "$app/state";
 
     let menuOpen = $state(false);
     let howToPlayOpen = $state(false);
 
     const currentPath = $derived(page.url.pathname);
+
+    const navLinks = [
+        { href: "/", label: "Endless Mode" },
+        { href: "/leaderboard", label: "Leaderboard" },
+        {
+            href: "https://discord.gg/r8rbntTaKQ",
+            label: "xander's lab Discord",
+            icon: faDiscord,
+            iconType: "fa",
+        },
+        {
+            href: "https://ko-fi.com/xandwr",
+            label: "Send a tip!",
+            icon: "/icons/kofi-icon.png",
+            iconType: "img",
+        },
+    ];
 </script>
 
 <header
     class="bg-blue-900/10 flex items-center justify-between p-4 shadow-lg border-b-4 border-blue-600/10"
 >
     <div class="flex flex-row items-end gap-1">
-        <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight text-nowrap">
+        <h1
+            class="text-3xl sm:text-4xl font-bold text-white tracking-tight text-nowrap"
+        >
             <a href="/">Word Gravity</a>
         </h1>
-        <h3 class="text-xs sm:text-sm sm:translate-y-0.5 font-semibold text-neutral-400 tracking-tight">
+        <h3
+            class="text-xs sm:text-sm sm:translate-y-0.5 font-semibold text-neutral-400 tracking-tight"
+        >
             <a href="/">v0.1</a>
         </h3>
     </div>
@@ -42,19 +65,36 @@
         </button>
 
         <!-- desktop nav -->
-        <nav class="hidden md:flex gap-4 text-white">
-            <a
-                href="/"
-                class="hover:underline {currentPath === '/'
-                    ? 'font-bold underline'
-                    : ''}">Endless Mode</a
-            >
-            <a
-                href="/leaderboard"
-                class="hover:underline {currentPath === '/leaderboard'
-                    ? 'font-bold underline'
-                    : ''}">Leaderboard</a
-            >
+        <nav class="hidden md:flex gap-4 text-white items-center">
+            {#each navLinks as link, index}
+                {#if index === 2}
+                    <div class="h-6 w-px bg-white/30 mx-2"></div>
+                {/if}
+                <a
+                    href={link.href}
+                    class="hover:underline {currentPath === link.href
+                        ? 'font-bold underline'
+                        : ''} {link.icon
+                        ? link.iconType === 'fa'
+                            ? 'hover:text-[#5865F2] transition-colors'
+                            : 'hover:opacity-80 transition-opacity'
+                        : ''}"
+                >
+                    {#if link.icon}
+                        {#if link.iconType === "fa"}
+                            <Fa icon={link.icon as any} size="lg" />
+                        {:else if link.iconType === "img"}
+                            <img
+                                src={link.icon as string}
+                                alt={link.label}
+                                class="w-6 h-6 inline-block"
+                            />
+                        {/if}
+                    {:else}
+                        {link.label}
+                    {/if}
+                </a>
+            {/each}
         </nav>
     </div>
 </header>
@@ -64,18 +104,30 @@
     <nav
         class="md:hidden flex flex-col text-white bg-blue-900/20 border-t border-blue-300/20 p-4 gap-2"
     >
-        <a
-            href="/"
-            class="hover:underline {currentPath === '/'
-                ? 'font-bold underline'
-                : ''}">Endless Mode</a
-        >
-        <a
-            href="/leaderboard"
-            class="hover:underline {currentPath === '/leaderboard'
-                ? 'font-bold underline'
-                : ''}">Leaderboard</a
-        >
+        {#each navLinks as link, index}
+            {#if index === 2}
+                <div class="h-px w-full bg-white/30 my-2"></div>
+            {/if}
+            <a
+                href={link.href}
+                class="hover:underline {currentPath === link.href
+                    ? 'font-bold underline'
+                    : ''} flex items-center gap-2"
+            >
+                {#if link.icon}
+                    {#if link.iconType === "fa"}
+                        <Fa icon={link.icon as any} />
+                    {:else if link.iconType === "img"}
+                        <img
+                            src={link.icon as string}
+                            alt={link.label}
+                            class="w-5 h-5"
+                        />
+                    {/if}
+                {/if}
+                {link.label}
+            </a>
+        {/each}
     </nav>
 {/if}
 

@@ -23,7 +23,9 @@
 		"vite": "^7.1.10"
 	},
 	"dependencies": {
+		"@fortawesome/free-brands-svg-icons": "^7.1.0",
 		"@vercel/kv": "^3.0.0",
-		"nanoid": "^5.1.6"
+		"nanoid": "^5.1.6",
+		"svelte-fa": "^4.0.4"
 	}
 }
