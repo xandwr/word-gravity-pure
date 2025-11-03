@@ -253,16 +253,21 @@
                 touch.clientY,
             );
 
-            // Check for swap button first
+            // Check for swap button first - let the swap button handle the logic
             const swapButton = element?.closest("#swapButton");
             if (swapButton && currentDragState.sourceType === "hand") {
-                if (gameState.playerSwapsRemaining > 0) {
-                    gameState.swapPlayerTile(currentDragState.sourceIndex ?? 0);
+                // Trigger the swap button's touch end handler
+                if (swapButton instanceof HTMLElement) {
+                    swapButton.dispatchEvent(new TouchEvent("touchend", {
+                        changedTouches: [touch],
+                        bubbles: true,
+                        cancelable: true
+                    }));
                 }
                 touchStartPos = null;
                 hasMoved = false;
                 destroyDragPreview(); // Clean up preview
-                gameState.endDrag();
+                // Don't end drag yet - let the swap button handler do it
                 document.removeEventListener(
                     "touchmove",
                     handleGlobalTouchMove,

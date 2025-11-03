@@ -94,6 +94,8 @@
             // Store the hand index and show the selection menu
             swapHandIndex = dragState.sourceIndex;
             showSwapMenu = true;
+            // End the drag state since we're showing the menu
+            gameState.endDrag();
         }
     }
 
@@ -136,6 +138,7 @@
                 ondragover={handleSwapDragOver}
                 ondragleave={handleSwapDragLeave}
                 ondrop={handleSwapDrop}
+                ontouchend={handleSwapTouchEnd}
             >
                 <h1 class="text-xl sm:text-2xl md:text-4xl">🔁</h1>
                 <h1 class="text-sm sm:text-base md:text-xl font-bold">Swap</h1>
