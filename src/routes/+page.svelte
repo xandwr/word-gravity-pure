@@ -103,13 +103,19 @@
             // Set up full-screen quad
             setupFullScreenQuad(gl, program);
 
-            // Start animation with opacity callback
+            // Start animation with dynamic uniforms callback
             cleanup = createShaderAnimation(
                 gl,
                 program,
                 canvas,
                 undefined, // no custom updateUniforms
-                () => gameState.backgroundOpacity, // provide opacity value from game state
+                () => ({
+                    opacity: gameState.backgroundOpacity,
+                    flashColor: gameState.backgroundFlashColor,
+                    flashIntensity: gameState.backgroundFlashIntensity,
+                    contrastMod: gameState.backgroundContrastMod,
+                    spinMod: gameState.backgroundSpinMod,
+                }),
             );
         });
 

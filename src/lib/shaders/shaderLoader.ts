@@ -120,6 +120,14 @@ export function setupFullScreenQuad(gl: WebGLRenderingContext, program: WebGLPro
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 }
 
+export interface ShaderUniforms {
+    opacity?: number;
+    flashColor?: [number, number, number];
+    flashIntensity?: number;
+    contrastMod?: number;
+    spinMod?: number;
+}
+
 /**
  * Create an animation loop for a shader
  */
@@ -128,11 +136,15 @@ export function createShaderAnimation(
     program: WebGLProgram,
     canvas: HTMLCanvasElement,
     updateUniforms?: (time: number) => void,
-    getOpacity?: () => number // optional callback for dynamic opacity
+    getUniforms?: () => ShaderUniforms // callback to get all dynamic uniforms
 ): () => void {
     const resolutionLocation = gl.getUniformLocation(program, 'resolution');
     const timeLocation = gl.getUniformLocation(program, 'time');
     const opacityLocation = gl.getUniformLocation(program, 'opacity');
+    const flashColorLocation = gl.getUniformLocation(program, 'flashColor');
+    const flashIntensityLocation = gl.getUniformLocation(program, 'flashIntensity');
+    const contrastModLocation = gl.getUniformLocation(program, 'contrastMod');
+    const spinModLocation = gl.getUniformLocation(program, 'spinMod');
 
     // Resize handler
     function resize() {
@@ -158,10 +170,29 @@ export function createShaderAnimation(
             gl.uniform1f(timeLocation, time);
         }
 
-        // update opacity uniform dynamically
+        // Get all dynamic uniforms
+        const uniforms = getUniforms ? getUniforms() : {};
+
+        // Update all uniform values
         if (opacityLocation) {
-            const opacity = getOpacity ? getOpacity() : 0.5;
-            gl.uniform1f(opacityLocation, opacity);
+            gl.uniform1f(opacityLocation, uniforms.opacity ?? 0.5);
+        }
+
+        if (flashColorLocation) {
+            const color = uniforms.flashColor ?? [0.0, 0.0, 0.0];
+            gl.uniform3f(flashColorLocation, color[0], color[1], color[2]);
+        }
+
+        if (flashIntensityLocation) {
+            gl.uniform1f(flashIntensityLocation, uniforms.flashIntensity ?? 0.0);
+        }
+
+        if (contrastModLocation) {
+            gl.uniform1f(contrastModLocation, uniforms.contrastMod ?? 1.0);
+        }
+
+        if (spinModLocation) {
+            gl.uniform1f(spinModLocation, uniforms.spinMod ?? 1.0);
         }
 
         if (updateUniforms) {

@@ -74,8 +74,12 @@ function createGameState() {
         sourceIndex: null
     });
 
-    // Background shader opacity control
+    // Background shader controls
     const bgOpacity = $state({ value: 0.3 });
+    const bgFlashColor = $state<{ value: [number, number, number] }>({ value: [0.0, 0.0, 0.0] });
+    const bgFlashIntensity = $state({ value: 0.0 });
+    const bgContrastMod = $state({ value: 1.0 });
+    const bgSpinMod = $state({ value: 1.0 });
 
     return {
         // Readonly access to board slots
@@ -130,6 +134,109 @@ function createGameState() {
         // Background shader opacity
         get backgroundOpacity() {
             return bgOpacity.value;
+        },
+
+        // Background shader flash color (RGB 0.0-1.0)
+        get backgroundFlashColor() {
+            return bgFlashColor.value;
+        },
+
+        // Background shader flash intensity (0.0-1.0)
+        get backgroundFlashIntensity() {
+            return bgFlashIntensity.value;
+        },
+
+        // Background shader contrast modifier (0.0-2.0, default 1.0)
+        get backgroundContrastMod() {
+            return bgContrastMod.value;
+        },
+
+        // Background shader spin modifier (0.0-2.0, default 1.0)
+        get backgroundSpinMod() {
+            return bgSpinMod.value;
+        },
+
+        // Trigger a color flash on the background shader
+        triggerBackgroundFlash(color: [number, number, number], duration: number = 800) {
+            // Set the flash color and intensity
+            bgFlashColor.value = color;
+            bgFlashIntensity.value = 0.6; // peak intensity
+
+            // Smoothly animate the flash intensity back to 0
+            const startTime = Date.now();
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+
+                // Ease out cubic for smooth decay
+                const eased = 1 - Math.pow(1 - progress, 3);
+                bgFlashIntensity.value = 0.6 * (1 - eased);
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    bgFlashIntensity.value = 0.0;
+                }
+            };
+            requestAnimationFrame(animate);
+        },
+
+        // Pulse the contrast modifier
+        pulseContrast(targetMod: number = 1.3, duration: number = 500) {
+            const startValue = bgContrastMod.value;
+            const startTime = Date.now();
+
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+
+                // Ease in-out for smooth pulse
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                // Go to target and back
+                const value = progress < 0.5
+                    ? startValue + (targetMod - startValue) * (eased * 2)
+                    : targetMod - (targetMod - startValue) * ((eased - 0.5) * 2);
+
+                bgContrastMod.value = value;
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    bgContrastMod.value = startValue;
+                }
+            };
+            requestAnimationFrame(animate);
+        },
+
+        // Pulse the spin speed modifier
+        pulseSpin(targetMod: number = 1.5, duration: number = 1000) {
+            const startValue = bgSpinMod.value;
+            const startTime = Date.now();
+
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progress = Math.min(elapsed / duration, 1.0);
+
+                // Ease out for smooth deceleration
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                // Go to target and back
+                const value = progress < 0.5
+                    ? startValue + (targetMod - startValue) * (progress * 2)
+                    : targetMod - (targetMod - startValue) * ((progress - 0.5) * 2);
+
+                bgSpinMod.value = value;
+
+                if (progress < 1.0) {
+                    requestAnimationFrame(animate);
+                } else {
+                    bgSpinMod.value = startValue;
+                }
+            };
+            requestAnimationFrame(animate);
         },
 
         // Readonly access to scores
@@ -193,11 +300,39 @@ function createGameState() {
         },
 
         updatePlayerScore(score: number) {
+            const oldScore = playerScore.value;
             playerScore.value = score;
+
+            // Trigger shader effects if score increased
+            if (score > oldScore) {
+                // Convert player color from hex to RGB 0.0-1.0
+                const color = this.hexToRGB('#22c55e'); // green-500
+                this.triggerBackgroundFlash(color, 800);
+                this.pulseContrast(1.3, 500);
+                this.pulseSpin(1.4, 1000);
+            }
         },
 
         updateOpponentScore(score: number) {
+            const oldScore = opponentScore.value;
             opponentScore.value = score;
+
+            // Trigger shader effects if score increased
+            if (score > oldScore) {
+                // Convert opponent color from hex to RGB 0.0-1.0
+                const color = this.hexToRGB('#ef4444'); // red-500
+                this.triggerBackgroundFlash(color, 800);
+                this.pulseContrast(1.3, 500);
+                this.pulseSpin(1.4, 1000);
+            }
+        },
+
+        // Helper to convert hex color to RGB 0.0-1.0
+        hexToRGB(hex: string): [number, number, number] {
+            const r = parseInt(hex.slice(1, 3), 16) / 255;
+            const g = parseInt(hex.slice(3, 5), 16) / 255;
+            const b = parseInt(hex.slice(5, 7), 16) / 255;
+            return [r, g, b];
         },
 
         decrementPlayerSwaps() {
@@ -564,6 +699,12 @@ function createGameState() {
             const FADE_DELAY = 400; // ms to wait before starting fade (matches letterTile)
             const FADE_DURATION = 300; // ms for fade out animation
 
+            // Trigger shader effects once at the start
+            const color = this.hexToRGB('#22c55e'); // green-500
+            this.triggerBackgroundFlash(color, 800);
+            this.pulseContrast(1.3, 500);
+            this.pulseSpin(1.4, 1000);
+
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];
 
@@ -654,6 +795,12 @@ function createGameState() {
             const WAVE_DELAY = 150; // ms between waves
             const FADE_DELAY = 400; // ms to wait before starting fade (matches letterTile)
             const FADE_DURATION = 300; // ms for fade out animation
+
+            // Trigger shader effects once at the start
+            const color = this.hexToRGB('#ef4444'); // red-500
+            this.triggerBackgroundFlash(color, 800);
+            this.pulseContrast(1.3, 500);
+            this.pulseSpin(1.4, 1000);
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];

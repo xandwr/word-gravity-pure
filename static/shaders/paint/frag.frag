@@ -3,6 +3,10 @@ precision mediump float;
 uniform vec2 resolution;
 uniform float time;
 uniform float opacity; // uniform for opacity control (0.0-1.0)
+uniform vec3 flashColor; // color to flash when player scores (RGB 0.0-1.0)
+uniform float flashIntensity; // intensity of color flash (0.0-1.0)
+uniform float contrastMod; // dynamic contrast modifier (0.0-2.0, default 1.0)
+uniform float spinMod; // dynamic spin speed modifier (0.0-2.0, default 1.0)
 
 // configuration constants
 #define SPIN_ROTATION 0.1
@@ -40,7 +44,7 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
     uv = (vec2(uv_len * cos(new_pixel_angle) + mid.x, uv_len * sin(new_pixel_angle) + mid.y) - mid);
     
     uv *= 30.0;
-    speed = t * SPIN_SPEED;
+    speed = t * SPIN_SPEED * spinMod; // apply dynamic spin modifier
     vec2 uv2 = vec2(uv.x + uv.y);
 
     for (int i = 0; i < 5; i++) {
@@ -52,7 +56,7 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
         uv  -= 1.0 * cos(uv.x + uv.y) - 1.0 * sin(uv.x * 0.711 - uv.y);
     }
     
-    float contrast_mod = (0.25 * CONTRAST + 0.5 * SPIN_AMOUNT + 1.2);
+    float contrast_mod = (0.25 * CONTRAST + 0.5 * SPIN_AMOUNT + 1.2) * contrastMod;
     float paint_res = min(2.0, max(0.0, length(uv) * 0.035 * contrast_mod));
     float c1p = max(0.0, 1.0 - contrast_mod * abs(1.0 - paint_res));
     float c2p = max(0.0, 1.0 - contrast_mod * abs(paint_res));
@@ -64,6 +68,10 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
          + (1.0 - 0.3 / CONTRAST)
          * (COLOUR_1 * c1p + COLOUR_2 * c2p + vec4(c3p * COLOUR_3.rgb, c3p * COLOUR_1.a))
          + light;
+
+    // Apply color flash effect (mix in the flash color)
+    vec3 flashedColor = mix(baseColor.rgb, flashColor, flashIntensity);
+    baseColor = vec4(flashedColor, baseColor.a);
 
     // Apply opacity to the final color alpha channel
     baseColor.a *= opacity;
