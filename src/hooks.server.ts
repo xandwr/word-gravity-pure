@@ -12,11 +12,15 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// If there's a session, fetch the user profile
 	if (session?.user) {
-		const { data: profile } = await event.locals.supabase
+		const { data: profile, error: profileError } = await event.locals.supabase
 			.from("profiles")
 			.select("username")
 			.eq("id", session.user.id)
 			.single();
+
+		if (profileError) {
+			console.error("Error fetching profile for user:", session.user.id, profileError);
+		}
 
 		event.locals.session = session;
 		event.locals.user = {

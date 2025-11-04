@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { getPlayerId } from "$lib/utils/playerIdentity";
+import { createSupabaseAdminClient } from "$lib/server/supabase";
 
 export const POST: RequestHandler = async ({ request, locals }) => {
 	try {
@@ -51,6 +52,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					username,
 					legacy_player_id: playerId, // Store for potential migration
 				},
+				emailRedirectTo: `${new URL(request.url).origin}/auth/callback`,
 			},
 		});
 
@@ -66,15 +68,52 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			);
 		}
 
-		// Create profile (should be handled by trigger, but we'll do it manually for now)
-		const { error: profileError } = await locals.supabase.from("profiles").insert({
-			id: data.user.id,
-			username: username,
-		});
+		// Check if email confirmation is required
+		if (data.session === null) {
+			console.log("Email confirmation required for user:", data.user.id);
+			// User created but needs to confirm email
+			// The trigger should have created the profile already
+			return json({
+				success: true,
+				requiresEmailConfirmation: true,
+				message: "Please check your email to confirm your account",
+				user: {
+					id: data.user.id,
+					email: data.user.email,
+					username,
+				},
+			});
+		}
 
-		if (profileError) {
-			console.error("Profile creation error:", profileError);
-			// Don't fail the registration, just log it
+		// Create profile using admin client to bypass RLS
+		const adminClient = createSupabaseAdminClient();
+
+		// Check if profile already exists (from trigger)
+		const { data: existingProfile } = await adminClient
+			.from("profiles")
+			.select("username")
+			.eq("id", data.user.id)
+			.maybeSingle();
+
+		if (!existingProfile) {
+			// Profile doesn't exist, create it
+			const { error: profileInsertError } = await adminClient
+				.from("profiles")
+				.insert({
+					id: data.user.id,
+					username: username,
+				});
+
+			if (profileInsertError) {
+				console.error("Failed to create profile:", profileInsertError);
+				return json(
+					{
+						success: false,
+						error: "Account created but profile setup failed. Please try logging in.",
+					},
+					{ status: 500 },
+				);
+			}
 		}
 
 		return json({

@@ -119,10 +119,93 @@ GRANT SELECT ON profiles TO anon;
 GRANT SELECT ON scores TO anon;
 
 -- ============================================
+-- 7. Leaderboard View
+-- ============================================
+
+-- Create a view for the global leaderboard with user rankings
+CREATE OR REPLACE VIEW leaderboard_global AS
+WITH ranked_scores AS (
+  SELECT
+    s.id,
+    s.user_id,
+    s.score,
+    s.created_at,
+    p.username,
+    ROW_NUMBER() OVER (
+      PARTITION BY s.user_id
+      ORDER BY s.score DESC, s.created_at ASC
+    ) as user_rank,
+    DENSE_RANK() OVER (
+      ORDER BY s.score DESC, s.created_at ASC
+    ) as global_rank
+  FROM scores s
+  JOIN profiles p ON s.user_id = p.id
+  WHERE s.mode = 'endless'
+)
+SELECT
+  id,
+  user_id,
+  username,
+  score,
+  created_at,
+  global_rank as rank
+FROM ranked_scores
+WHERE user_rank = 1  -- Only keep each user's best score
+ORDER BY score DESC, created_at ASC
+LIMIT 100;
+
+-- Grant access to the view
+GRANT SELECT ON leaderboard_global TO authenticated;
+GRANT SELECT ON leaderboard_global TO anon;
+
+-- ============================================
+-- 8. Helper Functions
+-- ============================================
+
+-- Function to get user's best score and rank
+CREATE OR REPLACE FUNCTION get_user_leaderboard_position(user_uuid UUID)
+RETURNS TABLE (
+  rank BIGINT,
+  score INTEGER,
+  total_players BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  WITH user_best_scores AS (
+    SELECT
+      s.user_id,
+      MAX(s.score) as best_score,
+      MIN(s.created_at) FILTER (WHERE s.score = MAX(s.score)) as first_best_at
+    FROM scores s
+    WHERE s.mode = 'endless'
+    GROUP BY s.user_id
+  ),
+  ranked_users AS (
+    SELECT
+      ubs.user_id,
+      ubs.best_score,
+      DENSE_RANK() OVER (ORDER BY ubs.best_score DESC, ubs.first_best_at ASC) as user_rank
+    FROM user_best_scores ubs
+  )
+  SELECT
+    ru.user_rank,
+    ru.best_score,
+    (SELECT COUNT(DISTINCT user_id) FROM scores WHERE mode = 'endless') as total
+  FROM ranked_users ru
+  WHERE ru.user_id = user_uuid;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant execute permission
+GRANT EXECUTE ON FUNCTION get_user_leaderboard_position(UUID) TO authenticated;
+
+-- ============================================
 -- Notes:
 -- ============================================
 -- 1. Run this script in your Supabase SQL Editor
 -- 2. The trigger will automatically create profiles when users sign up
 -- 3. RLS policies ensure users can only modify their own data
 -- 4. Everyone can view profiles and scores (for leaderboard)
--- 5. You may need to manually create the first few profiles if users already exist
+-- 5. The leaderboard_global view shows top 100 players by their best score
+-- 6. Use get_user_leaderboard_position(user_id) to get a specific user's rank
+-- 7. You may need to manually create the first few profiles if users already exist

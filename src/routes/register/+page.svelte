@@ -9,10 +9,12 @@
     let password = "";
     let loading = false;
     let error: string | null = null;
+    let successMessage: string | null = null;
 
     async function handleSubmit(e: Event) {
         e.preventDefault();
         error = null;
+        successMessage = null;
         loading = true;
 
         try {
@@ -29,6 +31,13 @@
 
             if (!data.success) {
                 throw new Error(data.error || "Registration failed");
+            }
+
+            // Check if email confirmation is required
+            if (data.requiresEmailConfirmation) {
+                successMessage = data.message || "Please check your email to confirm your account";
+                loading = false;
+                return;
             }
 
             // Invalidate all page data to refresh auth state
@@ -81,6 +90,10 @@
 
         {#if error}
             <p class="text-red-300 text-sm text-center">{error}</p>
+        {/if}
+
+        {#if successMessage}
+            <p class="text-green-300 text-sm text-center">{successMessage}</p>
         {/if}
 
         <button
