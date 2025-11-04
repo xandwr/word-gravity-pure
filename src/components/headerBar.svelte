@@ -169,29 +169,29 @@
                 <!-- Desktop Account Dropdown -->
                 {#if accountModalOpen}
                     <div
-                        class="absolute top-full mt-2 right-0 bg-white rounded-lg shadow-xl w-64 border-2 border-blue-300 z-50 account-dropdown-container"
+                        class="absolute top-full mt-3 border-2 border-blue-900 right-0 bg-none backdrop-blur-lg rounded-lg shadow-xl w-64 z-50 account-dropdown-container"
                     >
-                        <div class="p-4 space-y-3">
+                        <div class="p-4 space-y-2">
                             {#if username}
-                                <div class="text-center mb-3">
-                                    <p class="text-xs text-gray-600 mb-1">Signed in as:</p>
-                                    <p class="text-sm font-bold text-gray-800">{username}</p>
+                                <div class="text-center">
+                                    <p class="text-xs text-gray-300">Signed in as:</p>
+                                    <p class="text-sm font-bold text-white">{username}</p>
                                 </div>
                             {:else}
-                                <div class="text-center mb-3">
+                                <div class="text-center">
                                     <p class="text-xs text-gray-600">No username set</p>
                                 </div>
                             {/if}
 
                             <button
-                                class="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors border-2 border-blue-700 text-sm"
+                                class="w-full px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors border-2 border-blue-700 text-sm"
                                 onclick={handleProfileAction}
                             >
                                 {isOfficialAccount ? "My Profile" : "Register"}
                             </button>
 
                             <button
-                                class="w-full px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors border-2 border-gray-700 text-sm"
+                                class="w-full px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors border-2 border-gray-700 text-sm"
                                 onclick={handleLogoutOrClearCache}
                             >
                                 {isOfficialAccount ? "Logout" : "Clear Cache"}
