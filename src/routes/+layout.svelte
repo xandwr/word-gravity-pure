@@ -25,6 +25,19 @@
 
 <svelte:head>
 	<link rel="icon" href={favicon} />
+	<style>
+		/* Prevent Font Awesome icon flash on load */
+		svg:not(:root).svg-inline--fa {
+			overflow: visible;
+			box-sizing: content-box;
+		}
+		.svg-inline--fa {
+			display: var(--fa-display, inline-block);
+			height: 1em;
+			overflow: visible;
+			vertical-align: -0.125em;
+		}
+	</style>
 </svelte:head>
 
 <!-- Global background canvas -->

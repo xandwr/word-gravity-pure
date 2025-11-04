@@ -2,48 +2,34 @@
     import { faDiscord, faGoogle } from "@fortawesome/free-brands-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { goto, invalidateAll } from "$app/navigation";
-    import { getPlayerId } from "$lib/utils/playerIdentity";
 
-    let username = "";
     let email = "";
     let password = "";
     let loading = false;
     let error: string | null = null;
-    let successMessage: string | null = null;
 
     async function handleSubmit(e: Event) {
         e.preventDefault();
         error = null;
-        successMessage = null;
         loading = true;
 
         try {
-            // Get the current anonymous player ID for migration
-            const playerId = getPlayerId();
-
-            const response = await fetch("/api/auth/register", {
+            const response = await fetch("/api/auth/login", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password, username, playerId }),
+                body: JSON.stringify({ email, password }),
             });
 
             const data = await response.json();
 
             if (!data.success) {
-                throw new Error(data.error || "Registration failed");
-            }
-
-            // Check if email confirmation is required
-            if (data.requiresEmailConfirmation) {
-                successMessage = data.message || "Please check your email to confirm your account";
-                loading = false;
-                return;
+                throw new Error(data.error || "Login failed");
             }
 
             // Invalidate all page data to refresh auth state
             await invalidateAll();
 
-            // Redirect to home page after successful registration
+            // Redirect to home page after successful login
             await goto("/");
         } catch (err) {
             error =
@@ -65,15 +51,9 @@
         on:submit={handleSubmit}
         class="max-w-md w-full backdrop-blur-sm rounded-lg shadow-xl p-8 space-y-5"
     >
-        <h1 class="text-3xl font-bold text-white text-center mb-4">Register</h1>
+        <h1 class="text-3xl font-bold text-white text-center mb-4">Login</h1>
 
         <div class="space-y-4">
-            <input
-                class="w-full p-1 rounded bg-white/10 text-white placeholder-white/50 border border-blue-300/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                type="text"
-                placeholder="Username"
-                bind:value={username}
-            />
             <input
                 class="w-full p-1 rounded bg-white/10 text-white placeholder-white/50 border border-blue-300/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 type="email"
@@ -92,16 +72,12 @@
             <p class="text-red-300 text-sm text-center">{error}</p>
         {/if}
 
-        {#if successMessage}
-            <p class="text-green-300 text-sm text-center">{successMessage}</p>
-        {/if}
-
         <button
-            class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded transition disabled:opacity-50"
+            class="w-full py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded transition disabled:opacity-50"
             type="submit"
             disabled={loading}
         >
-            {loading ? "Registering..." : "Create Account"}
+            {loading ? "Logging in..." : "Login"}
         </button>
 
         <!-- Divider -->
@@ -130,6 +106,14 @@
                 <FontAwesomeIcon icon={faDiscord} class="w-4 h-4" />
                 Continue with Discord
             </button>
+        </div>
+
+        <!-- Register link -->
+        <div class="text-center text-sm text-white/70">
+            Don't have an account?
+            <a href="/register" class="text-blue-400 hover:text-blue-300 underline">
+                Register here
+            </a>
         </div>
     </form>
 </div>

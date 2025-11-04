@@ -6,83 +6,45 @@
 
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { kv } from '@vercel/kv';
-import { env } from '$env/dynamic/private';
 
 export interface LeaderboardEntry {
     username: string;
     score: number;
     timestamp: number;
     rank?: number;
-    playerId?: string;
-}
-
-const LEADERBOARD_KEY = 'leaderboard:global:alltime';
-const MAX_LEADERBOARD_SIZE = 100; // Keep top 100 scores
-
-// Server secret for signing submissions (change this in production!)
-const SERVER_SECRET = env.LEADERBOARD_SECRET || 'change-me-in-production';
-
-// Ensure environment variables are set for @vercel/kv
-if (env.KV_REST_API_URL) {
-    process.env.KV_REST_API_URL = env.KV_REST_API_URL;
-}
-if (env.KV_REST_API_TOKEN) {
-    process.env.KV_REST_API_TOKEN = env.KV_REST_API_TOKEN;
-}
-
-/**
- * Generate a simple hash for signature verification
- * In production, use a proper HMAC library like crypto.subtle
- */
-async function generateSignature(playerId: string, score: number, timestamp: number): Promise<string> {
-    const data = `${playerId}:${score}:${timestamp}:${SERVER_SECRET}`;
-
-    // Use Web Crypto API for server-side hashing
-    const encoder = new TextEncoder();
-    const dataBuffer = encoder.encode(data);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    return hashHex;
+    userId?: string;
 }
 
 // GET /api/leaderboard - Fetch top scores
-export const GET: RequestHandler = async () => {
+export const GET: RequestHandler = async ({ locals }) => {
     try {
-        // Get top scores from KV sorted set (highest scores first)
-        const topScores = await kv.zrange(LEADERBOARD_KEY, 0, 99, {
-            rev: true, // Highest scores first
-            withScores: true
-        });
+        const supabase = locals.supabase;
+
+        // Query the leaderboard view we created
+        const { data, error } = await supabase
+            .from('leaderboard_global')
+            .select('*')
+            .limit(100);
+
+        if (error) {
+            console.error('Error fetching leaderboard:', error);
+            return json(
+                {
+                    success: false,
+                    error: 'Failed to fetch leaderboard'
+                },
+                { status: 500 }
+            );
+        }
 
         // Format the response
-        const leaderboard: LeaderboardEntry[] = [];
-
-        for (let i = 0; i < topScores.length; i += 2) {
-            const entryData = topScores[i];
-            const score = topScores[i + 1] as number;
-
-            try {
-                // entryData might be a string or an object depending on how it was stored
-                let parsed: { username: string; timestamp: number };
-                if (typeof entryData === 'string') {
-                    parsed = JSON.parse(entryData);
-                } else {
-                    parsed = entryData as { username: string; timestamp: number };
-                }
-
-                leaderboard.push({
-                    username: parsed.username,
-                    score: score,
-                    timestamp: parsed.timestamp,
-                    rank: leaderboard.length + 1
-                });
-            } catch (e) {
-                console.error('Failed to parse leaderboard entry:', e, entryData);
-            }
-        }
+        const leaderboard: LeaderboardEntry[] = data.map(entry => ({
+            username: entry.username,
+            score: entry.score,
+            timestamp: new Date(entry.created_at).getTime(),
+            rank: entry.rank,
+            userId: entry.user_id
+        }));
 
         return json({
             success: true,
@@ -101,32 +63,26 @@ export const GET: RequestHandler = async () => {
 };
 
 // POST /api/leaderboard - Submit a new score
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
     try {
+        const supabase = locals.supabase;
+        const user = locals.user;
+
+        // Check if user is authenticated
+        if (!user) {
+            return json(
+                {
+                    success: false,
+                    error: 'You must be logged in to submit scores'
+                },
+                { status: 401 }
+            );
+        }
+
         const body = await request.json();
-        const { username, score, playerId } = body;
+        const { score } = body;
 
         // Validate input
-        if (!username || typeof username !== 'string') {
-            return json(
-                {
-                    success: false,
-                    error: 'Username is required'
-                },
-                { status: 400 }
-            );
-        }
-
-        if (!playerId || typeof playerId !== 'string') {
-            return json(
-                {
-                    success: false,
-                    error: 'Player ID is required'
-                },
-                { status: 400 }
-            );
-        }
-
         if (typeof score !== 'number' || score < 0) {
             return json(
                 {
@@ -149,52 +105,44 @@ export const POST: RequestHandler = async ({ request }) => {
             );
         }
 
-        // Sanitize username
-        const sanitizedUsername = username.trim().slice(0, 20);
-        if (sanitizedUsername.length === 0) {
+        // Insert the score into the database
+        const { error: insertError } = await supabase
+            .from('scores')
+            .insert({
+                user_id: user.id,
+                mode: 'endless',
+                score: score
+            });
+
+        if (insertError) {
+            console.error('Error inserting score:', insertError);
             return json(
                 {
                     success: false,
-                    error: 'Username cannot be empty'
+                    error: 'Failed to submit score'
                 },
-                { status: 400 }
+                { status: 500 }
             );
         }
 
-        const timestamp = Date.now();
+        // Get the user's new rank using the helper function
+        const { data: rankData, error: rankError } = await supabase
+            .rpc('get_user_leaderboard_position', { user_uuid: user.id })
+            .single();
 
-        // Generate server-side signature for this submission
-        const signature = await generateSignature(playerId, score, timestamp);
-
-        // Create entry data with playerId
-        const entryData = JSON.stringify({
-            username: sanitizedUsername,
-            playerId: playerId,
-            timestamp: timestamp,
-            signature: signature
-        });
-
-        // Use playerId:timestamp as unique member key to allow multiple scores per player
-        const memberKey = `${playerId}:${timestamp}`;
-
-        // Add to sorted set (score is the sorting value)
-        await kv.zadd(LEADERBOARD_KEY, {
-            score: score,
-            member: entryData
-        });
-
-        // Trim to keep only top MAX_LEADERBOARD_SIZE entries
-        const currentSize = await kv.zcard(LEADERBOARD_KEY);
-        if (currentSize > MAX_LEADERBOARD_SIZE) {
-            await kv.zremrangebyrank(LEADERBOARD_KEY, 0, currentSize - MAX_LEADERBOARD_SIZE - 1);
+        if (rankError) {
+            console.error('Error fetching rank:', rankError);
+            // Still return success since the score was saved
+            return json({
+                success: true,
+                rank: null,
+                message: 'Score submitted successfully'
+            });
         }
-
-        // Get the rank of this score
-        const rank = await kv.zrevrank(LEADERBOARD_KEY, entryData);
 
         return json({
             success: true,
-            rank: rank !== null ? rank + 1 : null,
+            rank: rankData?.rank || null,
             message: 'Score submitted successfully'
         });
     } catch (error) {

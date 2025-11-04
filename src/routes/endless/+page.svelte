@@ -8,24 +8,22 @@
     import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
     import PlayerInfoPanel from "$components/playerInfoPanel.svelte";
     import { PLAYER_COLORS } from "$lib/game/constants";
-    import { onMount } from "svelte";
     import { fade } from "svelte/transition";
-    import {
-        getPlayerId,
-        getUsername,
-        saveUsername,
-    } from "$lib/utils/playerIdentity";
+    import type { PageData } from "./$types";
 
-    let username = $state("");
+    let { data } = $props<{ data: PageData }>();
+
+    let username = $derived(data.user?.username || data.user?.email || null);
+
     let submitting = $state(false);
     let submitSuccess = $state(false);
     let submitError = $state("");
     let playerRank = $state<number | null>(null);
-    let playerId = $state("");
 
     async function submitScore() {
-        if (!username.trim()) {
-            submitError = "Please enter a username";
+        // Check if user is logged in
+        if (!data.user) {
+            submitError = "You must be logged in to submit scores";
             return;
         }
 
@@ -33,28 +31,23 @@
         submitError = "";
 
         try {
-            // Save username to localStorage for future games
-            saveUsername(username.trim());
-
             const response = await fetch("/api/leaderboard", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    username: username.trim(),
-                    playerId: playerId,
                     score: gameState.playerScore,
                 }),
             });
 
-            const data = await response.json();
+            const result = await response.json();
 
-            if (data.success) {
+            if (result.success) {
                 submitSuccess = true;
-                playerRank = data.rank;
+                playerRank = result.rank;
             } else {
-                submitError = data.error || "Failed to submit score";
+                submitError = result.error || "Failed to submit score";
             }
         } catch (error) {
             submitError = "Network error. Please try again.";
@@ -63,15 +56,6 @@
             submitting = false;
         }
     }
-
-    onMount(() => {
-        // Load player identity
-        playerId = getPlayerId();
-        const savedUsername = getUsername();
-        if (savedUsername) {
-            username = savedUsername;
-        }
-    });
 </script>
 
 <svelte:head>
@@ -106,36 +90,49 @@
                 </div>
 
                 {#if !submitSuccess}
-                    <div class="mb-4">
-                        <label
-                            for="username"
-                            class="block text-sm font-semibold mb-2"
-                        >
-                            Submit your score to the leaderboard:
-                        </label>
-                        <input
-                            id="username"
-                            type="text"
-                            bind:value={username}
-                            placeholder="Enter your username"
-                            maxlength="20"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            disabled={submitting}
-                        />
-                        {#if submitError}
-                            <p class="text-red-600 text-sm mt-2">
-                                {submitError}
+                    {#if data.user}
+                        <div class="mb-4">
+                            <p class="text-sm font-semibold mb-2 text-center">
+                                Submit as <span class="text-blue-600"
+                                    >{data.user.username || data.user.email}</span
+                                >
                             </p>
-                        {/if}
-                    </div>
+                            {#if submitError}
+                                <p class="text-red-600 text-sm mt-2 text-center">
+                                    {submitError}
+                                </p>
+                            {/if}
+                        </div>
 
-                    <button
-                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                        onclick={submitScore}
-                        disabled={submitting || !username.trim()}
-                    >
-                        {submitting ? "Submitting..." : "Submit Score"}
-                    </button>
+                        <button
+                            class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
+                            onclick={submitScore}
+                            disabled={submitting}
+                        >
+                            {submitting ? "Submitting..." : "Submit Score"}
+                        </button>
+                    {:else}
+                        <div
+                            class="mb-4 p-4 bg-yellow-100 border-2 border-yellow-500 rounded-lg text-center"
+                        >
+                            <p class="text-yellow-800 font-semibold mb-2">
+                                You must be logged in to submit scores
+                            </p>
+                            <a
+                                href="/login?redirect=/endless"
+                                class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Log In
+                            </a>
+                            <span class="mx-2 text-gray-500">or</span>
+                            <a
+                                href="/register?redirect=/endless"
+                                class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors"
+                            >
+                                Sign Up
+                            </a>
+                        </div>
+                    {/if}
                 {:else}
                     <div
                         class="mb-4 p-4 bg-green-100 border-2 border-green-500 rounded-lg text-center"
