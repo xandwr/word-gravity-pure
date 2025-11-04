@@ -1,6 +1,7 @@
 import { json } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 import { createSupabaseAdminClient } from "$lib/server/supabase";
+import { VITE_SUPABASE_URL } from "$env/static/private";
 
 /**
  * Request account deletion - sends confirmation email
@@ -54,26 +55,69 @@ export const POST: RequestHandler = async ({ locals, request }) => {
 			);
 		}
 
-		// Send deletion confirmation email using Supabase
-		// Note: You'll need to create a custom email template in Supabase
-		// For now, we'll use a workaround by sending a password reset email with custom redirect
-		const deletionUrl = `${new URL(request.url).origin}/account/confirm-delete?token=${deletionToken}&user_id=${session.user.id}`;
+		// Get user profile for username
+		const { data: profile } = await adminClient
+			.from("profiles")
+			.select("username")
+			.eq("id", session.user.id)
+			.single();
 
-		// Since Supabase doesn't have a built-in "custom email" feature,
-		// we'll need to either:
-		// 1. Use a third-party email service (like SendGrid, Resend, etc.)
-		// 2. Use Supabase Edge Functions to send custom emails
-		// For this example, we'll return the URL and log it
-		// In production, you should send this via email
+		// Call Supabase Edge Function to send deletion confirmation email
+		const appUrl = new URL(request.url).origin;
+		const edgeFunctionUrl = `${VITE_SUPABASE_URL}/functions/v1/send-deletion-email`;
 
-		console.log(`Deletion confirmation URL: ${deletionUrl}`);
+		try {
+			const emailResponse = await fetch(edgeFunctionUrl, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					Authorization: request.headers.get("Authorization") || "",
+				},
+				body: JSON.stringify({
+					userId: session.user.id,
+					email: session.user.email,
+					username: profile?.username || session.user.email?.split("@")[0] || "User",
+					deletionToken,
+					appUrl,
+				}),
+			});
 
-		return json({
-			success: true,
-			message: "Deletion confirmation email sent. Please check your inbox.",
-			// In development, return the URL so you can test
-			deletionUrl: process.env.NODE_ENV === "development" ? deletionUrl : undefined,
-		});
+			const emailResult = await emailResponse.json();
+
+			if (!emailResponse.ok) {
+				console.error("Edge function error:", emailResult);
+				// If email fails, still return the URL in dev mode
+				return json({
+					success: true,
+					message: "Deletion request created. Email service unavailable.",
+					deletionUrl:
+						process.env.NODE_ENV === "development"
+							? `${appUrl}/account/confirm-delete?token=${deletionToken}&user_id=${session.user.id}`
+							: undefined,
+				});
+			}
+
+			return json({
+				success: true,
+				message: "Deletion confirmation email sent. Please check your inbox.",
+				// In development, also return the URL for testing
+				deletionUrl:
+					process.env.NODE_ENV === "development"
+						? `${appUrl}/account/confirm-delete?token=${deletionToken}&user_id=${session.user.id}`
+						: undefined,
+			});
+		} catch (emailError) {
+			console.error("Failed to call edge function:", emailError);
+			// Fallback: return URL in dev mode if email fails
+			return json({
+				success: true,
+				message: "Deletion request created. Email service unavailable.",
+				deletionUrl:
+					process.env.NODE_ENV === "development"
+						? `${new URL(request.url).origin}/account/confirm-delete?token=${deletionToken}&user_id=${session.user.id}`
+						: undefined,
+			});
+		}
 	} catch (err) {
 		console.error("Delete request error:", err);
 		return json(
