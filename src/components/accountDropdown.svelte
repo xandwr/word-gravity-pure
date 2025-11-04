@@ -1,22 +1,30 @@
 <script lang="ts">
     import { onMount } from "svelte";
+    import { page } from "$app/stores";
+    import { goto, invalidateAll } from "$app/navigation";
     import { getUsername } from "$lib/utils/playerIdentity";
 
     let accountModalOpen = $state(false);
     let username = $state<string | null>(null);
-
-    // For now, all users are local-only (no official account system yet)
-    // In the future, this will check if the user has authenticated with the backend
     let isOfficialAccount = $state(false);
 
     // Props
     let { isMobile = false }: { isMobile?: boolean } = $props();
 
-    onMount(() => {
-        username = getUsername();
-        // TODO: Check if user has an official account when backend is ready
-        // isOfficialAccount = checkOfficialAccountStatus();
+    // Reactive: Update username and auth state based on page data
+    $effect(() => {
+        const user = $page.data.user;
+        if (user) {
+            username = user.username || user.email;
+            isOfficialAccount = true;
+        } else {
+            // Fall back to localStorage username if not authenticated
+            username = getUsername();
+            isOfficialAccount = false;
+        }
+    });
 
+    onMount(() => {
         // Close account dropdown when clicking outside
         const handleClickOutside = (event: MouseEvent) => {
             const target = event.target as HTMLElement;
@@ -36,25 +44,35 @@
 
     function handleProfileAction() {
         if (isOfficialAccount) {
-            // TODO: Navigate to profile page
-            console.log("Navigate to profile");
+            window.location.href = "/profile";
         } else {
-            // Navigate to registration page
             window.location.href = "/register";
         }
         accountModalOpen = false;
     }
 
     function handleLogin() {
-        // TODO: Navigate to login page
         window.location.href = "/login";
         accountModalOpen = false;
     }
 
-    function handleLogoutOrClearCache() {
+    async function handleLogoutOrClearCache() {
         if (isOfficialAccount) {
-            // TODO: Logout from official account
-            console.log("Logout from account");
+            // Logout from official account
+            try {
+                const response = await fetch("/api/auth/logout", {
+                    method: "POST",
+                });
+
+                if (response.ok) {
+                    await invalidateAll();
+                    await goto("/");
+                } else {
+                    console.error("Logout failed");
+                }
+            } catch (err) {
+                console.error("Logout error:", err);
+            }
         } else {
             // Clear local cache
             if (

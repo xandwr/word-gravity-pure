@@ -14,14 +14,20 @@
         loading = true;
 
         try {
-            await new Promise((r) => setTimeout(r, 600));
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password }),
+            });
 
-            if (!email || !password) {
-                throw new Error("Email and password are required.");
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || "Login failed");
             }
 
-            console.log("Logged in:", { email });
-            goto("/");
+            // Redirect to home page after successful login
+            await goto("/");
         } catch (err) {
             error =
                 err instanceof Error ? err.message : "Something went wrong.";
@@ -32,7 +38,7 @@
 
     function loginWith(provider: "discord" | "google") {
         console.log(`Redirecting to ${provider} OAuth...`);
-        // Replace with real redirect:
+        // TODO: Replace with real OAuth redirect when implemented
         // window.location.href = `/api/auth/${provider}`;
     }
 </script>

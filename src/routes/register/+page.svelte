@@ -2,6 +2,7 @@
     import { faDiscord, faGoogle } from "@fortawesome/free-brands-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { goto } from "$app/navigation";
+    import { getPlayerId } from "$lib/utils/playerIdentity";
 
     let username = "";
     let email = "";
@@ -15,14 +16,23 @@
         loading = true;
 
         try {
-            await new Promise((r) => setTimeout(r, 600));
+            // Get the current anonymous player ID for migration
+            const playerId = getPlayerId();
 
-            if (!username || !email || !password) {
-                throw new Error("All fields are required.");
+            const response = await fetch("/api/auth/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password, username, playerId }),
+            });
+
+            const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.error || "Registration failed");
             }
 
-            console.log("Registered:", { username, email });
-            goto("/login");
+            // Redirect to home page after successful registration
+            await goto("/");
         } catch (err) {
             error =
                 err instanceof Error ? err.message : "Something went wrong.";
@@ -33,7 +43,7 @@
 
     function loginWith(provider: "discord" | "google") {
         console.log(`Redirecting to ${provider} OAuth...`);
-        // Replace with real redirect:
+        // TODO: Replace with real OAuth redirect when implemented
         // window.location.href = `/api/auth/${provider}`;
     }
 </script>
