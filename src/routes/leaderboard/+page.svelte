@@ -36,7 +36,7 @@
     <title>Word Gravity | Leaderboard</title>
 </svelte:head>
 
-<div class="px-4 py-1">
+<div class="px-4 py-1 h-[calc(100vh-62px)]">
     <div class="max-w-4xl">
         <!-- Header -->
         <div class="text-center mb-8 pt-8">
@@ -87,7 +87,7 @@
             >
                 <!-- Table Header -->
                 <div
-                    class="grid grid-cols-[50px_1fr_80px] sm:grid-cols-[80px_1fr_120px_180px] gap-2 sm:gap-4 px-3 sm:px-6 py-4 bg-linear-to-r from-blue-600 to-purple-600 text-white font-bold items-center"
+                    class="grid grid-cols-[50px_1fr_80px] sm:grid-cols-[80px_1fr_120px_180px] gap-2 sm:gap-4 px-3 sm:px-6 py-4 bg-linear-to-r from-blue-800 to-purple-800 text-white font-bold items-center"
                 >
                     <div class="text-center">Rank</div>
                     <div>Player</div>

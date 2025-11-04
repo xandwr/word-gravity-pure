@@ -9,7 +9,7 @@
 </svelte:head>
 
 <div
-    class="flex flex-col items-center justify-center p-8"
+    class="flex flex-col items-center justify-center p-8 h-[calc(100vh-62px)]"
 >
     <div class="max-w-2xl text-center">
         <h1 class="text-5xl font-bold mb-6 text-white">Word Gravity</h1>
