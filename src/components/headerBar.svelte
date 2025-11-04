@@ -2,64 +2,12 @@
     import { Fa } from "svelte-fa";
     import { faDiscord } from "@fortawesome/free-brands-svg-icons";
     import { page } from "$app/state";
-    import { onMount } from "svelte";
-    import { getUsername } from "$lib/utils/playerIdentity";
+    import AccountDropdown from "./accountDropdown.svelte";
 
     let menuOpen = $state(false);
     let howToPlayOpen = $state(false);
-    let accountModalOpen = $state(false);
-    let username = $state<string | null>(null);
-
-    // For now, all users are local-only (no official account system yet)
-    // In the future, this will check if the user has authenticated with the backend
-    let isOfficialAccount = $state(false);
 
     const currentPath = $derived(page.url.pathname);
-
-    onMount(() => {
-        username = getUsername();
-        // TODO: Check if user has an official account when backend is ready
-        // isOfficialAccount = checkOfficialAccountStatus();
-
-        // Close account dropdown when clicking outside
-        const handleClickOutside = (event: MouseEvent) => {
-            const target = event.target as HTMLElement;
-            if (accountModalOpen && !target.closest('.account-dropdown-container')) {
-                accountModalOpen = false;
-            }
-        };
-
-        document.addEventListener('click', handleClickOutside);
-        return () => {
-            document.removeEventListener('click', handleClickOutside);
-        };
-    });
-
-    function handleProfileAction() {
-        if (isOfficialAccount) {
-            // TODO: Navigate to profile page
-            console.log("Navigate to profile");
-        } else {
-            // Navigate to registration page
-            window.location.href = '/register';
-        }
-        accountModalOpen = false;
-    }
-
-    function handleLogoutOrClearCache() {
-        if (isOfficialAccount) {
-            // TODO: Logout from official account
-            console.log("Logout from account");
-        } else {
-            // Clear local cache
-            if (confirm("Are you sure you want to clear all local data? This will remove your stored username and game progress.")) {
-                localStorage.clear();
-                username = null;
-                console.log("Local cache cleared");
-            }
-        }
-        accountModalOpen = false;
-    }
 
     const navLinks = [
         { href: "/", label: "Home" },
@@ -157,49 +105,7 @@
             <div class="h-6 w-px bg-white/30 mx-2"></div>
 
             <!-- Account section -->
-            <div class="flex flex-col items-center gap-0.5 relative account-dropdown-container">
-                <span class="text-xs text-white/60">Account:</span>
-                <button
-                    class="px-3 py-0 hover:bg-blue-300/20 rounded-lg transition-colors border border-white/20"
-                    onclick={() => (accountModalOpen = !accountModalOpen)}
-                >
-                    {username || "Login"}
-                </button>
-
-                <!-- Desktop Account Dropdown -->
-                {#if accountModalOpen}
-                    <div
-                        class="absolute top-full mt-3 border-2 border-blue-900 right-0 bg-none backdrop-blur-lg rounded-lg shadow-xl w-64 z-50 account-dropdown-container"
-                    >
-                        <div class="p-4 space-y-2">
-                            {#if username}
-                                <div class="text-center">
-                                    <p class="text-xs text-gray-300">Signed in as:</p>
-                                    <p class="text-sm font-bold text-white">{username}</p>
-                                </div>
-                            {:else}
-                                <div class="text-center">
-                                    <p class="text-xs text-white">No username set</p>
-                                </div>
-                            {/if}
-
-                            <button
-                                class="w-full px-2 py-1 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors border-2 border-blue-700 text-sm"
-                                onclick={handleProfileAction}
-                            >
-                                {isOfficialAccount ? "My Profile" : "Register"}
-                            </button>
-
-                            <button
-                                class="w-full px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors border-2 border-gray-700 text-sm"
-                                onclick={handleLogoutOrClearCache}
-                            >
-                                {isOfficialAccount ? "Logout" : "Clear Cache"}
-                            </button>
-                        </div>
-                    </div>
-                {/if}
-            </div>
+            <AccountDropdown />
         </nav>
     </div>
 </header>
@@ -210,47 +116,7 @@
         class="md:hidden flex flex-col text-white bg-blue-900/20 border-t border-blue-300/20 p-4 gap-2"
     >
         <!-- Account section (mobile) -->
-        <div class="flex flex-col gap-1 account-dropdown-container">
-            <span class="text-xs text-white/60">Account:</span>
-            <button
-                class="px-3 py-2 hover:bg-blue-300/20 rounded-lg transition-colors border border-white/20 text-left"
-                onclick={() => (accountModalOpen = !accountModalOpen)}
-            >
-                {username || "Login"}
-            </button>
-
-            <!-- Mobile Account Dropdown -->
-            {#if accountModalOpen}
-                <div class="rounded-lg shadow-xl bg-none backdrop-blur-lg border-2 border-blue-900 mt-2 account-dropdown-container">
-                    <div class="p-4 space-y-3">
-                        {#if username}
-                            <div class="text-center mb-3">
-                                <p class="text-xs text-gray-300 mb-1">Signed in as:</p>
-                                <p class="text-sm font-bold text-white">{username}</p>
-                            </div>
-                        {:else}
-                            <div class="text-center mb-3">
-                                <p class="text-xs text-white">No username set</p>
-                            </div>
-                        {/if}
-
-                        <button
-                            class="w-full px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-colors border-2 border-blue-700 text-sm"
-                            onclick={handleProfileAction}
-                        >
-                            {isOfficialAccount ? "My Profile" : "Register"}
-                        </button>
-
-                        <button
-                            class="w-full px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors border-2 border-gray-700 text-sm"
-                            onclick={handleLogoutOrClearCache}
-                        >
-                            {isOfficialAccount ? "Logout" : "Clear Cache"}
-                        </button>
-                    </div>
-                </div>
-            {/if}
-        </div>
+        <AccountDropdown isMobile={true} />
 
         <div class="h-px w-full bg-white/30 my-2"></div>
 
@@ -325,7 +191,7 @@
                     </p>
                 </section>
 
-                <hr class="border-t-2 border-gray-300">
+                <hr class="border-t-2 border-gray-300" />
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">How to Play</h3>
@@ -350,7 +216,7 @@
                     </ol>
                 </section>
 
-                <hr class="border-t-2 border-gray-300">
+                <hr class="border-t-2 border-gray-300" />
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Controls</h3>
@@ -366,42 +232,54 @@
                     </ul>
                 </section>
 
-                <hr class="border-t-2 border-gray-300">
+                <hr class="border-t-2 border-gray-300" />
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Swap System</h3>
                     <p class="mb-2">
-                        Swaps let you exchange unwanted tiles for better options:
+                        Swaps let you exchange unwanted tiles for better
+                        options:
                     </p>
                     <ul class="list-disc list-inside space-y-2">
                         <li>
-                            <strong>Start with 5 swaps</strong> - Each game begins with 5 swap uses
+                            <strong>Start with 5 swaps</strong> - Each game begins
+                            with 5 swap uses
                         </li>
                         <li>
-                            <strong>Earn more swaps</strong> - Gain +1 swap every time you claim a word
+                            <strong>Earn more swaps</strong> - Gain +1 swap every
+                            time you claim a word
                         </li>
                         <li>
-                            <strong>1 swap per turn limit</strong> - You can only use 1 swap per turn, regardless of how many you have
+                            <strong>1 swap per turn limit</strong> - You can only
+                            use 1 swap per turn, regardless of how many you have
                         </li>
                         <li>
-                            <strong>Swap with bag:</strong> Drag a hand tile to the swap button to choose a tile from the bag
+                            <strong>Swap with bag:</strong> Drag a hand tile to the
+                            swap button to choose a tile from the bag
                         </li>
                         <li>
-                            <strong>Swap with board:</strong> Drag a hand tile onto any tile on the board to swap them directly
+                            <strong>Swap with board:</strong> Drag a hand tile onto
+                            any tile on the board to swap them directly
                         </li>
                         <li>
-                            <strong>Steal words:</strong> When you swap a tile on the board that's part of an opponent's word, you gain ownership of that word!
+                            <strong>Steal words:</strong> When you swap a tile on
+                            the board that's part of an opponent's word, you gain
+                            ownership of that word!
                         </li>
                         <li>
-                            <strong>Visual feedback:</strong> When dragging a tile, the swap button pulses with a blue glow if you have a swap available
+                            <strong>Visual feedback:</strong> When dragging a tile,
+                            the swap button pulses with a blue glow if you have a
+                            swap available
                         </li>
                         <li>
-                            <strong>Strategic use:</strong> Swaps don't end your turn, so use them to set up better plays or hijack opponent words
+                            <strong>Strategic use:</strong> Swaps don't end your
+                            turn, so use them to set up better plays or hijack opponent
+                            words
                         </li>
                     </ul>
                 </section>
 
-                <hr class="border-t-2 border-gray-300">
+                <hr class="border-t-2 border-gray-300" />
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Word Ownership</h3>
@@ -410,21 +288,27 @@
                     </p>
                     <ul class="list-disc list-inside space-y-2">
                         <li>
-                            <strong>Creating words:</strong> When you place tiles that form a new word, you own it
+                            <strong>Creating words:</strong> When you place tiles
+                            that form a new word, you own it
                         </li>
                         <li>
-                            <strong>Extending words:</strong> If you add tiles to an existing word, making it longer, you take ownership
+                            <strong>Extending words:</strong> If you add tiles to
+                            an existing word, making it longer, you take ownership
                         </li>
                         <li>
-                            <strong>Overwriting tiles:</strong> If you swap a tile that's part of an opponent's word, you steal ownership of that entire word
+                            <strong>Overwriting tiles:</strong> If you swap a tile
+                            that's part of an opponent's word, you steal ownership
+                            of that entire word
                         </li>
                         <li>
-                            <strong>Example:</strong> If the opponent has "CAT" and you swap the "A" for an "U" (making "CUT"), the word becomes yours!
+                            <strong>Example:</strong> If the opponent has "CAT" and
+                            you swap the "A" for an "U" (making "CUT"), the word
+                            becomes yours!
                         </li>
                     </ul>
                 </section>
 
-                <hr class="border-t-2 border-gray-300">
+                <hr class="border-t-2 border-gray-300" />
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Tile Colors:</h3>
@@ -459,7 +343,7 @@
                     </ol>
                 </section>
 
-                <hr class="border-t-2 border-gray-300">
+                <hr class="border-t-2 border-gray-300" />
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Tile Multipliers</h3>
@@ -507,7 +391,7 @@
                     </div>
                 </section>
 
-                <hr class="border-t-2 border-gray-300">
+                <hr class="border-t-2 border-gray-300" />
 
                 <section>
                     <h3 class="text-xl font-bold mb-2">Tips</h3>
