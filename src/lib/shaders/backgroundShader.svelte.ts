@@ -13,6 +13,7 @@ function createShaderBackgroundState() {
     const flashIntensity = $state({ value: 0.0 });
     const contrastMod = $state({ value: 1.0 });
     const spinMod = $state({ value: 1.0 });
+    const baseColor = $state<{ value: [number, number, number] }>({ value: [0.0, 0.0, 0.0] }); // Persistent color tint based on score dominance
 
     return {
         // Getters for shader parameters
@@ -36,6 +37,10 @@ function createShaderBackgroundState() {
             return spinMod.value;
         },
 
+        get baseColor() {
+            return baseColor.value;
+        },
+
         // Setters for direct control
         setOpacity(value: number) {
             opacity.value = value;
@@ -55,6 +60,49 @@ function createShaderBackgroundState() {
 
         setSpinMod(value: number) {
             spinMod.value = value;
+        },
+
+        setBaseColor(color: [number, number, number]) {
+            baseColor.value = color;
+        },
+
+        // Update base color based on score ratio (for gradual color shift)
+        updateBaseColorFromScores(playerScore: number, opponentScore: number) {
+            const playerColor: [number, number, number] = [0.133, 0.773, 0.369]; // #22c55e green-500
+            const opponentColor: [number, number, number] = [0.937, 0.267, 0.267]; // #ef4444 red-500
+            const neutralColor: [number, number, number] = [0.0, 0.0, 0.0]; // black/neutral
+
+            const totalScore = playerScore + opponentScore;
+
+            if (totalScore === 0) {
+                baseColor.value = neutralColor;
+                return;
+            }
+
+            // Calculate dominance ratio (-1 to 1, where -1 is full opponent, 1 is full player)
+            const dominance = (playerScore - opponentScore) / totalScore;
+
+            // Mix intensity scales with score count (more scores = stronger color)
+            // Cap at 0.4 intensity to keep it subtle
+            const maxIntensity = Math.min(0.4, totalScore / 100);
+
+            if (dominance > 0) {
+                // Player is winning - mix toward green
+                const intensity = dominance * maxIntensity;
+                baseColor.value = [
+                    playerColor[0] * intensity,
+                    playerColor[1] * intensity,
+                    playerColor[2] * intensity
+                ];
+            } else {
+                // Opponent is winning - mix toward red
+                const intensity = Math.abs(dominance) * maxIntensity;
+                baseColor.value = [
+                    opponentColor[0] * intensity,
+                    opponentColor[1] * intensity,
+                    opponentColor[2] * intensity
+                ];
+            }
         },
 
         // Trigger a color flash on the background shader with cumulative random walk
@@ -220,6 +268,7 @@ function createShaderBackgroundState() {
                 flashIntensity: flashIntensity.value,
                 contrastMod: contrastMod.value,
                 spinMod: spinMod.value,
+                baseColor: baseColor.value,
             };
         }
     };

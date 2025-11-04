@@ -245,6 +245,9 @@ function createGameState() {
                 shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
                 shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
                 shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
+
+                // Update persistent base color based on score dominance
+                shaderBackground.updateBaseColorFromScores(score, opponentScore.value);
             }
         },
 
@@ -259,6 +262,9 @@ function createGameState() {
                 shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
                 shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
                 shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
+
+                // Update persistent base color based on score dominance
+                shaderBackground.updateBaseColorFromScores(playerScore.value, score);
             }
         },
 

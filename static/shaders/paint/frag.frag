@@ -7,6 +7,7 @@ uniform vec3 flashColor; // color to flash when player scores (RGB 0.0-1.0)
 uniform float flashIntensity; // intensity of color flash (0.0-1.0)
 uniform float contrastMod; // dynamic contrast modifier (0.0-2.0, default 1.0)
 uniform float spinMod; // dynamic spin speed modifier (0.0-2.0, default 1.0)
+uniform vec3 baseColor; // persistent color tint based on score dominance (RGB 0.0-1.0)
 
 // configuration constants
 #define SPIN_ROTATION 0.5
@@ -64,19 +65,22 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
     float light = (LIGTHING - 0.2) * max(c1p * 5.0 - 4.0, 0.0)
                 + LIGTHING * max(c2p * 5.0 - 4.0, 0.0);
     
-    vec4 baseColor = (0.3 / CONTRAST) * COLOUR_1
+    vec4 paintColor = (0.3 / CONTRAST) * COLOUR_1
          + (1.0 - 0.3 / CONTRAST)
          * (COLOUR_1 * c1p + COLOUR_2 * c2p + vec4(c3p * COLOUR_3.rgb, c3p * COLOUR_1.a))
          + light;
 
+    // Apply persistent base color tint (score dominance)
+    vec3 tintedColor = paintColor.rgb + baseColor;
+
     // Apply color flash effect (mix in the flash color)
-    vec3 flashedColor = mix(baseColor.rgb, flashColor, flashIntensity);
-    baseColor = vec4(flashedColor, baseColor.a);
+    vec3 flashedColor = mix(tintedColor, flashColor, flashIntensity);
+    paintColor = vec4(flashedColor, paintColor.a);
 
     // Apply opacity to the final color alpha channel
-    baseColor.a *= opacity;
+    paintColor.a *= opacity;
 
-    return baseColor;
+    return paintColor;
 }
 
 void main() {

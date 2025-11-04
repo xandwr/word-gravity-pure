@@ -126,6 +126,7 @@ export interface ShaderUniforms {
     flashIntensity?: number;
     contrastMod?: number;
     spinMod?: number;
+    baseColor?: [number, number, number];
 }
 
 /**
@@ -145,6 +146,7 @@ export function createShaderAnimation(
     const flashIntensityLocation = gl.getUniformLocation(program, 'flashIntensity');
     const contrastModLocation = gl.getUniformLocation(program, 'contrastMod');
     const spinModLocation = gl.getUniformLocation(program, 'spinMod');
+    const baseColorLocation = gl.getUniformLocation(program, 'baseColor');
 
     // Resize handler
     function resize() {
@@ -193,6 +195,11 @@ export function createShaderAnimation(
 
         if (spinModLocation) {
             gl.uniform1f(spinModLocation, uniforms.spinMod ?? 1.0);
+        }
+
+        if (baseColorLocation) {
+            const color = uniforms.baseColor ?? [0.0, 0.0, 0.0];
+            gl.uniform3f(baseColorLocation, color[0], color[1], color[2]);
         }
 
         if (updateUniforms) {
