@@ -238,15 +238,8 @@ function createGameState() {
             const oldScore = playerScore.value;
             playerScore.value = score;
 
-            // Trigger shader effects if score increased
+            // Update persistent base color based on score dominance
             if (score > oldScore) {
-                // Convert player color from hex to RGB 0.0-1.0
-                const color = shaderBackground.hexToRGB('#22c55e'); // green-500
-                shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
-                shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
-                shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
-
-                // Update persistent base color based on score dominance
                 shaderBackground.updateBaseColorFromScores(score, opponentScore.value);
             }
         },
@@ -255,15 +248,8 @@ function createGameState() {
             const oldScore = opponentScore.value;
             opponentScore.value = score;
 
-            // Trigger shader effects if score increased
+            // Update persistent base color based on score dominance
             if (score > oldScore) {
-                // Convert opponent color from hex to RGB 0.0-1.0
-                const color = shaderBackground.hexToRGB('#ef4444'); // red-500
-                shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
-                shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
-                shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
-
-                // Update persistent base color based on score dominance
                 shaderBackground.updateBaseColorFromScores(playerScore.value, score);
             }
         },
@@ -713,7 +699,7 @@ function createGameState() {
 
                         // Score immediately
                         const tileScore = tile.baseScore * tile.multiplier;
-                        playerScore.value += tileScore;
+                        this.updatePlayerScore(playerScore.value + tileScore);
                     }
                 }
 
@@ -810,7 +796,7 @@ function createGameState() {
 
                         // Score immediately for opponent
                         const tileScore = tile.baseScore * tile.multiplier;
-                        opponentScore.value += tileScore;
+                        this.updateOpponentScore(opponentScore.value + tileScore);
                     }
                 }
 
@@ -987,7 +973,7 @@ function createGameState() {
                             remainingTileScore += slot.heldLetterTile.baseScore * slot.heldLetterTile.multiplier;
                         }
                     });
-                    opponentScore.value += remainingTileScore;
+                    this.updateOpponentScore(opponentScore.value + remainingTileScore);
                 }
 
                 // If opponent's hand is empty but player still has tiles, give player their tiles
@@ -999,7 +985,7 @@ function createGameState() {
                             remainingTileScore += slot.heldLetterTile.baseScore * slot.heldLetterTile.multiplier;
                         }
                     });
-                    playerScore.value += remainingTileScore;
+                    this.updatePlayerScore(playerScore.value + remainingTileScore);
                 }
 
                 // Game over - no more tiles available
@@ -1061,6 +1047,100 @@ function createGameState() {
             if (gravityIntervalId !== null) {
                 clearInterval(gravityIntervalId);
                 gravityIntervalId = null;
+            }
+        },
+
+        // Save game state to localStorage
+        saveGameState() {
+            const state = {
+                boardSlots: boardSlots.map(slot => ({
+                    heldLetterTile: slot.heldLetterTile
+                })),
+                playerHandSlots: playerHandSlots.map(slot => ({
+                    heldLetterTile: slot.heldLetterTile
+                })),
+                opponentHandSlots: opponentHandSlots.map(slot => ({
+                    heldLetterTile: slot.heldLetterTile
+                })),
+                playerScore: playerScore.value,
+                opponentScore: opponentScore.value,
+                currentPlayerTurn: currentPlayerTurn.value,
+                playerSwapsRemaining: playerSwapsRemaining.value,
+                playerSwapsUsedThisTurn: playerSwapsUsedThisTurn.value,
+                isGameOver: isGameOver.value,
+                gameOverReason: gameOverReason.value,
+                aiDifficulty: aiDifficulty.value,
+                sharedBagTiles: [...sharedBag],
+                timestamp: Date.now()
+            };
+
+            try {
+                localStorage.setItem('wordGravityGameState', JSON.stringify(state));
+            } catch (e) {
+                console.error('Failed to save game state:', e);
+            }
+        },
+
+        // Load game state from localStorage
+        loadGameState(): boolean {
+            try {
+                const saved = localStorage.getItem('wordGravityGameState');
+                if (!saved) return false;
+
+                const state = JSON.parse(saved);
+
+                // Check if state is too old (> 24 hours)
+                const MAX_AGE = 24 * 60 * 60 * 1000;
+                if (Date.now() - state.timestamp > MAX_AGE) {
+                    localStorage.removeItem('wordGravityGameState');
+                    return false;
+                }
+
+                // Restore board
+                state.boardSlots.forEach((slot: TileContainer, index: number) => {
+                    boardSlots[index].heldLetterTile = slot.heldLetterTile;
+                });
+
+                // Restore hands
+                state.playerHandSlots.forEach((slot: TileContainer, index: number) => {
+                    playerHandSlots[index].heldLetterTile = slot.heldLetterTile;
+                });
+                state.opponentHandSlots.forEach((slot: TileContainer, index: number) => {
+                    opponentHandSlots[index].heldLetterTile = slot.heldLetterTile;
+                });
+
+                // Restore game metadata
+                playerScore.value = state.playerScore;
+                opponentScore.value = state.opponentScore;
+                currentPlayerTurn.value = state.currentPlayerTurn;
+                playerSwapsRemaining.value = state.playerSwapsRemaining;
+                playerSwapsUsedThisTurn.value = state.playerSwapsUsedThisTurn;
+                isGameOver.value = state.isGameOver;
+                gameOverReason.value = state.gameOverReason;
+                aiDifficulty.value = state.aiDifficulty;
+
+                // Restore shared bag
+                if (state.sharedBagTiles) {
+                    sharedBag.length = 0;
+                    sharedBag.push(...state.sharedBagTiles);
+                }
+
+                // Update shader background based on restored scores
+                shaderBackground.updateBaseColorFromScores(state.playerScore, state.opponentScore);
+
+                return true;
+            } catch (e) {
+                console.error('Failed to load game state:', e);
+                return false;
+            }
+        },
+
+        // Clear saved game state
+        clearSavedGameState() {
+            try {
+                localStorage.removeItem('wordGravityGameState');
+            } catch (e) {
+                console.error('Failed to clear saved game state:', e);
             }
         }
     };

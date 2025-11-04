@@ -10,6 +10,7 @@
     import { PLAYER_COLORS } from "$lib/game/constants";
     import { fade } from "svelte/transition";
     import type { PageData } from "./$types";
+    import { onMount } from "svelte";
 
     let { data } = $props<{ data: PageData }>();
 
@@ -19,6 +20,35 @@
     let submitSuccess = $state(false);
     let submitError = $state("");
     let playerRank = $state<number | null>(null);
+
+    // Load saved game state on mount
+    onMount(() => {
+        const wasLoaded = gameState.loadGameState();
+
+        if (wasLoaded) {
+            console.log("Restored previous game state");
+        }
+
+        // Auto-save game state when it changes
+        const saveInterval = setInterval(() => {
+            if (!gameState.isGameOver) {
+                gameState.saveGameState();
+            }
+        }, 3000); // Save every 3 seconds
+
+        // Save on page unload
+        const handleBeforeUnload = () => {
+            if (!gameState.isGameOver) {
+                gameState.saveGameState();
+            }
+        };
+        window.addEventListener('beforeunload', handleBeforeUnload);
+
+        return () => {
+            clearInterval(saveInterval);
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+        };
+    });
 
     async function submitScore() {
         // Check if user is logged in
@@ -157,7 +187,10 @@
 
                 <button
                     class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                    onclick={() => window.location.reload()}
+                    onclick={() => {
+                        gameState.clearSavedGameState();
+                        window.location.reload();
+                    }}
                 >
                     Play Again
                 </button>
