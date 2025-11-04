@@ -13,9 +13,10 @@ uniform vec3 baseColor; // persistent color tint based on score dominance (RGB 0
 #define SPIN_ROTATION 0.5
 #define SPIN_SPEED 1.0
 #define OFFSET vec2(0.0)
-#define COLOUR_1 vec4(0.050, 0.180, 0.400, 0.1) // deep space blue
-#define COLOUR_2 vec4(0.290, 0.050, 0.560, 1.0) // violet nebula core
-#define COLOUR_3 vec4(0.010, 0.020, 0.050, 0.1) // almost-black void
+// Base colors - will be overridden by baseColor uniform for score-based shifting
+vec4 COLOUR_1 = vec4(0.050, 0.180, 0.400, 0.1); // deep space blue
+vec4 COLOUR_2 = vec4(0.290, 0.050, 0.560, 1.0); // violet nebula core (purple neutral)
+vec4 COLOUR_3 = vec4(0.010, 0.020, 0.050, 0.1); // almost-black void
 #define CONTRAST 2.5
 #define LIGTHING 0.25
 #define SPIN_AMOUNT 0.25
@@ -30,7 +31,7 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
     float pixel_size = length(screenSize.xy) / PIXEL_FILTER;
     vec2 uv = (floor(screen_coords.xy * (1.0 / pixel_size)) * pixel_size - 0.5 * screenSize.xy) / length(screenSize.xy) - OFFSET;
     float uv_len = length(uv);
-    
+
     float speed = (SPIN_ROTATION * SPIN_EASE * 0.2);
     if (IS_ROTATE) {
         speed = t * speed;
@@ -43,7 +44,7 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
 
     vec2 mid = (screenSize.xy / length(screenSize.xy)) / 2.0;
     uv = (vec2(uv_len * cos(new_pixel_angle) + mid.x, uv_len * sin(new_pixel_angle) + mid.y) - mid);
-    
+
     uv *= 30.0;
     speed = t * SPIN_SPEED * spinMod; // apply dynamic spin modifier
     vec2 uv2 = vec2(uv.x + uv.y);
@@ -56,7 +57,7 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
         );
         uv  -= 1.0 * cos(uv.x + uv.y) - 1.0 * sin(uv.x * 0.711 - uv.y);
     }
-    
+
     float contrast_mod = (0.25 * CONTRAST + 0.5 * SPIN_AMOUNT + 1.2) * contrastMod;
     float paint_res = min(2.0, max(0.0, length(uv) * 0.035 * contrast_mod));
     float c1p = max(0.0, 1.0 - contrast_mod * abs(1.0 - paint_res));
@@ -64,17 +65,20 @@ vec4 effect(vec2 screenSize, vec2 screen_coords, float t) {
     float c3p = 1.0 - min(1.0, c1p + c2p);
     float light = (LIGTHING - 0.2) * max(c1p * 5.0 - 4.0, 0.0)
                 + LIGTHING * max(c2p * 5.0 - 4.0, 0.0);
-    
+
+    // If baseColor is set (length > 0), use it as COLOUR_2 (the main nebula color)
+    // Otherwise use default purple
+    vec4 dynamicColor2 = length(baseColor) > 0.01
+        ? vec4(baseColor, 1.0)
+        : COLOUR_2;
+
     vec4 paintColor = (0.3 / CONTRAST) * COLOUR_1
          + (1.0 - 0.3 / CONTRAST)
-         * (COLOUR_1 * c1p + COLOUR_2 * c2p + vec4(c3p * COLOUR_3.rgb, c3p * COLOUR_1.a))
+         * (COLOUR_1 * c1p + dynamicColor2 * c2p + vec4(c3p * COLOUR_3.rgb, c3p * COLOUR_1.a))
          + light;
 
-    // Apply persistent base color tint (score dominance)
-    vec3 tintedColor = paintColor.rgb + baseColor;
-
     // Apply color flash effect (mix in the flash color)
-    vec3 flashedColor = mix(tintedColor, flashColor, flashIntensity);
+    vec3 flashedColor = mix(paintColor.rgb, flashColor, flashIntensity);
     paintColor = vec4(flashedColor, paintColor.a);
 
     // Apply opacity to the final color alpha channel
