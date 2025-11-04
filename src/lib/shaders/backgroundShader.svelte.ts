@@ -57,19 +57,28 @@ function createShaderBackgroundState() {
             spinMod.value = value;
         },
 
-        // Trigger a color flash on the background shader
-        triggerFlash(color: [number, number, number], duration: number = 600) {
-            // Set the flash color and intensity
+        // Trigger a color flash on the background shader with cumulative random walk
+        triggerFlash(color: [number, number, number], duration: number = 500) {
+            // Set the flash color
             flashColor.value = color;
 
-            const MIN_INTENSITY = 0.1; // Minimum baseline intensity
-            const MAX_INTENSITY = 0.85; // Maximum intensity cap
-            const BOOST_AMOUNT = 0.4; // How much to boost on each score
+            const MIN_INTENSITY = 0.05; // Minimum baseline intensity
+            const MAX_INTENSITY = 0.9; // Maximum intensity cap
+            const MIN_CHANGE = 0.1; // Minimum random change amount
+            const MAX_CHANGE = 0.45; // Maximum random change amount
+
+            // Pick a random direction (positive or negative)
+            const direction = Math.random() < 0.5 ? -1 : 1;
+
+            // Pick a random intensity for this burst
+            const changeAmount = MIN_CHANGE + Math.random() * (MAX_CHANGE - MIN_CHANGE);
+
+            // Calculate new target value, clamped to min/max
+            const currentValue = flashIntensity.value;
+            const targetValue = Math.max(MIN_INTENSITY, Math.min(MAX_INTENSITY, currentValue + (direction * changeAmount)));
 
             const startTime = performance.now();
-            const rampUpTime = 0.15; // Fast burst - 15% of duration
-            const startIntensity = Math.max(MIN_INTENSITY, flashIntensity.value); // Start from current value
-            const targetIntensity = Math.min(MAX_INTENSITY, startIntensity + BOOST_AMOUNT);
+            const startValue = currentValue;
             let lastTime = startTime;
 
             const animate = (currentTime: number) => {
@@ -79,18 +88,12 @@ function createShaderBackgroundState() {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                let intensity: number;
-                if (progress < rampUpTime) {
-                    // Fast ramp up - cubic ease-in for snappy start
-                    const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    intensity = startIntensity + (targetIntensity - startIntensity) * eased;
-                } else {
-                    // Decay back to minimum, not zero
-                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = Math.exp(-decayProgress * 3.5); // Exponential fade
-                    intensity = MIN_INTENSITY + (targetIntensity - MIN_INTENSITY) * eased;
-                }
+                // Smooth ease-in-out to the new value
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                const intensity = startValue + (targetValue - startValue) * eased;
 
                 // Lerp the intensity based on delta time for frame-rate independence
                 const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
@@ -99,22 +102,31 @@ function createShaderBackgroundState() {
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
                 } else {
-                    flashIntensity.value = Math.max(MIN_INTENSITY, flashIntensity.value);
+                    flashIntensity.value = targetValue;
                 }
             };
             requestAnimationFrame(animate);
         },
 
-        // Pulse the contrast modifier
-        pulseContrast(targetMod: number = 1.4, duration: number = 1200) {
-            const MIN_CONTRAST = 1.0; // Minimum baseline contrast
-            const MAX_CONTRAST = 2.0; // Maximum contrast cap
-            const BOOST_AMOUNT = 0.35; // How much to boost on each score
+        // Pulse the contrast modifier with cumulative random walk
+        pulseContrast(targetMod: number = 1.4, duration: number = 500) {
+            const MIN_CONTRAST = 0.6; // Minimum baseline contrast
+            const MAX_CONTRAST = 2.4; // Maximum contrast cap
+            const MIN_CHANGE = 0.12; // Minimum random change amount
+            const MAX_CHANGE = 0.5; // Maximum random change amount
+
+            // Pick a random direction (positive or negative)
+            const direction = Math.random() < 0.5 ? -1 : 1;
+
+            // Pick a random intensity for this burst
+            const changeAmount = MIN_CHANGE + Math.random() * (MAX_CHANGE - MIN_CHANGE);
+
+            // Calculate new target value, clamped to min/max
+            const currentValue = contrastMod.value;
+            const targetValue = Math.max(MIN_CONTRAST, Math.min(MAX_CONTRAST, currentValue + (direction * changeAmount)));
 
             const startTime = performance.now();
-            const rampUpTime = 0.15; // Fast burst like flash effect
-            const startValue = Math.max(MIN_CONTRAST, contrastMod.value); // Start from current value
-            const targetValue = Math.min(MAX_CONTRAST, startValue + BOOST_AMOUNT);
+            const startValue = currentValue;
             let lastTime = startTime;
 
             const animate = (currentTime: number) => {
@@ -124,18 +136,12 @@ function createShaderBackgroundState() {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                let contrast: number;
-                if (progress < rampUpTime) {
-                    // Fast ramp up - cubic ease-in for snappy start
-                    const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    contrast = startValue + (targetValue - startValue) * eased;
-                } else {
-                    // Decay back to minimum, not 1.0
-                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = Math.exp(-decayProgress * 3.5); // Exponential fade
-                    contrast = MIN_CONTRAST + (targetValue - MIN_CONTRAST) * eased;
-                }
+                // Smooth ease-in-out to the new value
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                const contrast = startValue + (targetValue - startValue) * eased;
 
                 // Lerp the value based on delta time for frame-rate independence
                 const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
@@ -144,22 +150,31 @@ function createShaderBackgroundState() {
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
                 } else {
-                    contrastMod.value = Math.max(MIN_CONTRAST, contrastMod.value);
+                    contrastMod.value = targetValue;
                 }
             };
             requestAnimationFrame(animate);
         },
 
-        // Pulse the spin speed modifier
-        pulseSpin(targetMod: number = 1.6, duration: number = 1400) {
-            const MIN_SPIN = 1.0; // Minimum baseline spin
-            const MAX_SPIN = 2.5; // Maximum spin cap
-            const BOOST_AMOUNT = 0.5; // How much to boost on each score
+        // Pulse the spin speed modifier with cumulative random walk
+        pulseSpin(targetMod: number = 1.6, duration: number = 500) {
+            const MIN_SPIN = 0.3; // Minimum baseline spin
+            const MAX_SPIN = 2.8; // Maximum spin cap
+            const MIN_CHANGE = 0.15; // Minimum random change amount
+            const MAX_CHANGE = 0.6; // Maximum random change amount
+
+            // Pick a random direction (positive or negative)
+            const direction = Math.random() < 0.5 ? -1 : 1;
+
+            // Pick a random intensity for this burst
+            const changeAmount = MIN_CHANGE + Math.random() * (MAX_CHANGE - MIN_CHANGE);
+
+            // Calculate new target value, clamped to min/max
+            const currentValue = spinMod.value;
+            const targetValue = Math.max(MIN_SPIN, Math.min(MAX_SPIN, currentValue + (direction * changeAmount)));
 
             const startTime = performance.now();
-            const rampUpTime = 0.15; // Fast burst like flash effect
-            const startValue = Math.max(MIN_SPIN, spinMod.value); // Start from current value
-            const targetValue = Math.min(MAX_SPIN, startValue + BOOST_AMOUNT);
+            const startValue = currentValue;
             let lastTime = startTime;
 
             const animate = (currentTime: number) => {
@@ -169,18 +184,12 @@ function createShaderBackgroundState() {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1.0);
 
-                let spin: number;
-                if (progress < rampUpTime) {
-                    // Fast ramp up - cubic ease-in for snappy start
-                    const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    spin = startValue + (targetValue - startValue) * eased;
-                } else {
-                    // Decay back to minimum, not 1.0
-                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = Math.exp(-decayProgress * 3.5); // Exponential fade
-                    spin = MIN_SPIN + (targetValue - MIN_SPIN) * eased;
-                }
+                // Smooth ease-in-out to the new value
+                const eased = progress < 0.5
+                    ? 2 * progress * progress
+                    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+
+                const spin = startValue + (targetValue - startValue) * eased;
 
                 // Lerp the value based on delta time for frame-rate independence
                 const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
@@ -189,7 +198,7 @@ function createShaderBackgroundState() {
                 if (progress < 1.0) {
                     requestAnimationFrame(animate);
                 } else {
-                    spinMod.value = Math.max(MIN_SPIN, spinMod.value);
+                    spinMod.value = targetValue;
                 }
             };
             requestAnimationFrame(animate);
