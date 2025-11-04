@@ -3,7 +3,6 @@
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
     import { goto } from "$app/navigation";
 
-    let username = "";
     let email = "";
     let password = "";
     let loading = false;
@@ -17,12 +16,12 @@
         try {
             await new Promise((r) => setTimeout(r, 600));
 
-            if (!username || !email || !password) {
-                throw new Error("All fields are required.");
+            if (!email || !password) {
+                throw new Error("Email and password are required.");
             }
 
-            console.log("Registered:", { username, email });
-            goto("/login");
+            console.log("Logged in:", { email });
+            goto("/");
         } catch (err) {
             error =
                 err instanceof Error ? err.message : "Something went wrong.";
@@ -43,15 +42,9 @@
         on:submit={handleSubmit}
         class="max-w-md w-full backdrop-blur-sm rounded-lg shadow-xl p-8 space-y-5"
     >
-        <h1 class="text-3xl font-bold text-white text-center mb-4">Register</h1>
+        <h1 class="text-3xl font-bold text-white text-center mb-4">Login</h1>
 
         <div class="space-y-4">
-            <input
-                class="w-full p-1 rounded bg-white/10 text-white placeholder-white/50 border border-blue-300/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-                type="text"
-                placeholder="Username"
-                bind:value={username}
-            />
             <input
                 class="w-full p-1 rounded bg-white/10 text-white placeholder-white/50 border border-blue-300/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
                 type="email"
@@ -71,11 +64,11 @@
         {/if}
 
         <button
-            class="w-full py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded transition disabled:opacity-50"
+            class="w-full py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded transition disabled:opacity-50"
             type="submit"
             disabled={loading}
         >
-            {loading ? "Registering..." : "Create Account"}
+            {loading ? "Logging in..." : "Login"}
         </button>
 
         <!-- Divider -->
@@ -104,6 +97,14 @@
                 <FontAwesomeIcon icon={faDiscord} class="w-4 h-4" />
                 Continue with Discord
             </button>
+        </div>
+
+        <!-- Register link -->
+        <div class="text-center text-sm text-white/70">
+            Don't have an account?
+            <a href="/register" class="text-blue-400 hover:text-blue-300 underline">
+                Register here
+            </a>
         </div>
     </form>
 </div>

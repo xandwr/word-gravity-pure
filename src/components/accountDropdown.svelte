@@ -45,6 +45,12 @@
         accountModalOpen = false;
     }
 
+    function handleLogin() {
+        // TODO: Navigate to login page
+        window.location.href = "/login";
+        accountModalOpen = false;
+    }
+
     function handleLogoutOrClearCache() {
         if (isOfficialAccount) {
             // TODO: Logout from official account
@@ -104,6 +110,15 @@
                         {isOfficialAccount ? "My Profile" : "Register"}
                     </button>
 
+                    {#if !isOfficialAccount}
+                        <button
+                            class="w-full px-3 py-2 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors border-2 border-green-700 text-sm"
+                            onclick={handleLogin}
+                        >
+                            Login
+                        </button>
+                    {/if}
+
                     <button
                         class="w-full px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors border-2 border-gray-700 text-sm"
                         onclick={handleLogoutOrClearCache}
@@ -152,6 +167,15 @@
                     >
                         {isOfficialAccount ? "My Profile" : "Register"}
                     </button>
+
+                    {#if !isOfficialAccount}
+                        <button
+                            class="w-full px-2 py-1 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-colors border-2 border-green-700 text-sm"
+                            onclick={handleLogin}
+                        >
+                            Login
+                        </button>
+                    {/if}
 
                     <button
                         class="w-full px-2 py-1 bg-gray-500 hover:bg-gray-600 text-white font-semibold rounded-lg transition-colors border-2 border-gray-700 text-sm"
