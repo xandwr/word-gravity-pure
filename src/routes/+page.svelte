@@ -1,327 +1,35 @@
-<!--
-    +page.svelte
--->
+<!-- routes/+page.svelte -->
 
 <script lang="ts">
-    import WordGrid from "../components/wordGrid.svelte";
-    import PlayerHand from "../components/playerHand.svelte";
-    import { gameState, HAND_CONFIG } from "$lib/game/state.svelte";
-    import PlayerInfoPanel from "../components/playerInfoPanel.svelte";
-    import { PLAYER_COLORS } from "$lib/game/constants";
-    import { onMount } from "svelte";
-    import {
-        loadShaderProgram,
-        setupFullScreenQuad,
-        createShaderAnimation,
-    } from "$lib/shaders/shaderLoader";
-    import { fade } from "svelte/transition";
-    import {
-        getPlayerId,
-        getUsername,
-        saveUsername,
-    } from "$lib/utils/playerIdentity";
-
-    let username = $state("");
-    let submitting = $state(false);
-    let submitSuccess = $state(false);
-    let submitError = $state("");
-    let playerRank = $state<number | null>(null);
-    let playerId = $state("");
-
-    async function submitScore() {
-        if (!username.trim()) {
-            submitError = "Please enter a username";
-            return;
-        }
-
-        submitting = true;
-        submitError = "";
-
-        try {
-            // Save username to localStorage for future games
-            saveUsername(username.trim());
-
-            const response = await fetch("/api/leaderboard", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    username: username.trim(),
-                    playerId: playerId,
-                    score: gameState.playerScore,
-                }),
-            });
-
-            const data = await response.json();
-
-            if (data.success) {
-                submitSuccess = true;
-                playerRank = data.rank;
-            } else {
-                submitError = data.error || "Failed to submit score";
-            }
-        } catch (error) {
-            submitError = "Network error. Please try again.";
-            console.error("Submit error:", error);
-        } finally {
-            submitting = false;
-        }
-    }
-
-    // WebGL shader setup
-    onMount(() => {
-        // Load player identity
-        playerId = getPlayerId();
-        const savedUsername = getUsername();
-        if (savedUsername) {
-            username = savedUsername;
-        }
-
-        const canvas = document.getElementById(
-            "gameBackgroundCanvas",
-        ) as HTMLCanvasElement;
-        if (!canvas) return;
-
-        const gl =
-            canvas.getContext("webgl", {
-                alpha: true,
-                premultipliedAlpha: false,
-            }) ||
-            (canvas.getContext("experimental-webgl", {
-                alpha: true,
-                premultipliedAlpha: false,
-            }) as WebGLRenderingContext);
-        if (!gl) {
-            console.error("WebGL not supported");
-            return;
-        }
-
-        // Enable blending for opacity to work
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-        let cleanup: (() => void) | undefined;
-
-        // Load shader program from files
-        loadShaderProgram(
-            gl,
-            "/shaders/paint/vert.vert",
-            "/shaders/paint/frag.frag",
-        ).then((shaderProgram) => {
-            if (!shaderProgram) {
-                console.error("Failed to load shader program");
-                return;
-            }
-
-            const { program } = shaderProgram;
-            gl.useProgram(program);
-
-            // Set up full-screen quad
-            setupFullScreenQuad(gl, program);
-
-            // Start animation with dynamic uniforms callback
-            cleanup = createShaderAnimation(
-                gl,
-                program,
-                canvas,
-                undefined, // no custom updateUniforms
-                () => ({
-                    opacity: gameState.backgroundOpacity,
-                    flashColor: gameState.backgroundFlashColor,
-                    flashIntensity: gameState.backgroundFlashIntensity,
-                    contrastMod: gameState.backgroundContrastMod,
-                    spinMod: gameState.backgroundSpinMod,
-                }),
-            );
-        });
-
-        // Return cleanup function
-        return () => {
-            if (cleanup) cleanup();
-        };
-    });
+    import { page } from "$app/state";
 </script>
 
 <svelte:head>
-    <title>Word Gravity | Endless</title>
+    <title>Word Gravity</title>
 </svelte:head>
 
-<div class="flex flex-col h-[calc(100vh-62px)] overflow-hidden">
-    {#if gameState.isGameOver}
-        <div
-            class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
-        >
-            <div
-                class="bg-white rounded-lg p-6 sm:p-8 max-w-md w-full shadow-2xl"
+<div
+    class="flex flex-col items-center justify-center bg-linear-to-b from-blue-100 to-purple-100 p-8"
+>
+    <div class="max-w-2xl text-center">
+        <h1 class="text-5xl font-bold mb-6 text-gray-800">Word Gravity</h1>
+        <p class="text-xl text-gray-600 mb-8">
+            A word-building game where letters fall with gravity!
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a
+                href="/endless"
+                class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg transition-colors text-lg"
             >
-                <h2 class="text-2xl sm:text-3xl font-bold text-center mb-4">
-                    Game Over!
-                </h2>
-                <p class="text-center mb-6">{gameState.gameOverReason}</p>
-                <div class="flex flex-col gap-2 mb-6">
-                    <div class="flex justify-between text-lg">
-                        <span class="font-semibold">Your Score:</span>
-                        <span class="font-bold text-green-600"
-                            >{gameState.playerScore}</span
-                        >
-                    </div>
-                    <div class="flex justify-between text-lg">
-                        <span class="font-semibold">Opponent Score:</span>
-                        <span class="font-bold text-red-600"
-                            >{gameState.opponentScore}</span
-                        >
-                    </div>
-                </div>
-
-                {#if !submitSuccess}
-                    <div class="mb-4">
-                        <label
-                            for="username"
-                            class="block text-sm font-semibold mb-2"
-                        >
-                            Submit your score to the leaderboard:
-                        </label>
-                        <input
-                            id="username"
-                            type="text"
-                            bind:value={username}
-                            placeholder="Enter your username"
-                            maxlength="20"
-                            class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"
-                            disabled={submitting}
-                        />
-                        {#if submitError}
-                            <p class="text-red-600 text-sm mt-2">
-                                {submitError}
-                            </p>
-                        {/if}
-                    </div>
-
-                    <button
-                        class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors mb-3 disabled:opacity-50 disabled:cursor-not-allowed"
-                        onclick={submitScore}
-                        disabled={submitting || !username.trim()}
-                    >
-                        {submitting ? "Submitting..." : "Submit Score"}
-                    </button>
-                {:else}
-                    <div
-                        class="mb-4 p-4 bg-green-100 border-2 border-green-500 rounded-lg text-center"
-                    >
-                        <p class="text-green-800 font-bold mb-1">
-                            Score submitted!
-                        </p>
-                        {#if playerRank !== null}
-                            <p class="text-green-700">
-                                You ranked #{playerRank} on the leaderboard!
-                            </p>
-                        {/if}
-                    </div>
-
-                    <a
-                        href="/leaderboard"
-                        class="block w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition-colors text-center mb-3"
-                    >
-                        View Leaderboard
-                    </a>
-                {/if}
-
-                <button
-                    class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
-                    onclick={() => window.location.reload()}
-                >
-                    Play Again
-                </button>
-            </div>
-        </div>
-    {/if}
-
-    <div class="relative flex flex-col flex-1 min-h-0">
-        <div class="absolute inset-0 -z-10">
-            <canvas
-                id="gameBackgroundCanvas"
-                class="absolute inset-0 -z-10 w-full h-full"
-            ></canvas>
-        </div>
-
-        <div
-            class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-start overflow-auto"
-        >
-            <WordGrid />
-        </div>
-
-        <div
-            class="relative flex justify-center px-2 py-0.5 border-y-2 border-black/30 overflow-hidden shadow-lg"
-        >
-            <!-- animated caution-tape background -->
-            <div
-                class="absolute inset-0 bg-size-[40px_40px] animate-banner"
-                style="background-image: linear-gradient(45deg, {PLAYER_COLORS[
-                    gameState.currentPlayerTurn
-                ]
-                    .primary} 35%, transparent 35%, transparent 50%, {PLAYER_COLORS[
-                    gameState.currentPlayerTurn
-                ].primary} 50%, {PLAYER_COLORS[gameState.currentPlayerTurn]
-                    .primary} 85%, transparent 85%, transparent)"
-            ></div>
-
-            <div
-                class="relative z-10 flex flex-row justify-between items-center gap-2 sm:gap-4 w-full"
+                Play Endless Mode
+            </a>
+            <a
+                href="/leaderboard"
+                class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 px-8 rounded-lg transition-colors text-lg"
             >
-                <PlayerInfoPanel
-                    player="player"
-                    playerUsername={username || null}
-                />
-
-                <div class="flex flex-col items-center gap-1 shrink-0">
-                    <div
-                        class="flex items-center gap-1 text-xl uppercase whitespace-nowrap"
-                    >
-                        <span
-                            class="font-bold drop-shadow-[0px_1px_1px_black]"
-                            style="color: {PLAYER_COLORS[
-                                gameState.currentPlayerTurn
-                            ].primary};"
-                            >{gameState.currentPlayerTurn == "player"
-                                ? username || "You"
-                                : "Them"}</span
-                        >
-                    </div>
-                    <div
-                        class="flex items-center gap-1 text-xs text-white sm:text-base whitespace-nowrap bg-gray-800/20 border-2 border-black/10 px-4 py-1 rounded-lg"
-                    >
-                        <span class="font-semibold">Letters:</span>
-                        <span class="font-bold">{gameState.bagCount}</span>
-                    </div>
-                </div>
-
-                <PlayerInfoPanel player="opponent" />
-            </div>
-        </div>
-
-        <div class="relative shrink-0">
-            <!-- Background panel from player info to bottom of screen -->
-            <div class="absolute inset-0 bg-gray-500/10"></div>
-
-            <div class="relative px-1 py-2 sm:p-3 md:p-4 flex justify-center">
-                <PlayerHand />
-            </div>
+                View Leaderboard
+            </a>
         </div>
     </div>
 </div>
-
-<style>
-    @keyframes bannerScroll {
-        from {
-            background-position: 0 0;
-        }
-        to {
-            background-position: 40px 0;
-        }
-    }
-    .animate-banner {
-        animation: bannerScroll 2s linear infinite;
-        opacity: 0.15; /* adjust so text stays readable */
-    }
-</style>

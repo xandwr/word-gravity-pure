@@ -9,7 +9,8 @@
     const currentPath = $derived(page.url.pathname);
 
     const navLinks = [
-        { href: "/", label: "Endless Mode" },
+        { href: "/", label: "Home" },
+        { href: "/endless", label: "Endless Mode" },
         { href: "/leaderboard", label: "Leaderboard" },
         {
             href: "https://discord.gg/r8rbntTaKQ",
@@ -70,7 +71,7 @@
             <div class="h-6 w-px bg-white/30 mx-2"></div>
 
             {#each navLinks as link, index}
-                {#if index === 2}
+                {#if index === 3}
                     <div class="h-6 w-px bg-white/30 mx-2"></div>
                 {/if}
                 <a
@@ -108,7 +109,7 @@
         class="md:hidden flex flex-col text-white bg-blue-900/20 border-t border-blue-300/20 p-4 gap-2"
     >
         {#each navLinks as link, index}
-            {#if index === 2}
+            {#if index === 3}
                 <div class="h-px w-full bg-white/30 my-2"></div>
             {/if}
             <a
