@@ -9,11 +9,11 @@
 </svelte:head>
 
 <div
-    class="flex flex-col items-center justify-center bg-linear-to-b from-blue-100 to-purple-100 p-8"
+    class="flex flex-col items-center justify-center p-8"
 >
     <div class="max-w-2xl text-center">
-        <h1 class="text-5xl font-bold mb-6 text-gray-800">Word Gravity</h1>
-        <p class="text-xl text-gray-600 mb-8">
+        <h1 class="text-5xl font-bold mb-6 text-white">Word Gravity</h1>
+        <p class="text-xl text-gray-300 mb-8">
             A word-building game where letters fall with gravity!
         </p>
 
