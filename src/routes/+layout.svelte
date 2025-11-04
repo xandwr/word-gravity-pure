@@ -6,6 +6,7 @@
 	import "../app.css";
 	import favicon from "$lib/assets/favicon.svg";
 	import HeaderBar from "../components/headerBar.svelte";
+	import SwapIndicatorLines from "../components/swapIndicatorLines.svelte";
 	import { onMount } from "svelte";
 	import { initializeShaderBackground } from "$lib/shaders/backgroundShader.svelte";
 
@@ -29,6 +30,9 @@
 <!-- Global background canvas -->
 <canvas id="globalBackgroundCanvas" class="fixed inset-0 -z-50 w-full h-full"
 ></canvas>
+
+<!-- Swap indicator lines overlay -->
+<SwapIndicatorLines />
 
 <main class="max-w-4xl m-auto sm:border-x-4 border-blue-800/40">
 	<HeaderBar />

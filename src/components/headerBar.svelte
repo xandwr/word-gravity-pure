@@ -10,7 +10,7 @@
 
     const navLinks = [
         { href: "/", label: "Home" },
-        { href: "/endless", label: "Endless Mode" },
+        { href: "/endless", label: "Endless" },
         { href: "/leaderboard", label: "Leaderboard" },
         {
             href: "https://discord.gg/r8rbntTaKQ",
