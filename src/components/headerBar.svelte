@@ -179,7 +179,7 @@
                                 </div>
                             {:else}
                                 <div class="text-center">
-                                    <p class="text-xs text-gray-600">No username set</p>
+                                    <p class="text-xs text-white">No username set</p>
                                 </div>
                             {/if}
 
@@ -221,16 +221,16 @@
 
             <!-- Mobile Account Dropdown -->
             {#if accountModalOpen}
-                <div class="bg-white rounded-lg shadow-xl border-2 border-blue-300 mt-2 account-dropdown-container">
+                <div class="rounded-lg shadow-xl bg-none backdrop-blur-lg border-2 border-blue-900 mt-2 account-dropdown-container">
                     <div class="p-4 space-y-3">
                         {#if username}
                             <div class="text-center mb-3">
-                                <p class="text-xs text-gray-600 mb-1">Signed in as:</p>
-                                <p class="text-sm font-bold text-gray-800">{username}</p>
+                                <p class="text-xs text-gray-300 mb-1">Signed in as:</p>
+                                <p class="text-sm font-bold text-white">{username}</p>
                             </div>
                         {:else}
                             <div class="text-center mb-3">
-                                <p class="text-xs text-gray-600">No username set</p>
+                                <p class="text-xs text-white">No username set</p>
                             </div>
                         {/if}
 
