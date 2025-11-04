@@ -39,6 +39,7 @@
     let isSwapHover = $state(false);
     let showSwapMenu = $state(false);
     let swapHandIndex = $state<number | null>(null);
+    let showResetConfirm = $state(false);
 
     // Derived state: should the swap box pulse when dragging?
     let shouldPulse = $derived.by(() => {
@@ -119,6 +120,40 @@
         showSwapMenu = false;
         swapHandIndex = null;
     }
+
+    function handleResetButtonClick() {
+        showResetConfirm = true;
+    }
+
+    function handleConfirmReset() {
+        showResetConfirm = false;
+
+        // Reset the game state
+        gameState.resetGame();
+
+        // Re-deal player hand
+        const playerTiles = gameState.playerFreshHand();
+        if (playerTiles) {
+            playerTiles.forEach((tile, index) => {
+                gameState.setPlayerHandSlot(index, tile);
+            });
+        }
+
+        // Re-deal opponent hand
+        const opponentTiles = gameState.opponentFreshHand();
+        if (opponentTiles) {
+            opponentTiles.forEach((tile, index) => {
+                gameState.setOpponentHandSlot(index, tile);
+            });
+        }
+
+        // Restart gravity system
+        gameState.startGravity(300);
+    }
+
+    function handleCancelReset() {
+        showResetConfirm = false;
+    }
 </script>
 
 <div>
@@ -133,12 +168,12 @@
             {/each}
         </div>
 
-        <div class="flex items-stretch justify-center h-full">
+        <div class="flex flex-col gap-1 sm:gap-2 h-full">
             <div
                 id="swapButton"
                 role="button"
                 tabindex="0"
-                class="h-full rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-20 sm:min-w-[100px] transition-all duration-300 {isSwapHover
+                class="flex-1 rounded-xl border-2 sm:border-4 flex flex-col items-center justify-center p-2 sm:p-3 md:p-4 min-w-20 sm:min-w-[100px] transition-all duration-300 {isSwapHover
                     ? 'bg-blue-500 border-blue-700'
                     : 'bg-blue-200'} {gameState.playerSwapsRemaining <= 0 || gameState.playerSwapsUsedThisTurn >= 1
                     ? 'opacity-50 cursor-not-allowed'
@@ -161,6 +196,13 @@
                     <h1 class="font-bold">{gameState.playerSwapsRemaining}</h1>
                 </span>
             </div>
+            <button
+                class="rounded-xl font-semibold border-2 sm:border-4 bg-red-200 hover:bg-red-300 hover:border-red-500 flex items-center justify-center cursor-pointer transition-all duration-300 text-sm"
+                onclick={handleResetButtonClick}
+                title="Reset Game"
+            >
+                Reset Game
+            </button>
         </div>
     </div>
 
@@ -170,5 +212,45 @@
             onSelect={handleSwapSelect}
             onCancel={handleSwapCancel}
         />
+    {/if}
+
+    <!-- Reset confirmation modal -->
+    {#if showResetConfirm}
+        <div
+            class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            role="button"
+            tabindex="0"
+            onclick={handleCancelReset}
+            onkeydown={(e) => e.key === 'Escape' && handleCancelReset()}
+        >
+            <div
+                class="bg-linear-to-br from-purple-900/90 to-indigo-900/90 backdrop-blur-md border-2 border-purple-400/50 rounded-2xl p-8 max-w-md w-full shadow-2xl shadow-purple-500/20"
+                role="dialog"
+                tabindex="-1"
+                aria-modal="true"
+                aria-labelledby="reset-dialog-title"
+                onclick={(e) => e.stopPropagation()}
+                onkeydown={(e) => e.stopPropagation()}
+            >
+                <h2 id="reset-dialog-title" class="text-2xl font-bold text-white mb-4 text-center">Reset Game?</h2>
+                <p class="text-purple-200 mb-8 text-center">
+                    This will start a new game. All progress will be lost.
+                </p>
+                <div class="flex gap-4 justify-center">
+                    <button
+                        class="px-6 py-3 rounded-xl font-semibold bg-gray-700 hover:bg-gray-600 text-white border-2 border-gray-500 transition-all duration-300"
+                        onclick={handleCancelReset}
+                    >
+                        Cancel
+                    </button>
+                    <button
+                        class="px-6 py-3 rounded-xl font-semibold bg-red-600 hover:bg-red-500 text-white border-2 border-red-400 transition-all duration-300"
+                        onclick={handleConfirmReset}
+                    >
+                        Reset
+                    </button>
+                </div>
+            </div>
+        </div>
     {/if}
 </div>

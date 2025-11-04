@@ -4,7 +4,7 @@
 
 import type { TileData, TileContainer } from "./types";
 import { sharedBag } from "./sharedLetterBag.svelte";
-import { drawFromBag, createTile } from "./letterBag.svelte";
+import { drawFromBag, createTile, createLetterBag } from "./letterBag.svelte";
 import { wordValidator } from "./wordValidator.svelte";
 import { AI_CONFIG, AI_DIFFICULTY } from "./constants";
 import { findBestAction } from "./aiStrategy.svelte";
@@ -1142,6 +1142,73 @@ function createGameState() {
             } catch (e) {
                 console.error('Failed to clear saved game state:', e);
             }
+        },
+
+        // Reset entire game state
+        resetGame() {
+            // Clear localStorage first
+            this.clearSavedGameState();
+
+            // Stop gravity if running
+            if (gravityIntervalId !== null) {
+                clearInterval(gravityIntervalId);
+                gravityIntervalId = null;
+            }
+
+            // Reset board
+            for (let i = 0; i < boardSlots.length; i++) {
+                boardSlots[i].heldLetterTile = null;
+            }
+
+            // Reset player hand
+            for (let i = 0; i < playerHandSlots.length; i++) {
+                playerHandSlots[i].heldLetterTile = null;
+            }
+
+            // Reset opponent hand
+            for (let i = 0; i < opponentHandSlots.length; i++) {
+                opponentHandSlots[i].heldLetterTile = null;
+            }
+
+            // Reset scores and game state
+            playerScore.value = 0;
+            opponentScore.value = 0;
+            currentPlayerTurn.value = "player";
+            playerSwapsRemaining.value = 5;
+            playerSwapsUsedThisTurn.value = 0;
+
+            // Reset game over state
+            isGameOver.value = false;
+            gameOverReason.value = null;
+
+            // Reset board settlement tracking
+            isBoardSettled.value = true;
+            pendingTurnSwitch.value = false;
+
+            // Reset claiming animation state
+            isClaimingInProgress.value = false;
+            claimingWaves.length = 0;
+
+            // Reset drag state
+            dragState.tile = null;
+            dragState.sourceType = null;
+            dragState.sourceIndex = null;
+
+            // Reset swap animation state
+            swapAnimationState.isSwapping = false;
+            swapAnimationState.handIndex = null;
+            swapAnimationState.boardIndex = null;
+
+            // Reset overwritten tiles
+            overwrittenTileIndices.clear();
+
+            // Reset shared bag to fresh state
+            const newBag = createLetterBag();
+            sharedBag.length = 0;
+            sharedBag.push(...newBag);
+
+            // Reset shader background
+            shaderBackground.resetColors();
         }
     };
 }

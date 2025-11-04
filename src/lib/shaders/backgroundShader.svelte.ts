@@ -262,6 +262,22 @@ function createShaderBackgroundState() {
                 spinMod: spinMod.value,
                 baseColor: baseColor.value,
             };
+        },
+
+        // Reset all shader parameters to default
+        resetColors() {
+            // Cancel any ongoing animation
+            if (baseColorAnimationId !== null) {
+                cancelAnimationFrame(baseColorAnimationId);
+                baseColorAnimationId = null;
+            }
+
+            // Reset to default purple color (neutral state)
+            baseColor.value = [0.290, 0.050, 0.560];
+            flashColor.value = [0.0, 0.0, 0.0];
+            flashIntensity.value = 0.0;
+            contrastMod.value = 1.0;
+            spinMod.value = 1.0;
         }
     };
 }
