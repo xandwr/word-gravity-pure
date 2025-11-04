@@ -1,7 +1,7 @@
 <script lang="ts">
     import { faDiscord, faGoogle } from "@fortawesome/free-brands-svg-icons";
     import { FontAwesomeIcon } from "@fortawesome/svelte-fontawesome";
-    import { goto } from "$app/navigation";
+    import { goto, invalidateAll } from "$app/navigation";
 
     let email = "";
     let password = "";
@@ -25,6 +25,9 @@
             if (!data.success) {
                 throw new Error(data.error || "Login failed");
             }
+
+            // Invalidate all page data to refresh auth state
+            await invalidateAll();
 
             // Redirect to home page after successful login
             await goto("/");

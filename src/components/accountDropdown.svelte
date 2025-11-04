@@ -42,18 +42,18 @@
         };
     });
 
-    function handleProfileAction() {
-        if (isOfficialAccount) {
-            window.location.href = "/profile";
-        } else {
-            window.location.href = "/register";
-        }
+    async function handleProfileAction() {
         accountModalOpen = false;
+        if (isOfficialAccount) {
+            await goto("/profile");
+        } else {
+            await goto("/register");
+        }
     }
 
-    function handleLogin() {
-        window.location.href = "/login";
+    async function handleLogin() {
         accountModalOpen = false;
+        await goto("/login");
     }
 
     async function handleLogoutOrClearCache() {
