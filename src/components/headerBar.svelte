@@ -40,8 +40,8 @@
             // TODO: Navigate to profile page
             console.log("Navigate to profile");
         } else {
-            // TODO: Navigate to registration page
-            console.log("Navigate to registration");
+            // Navigate to registration page
+            window.location.href = '/register';
         }
         accountModalOpen = false;
     }
