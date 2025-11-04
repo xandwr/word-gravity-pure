@@ -8,6 +8,7 @@ import { drawFromBag, createTile } from "./letterBag.svelte";
 import { wordValidator } from "./wordValidator.svelte";
 import { AI_CONFIG, AI_DIFFICULTY } from "./constants";
 import { findBestAction } from "./aiStrategy.svelte";
+import { shaderBackground } from "$lib/shaders/backgroundShader.svelte";
 
 // Re-export createTile for backwards compatibility
 export { createTile } from "./letterBag.svelte";
@@ -89,13 +90,6 @@ function createGameState() {
     // Track board indices that were overwritten this turn (for word ownership transfer)
     const overwrittenTileIndices = $state<Set<number>>(new Set());
 
-    // Background shader controls
-    const bgOpacity = $state({ value: 0.5 });
-    const bgFlashColor = $state<{ value: [number, number, number] }>({ value: [0.0, 0.0, 0.0] });
-    const bgFlashIntensity = $state({ value: 0.0 });
-    const bgContrastMod = $state({ value: 1.0 });
-    const bgSpinMod = $state({ value: 1.0 });
-
     // AI difficulty setting
     const aiDifficulty = $state<{ value: 'EASY' | 'MEDIUM' | 'HARD' | 'NIGHTMARE' }>({ value: 'EASY' });
 
@@ -147,169 +141,6 @@ function createGameState() {
         // Reactive bag count getter
         get bagCount() {
             return sharedBag.length;
-        },
-
-        // Background shader opacity
-        get backgroundOpacity() {
-            return bgOpacity.value;
-        },
-
-        // Background shader flash color (RGB 0.0-1.0)
-        get backgroundFlashColor() {
-            return bgFlashColor.value;
-        },
-
-        // Background shader flash intensity (0.0-1.0)
-        get backgroundFlashIntensity() {
-            return bgFlashIntensity.value;
-        },
-
-        // Background shader contrast modifier (0.0-2.0, default 1.0)
-        get backgroundContrastMod() {
-            return bgContrastMod.value;
-        },
-
-        // Background shader spin modifier (0.0-2.0, default 1.0)
-        get backgroundSpinMod() {
-            return bgSpinMod.value;
-        },
-
-        // Trigger a color flash on the background shader
-        triggerBackgroundFlash(color: [number, number, number], duration: number = 600) {
-            // Set the flash color and intensity
-            bgFlashColor.value = color;
-
-            const MIN_INTENSITY = 0.1; // Minimum baseline intensity
-            const MAX_INTENSITY = 0.85; // Maximum intensity cap
-            const BOOST_AMOUNT = 0.4; // How much to boost on each score
-
-            const startTime = performance.now();
-            const rampUpTime = 0.15; // Fast burst - 15% of duration
-            const startIntensity = Math.max(MIN_INTENSITY, bgFlashIntensity.value); // Start from current value
-            const targetIntensity = Math.min(MAX_INTENSITY, startIntensity + BOOST_AMOUNT);
-            let lastTime = startTime;
-
-            const animate = (currentTime: number) => {
-                const delta = (currentTime - lastTime) / 1000; // Delta in seconds
-                lastTime = currentTime;
-
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1.0);
-
-                let intensity: number;
-                if (progress < rampUpTime) {
-                    // Fast ramp up - cubic ease-in for snappy start
-                    const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    intensity = startIntensity + (targetIntensity - startIntensity) * eased;
-                } else {
-                    // Decay back to minimum, not zero
-                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = Math.exp(-decayProgress * 3.5); // Exponential fade
-                    intensity = MIN_INTENSITY + (targetIntensity - MIN_INTENSITY) * eased;
-                }
-
-                // Lerp the intensity based on delta time for frame-rate independence
-                const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
-                bgFlashIntensity.value = bgFlashIntensity.value + (intensity - bgFlashIntensity.value) * lerpFactor;
-
-                if (progress < 1.0) {
-                    requestAnimationFrame(animate);
-                } else {
-                    bgFlashIntensity.value = Math.max(MIN_INTENSITY, bgFlashIntensity.value);
-                }
-            };
-            requestAnimationFrame(animate);
-        },
-
-        // Pulse the contrast modifier
-        pulseContrast(targetMod: number = 1.4, duration: number = 1200) {
-            const MIN_CONTRAST = 1.0; // Minimum baseline contrast
-            const MAX_CONTRAST = 2.0; // Maximum contrast cap
-            const BOOST_AMOUNT = 0.35; // How much to boost on each score
-
-            const startTime = performance.now();
-            const rampUpTime = 0.15; // Fast burst like flash effect
-            const startValue = Math.max(MIN_CONTRAST, bgContrastMod.value); // Start from current value
-            const targetValue = Math.min(MAX_CONTRAST, startValue + BOOST_AMOUNT);
-            let lastTime = startTime;
-
-            const animate = (currentTime: number) => {
-                const delta = (currentTime - lastTime) / 1000; // Delta in seconds
-                lastTime = currentTime;
-
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1.0);
-
-                let contrast: number;
-                if (progress < rampUpTime) {
-                    // Fast ramp up - cubic ease-in for snappy start
-                    const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    contrast = startValue + (targetValue - startValue) * eased;
-                } else {
-                    // Decay back to minimum, not 1.0
-                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = Math.exp(-decayProgress * 3.5); // Exponential fade
-                    contrast = MIN_CONTRAST + (targetValue - MIN_CONTRAST) * eased;
-                }
-
-                // Lerp the value based on delta time for frame-rate independence
-                const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
-                bgContrastMod.value = bgContrastMod.value + (contrast - bgContrastMod.value) * lerpFactor;
-
-                if (progress < 1.0) {
-                    requestAnimationFrame(animate);
-                } else {
-                    bgContrastMod.value = Math.max(MIN_CONTRAST, bgContrastMod.value);
-                }
-            };
-            requestAnimationFrame(animate);
-        },
-
-        // Pulse the spin speed modifier
-        pulseSpin(targetMod: number = 1.6, duration: number = 1400) {
-            const MIN_SPIN = 1.0; // Minimum baseline spin
-            const MAX_SPIN = 2.5; // Maximum spin cap
-            const BOOST_AMOUNT = 0.5; // How much to boost on each score
-
-            const startTime = performance.now();
-            const rampUpTime = 0.15; // Fast burst like flash effect
-            const startValue = Math.max(MIN_SPIN, bgSpinMod.value); // Start from current value
-            const targetValue = Math.min(MAX_SPIN, startValue + BOOST_AMOUNT);
-            let lastTime = startTime;
-
-            const animate = (currentTime: number) => {
-                const delta = (currentTime - lastTime) / 1000; // Delta in seconds
-                lastTime = currentTime;
-
-                const elapsed = currentTime - startTime;
-                const progress = Math.min(elapsed / duration, 1.0);
-
-                let spin: number;
-                if (progress < rampUpTime) {
-                    // Fast ramp up - cubic ease-in for snappy start
-                    const rampProgress = progress / rampUpTime;
-                    const eased = rampProgress * rampProgress * rampProgress;
-                    spin = startValue + (targetValue - startValue) * eased;
-                } else {
-                    // Decay back to minimum, not 1.0
-                    const decayProgress = (progress - rampUpTime) / (1 - rampUpTime);
-                    const eased = Math.exp(-decayProgress * 3.5); // Exponential fade
-                    spin = MIN_SPIN + (targetValue - MIN_SPIN) * eased;
-                }
-
-                // Lerp the value based on delta time for frame-rate independence
-                const lerpFactor = Math.min(delta * 60, 1.0); // Normalize to 60fps
-                bgSpinMod.value = bgSpinMod.value + (spin - bgSpinMod.value) * lerpFactor;
-
-                if (progress < 1.0) {
-                    requestAnimationFrame(animate);
-                } else {
-                    bgSpinMod.value = Math.max(MIN_SPIN, bgSpinMod.value);
-                }
-            };
-            requestAnimationFrame(animate);
         },
 
         // Readonly access to scores
@@ -410,10 +241,10 @@ function createGameState() {
             // Trigger shader effects if score increased
             if (score > oldScore) {
                 // Convert player color from hex to RGB 0.0-1.0
-                const color = this.hexToRGB('#22c55e'); // green-500
-                this.triggerBackgroundFlash(color, 2000); // Extended duration for slow creep-out
-                this.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
-                this.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
+                const color = shaderBackground.hexToRGB('#22c55e'); // green-500
+                shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
+                shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
+                shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
             }
         },
 
@@ -424,19 +255,11 @@ function createGameState() {
             // Trigger shader effects if score increased
             if (score > oldScore) {
                 // Convert opponent color from hex to RGB 0.0-1.0
-                const color = this.hexToRGB('#ef4444'); // red-500
-                this.triggerBackgroundFlash(color, 2000); // Extended duration for slow creep-out
-                this.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
-                this.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
+                const color = shaderBackground.hexToRGB('#ef4444'); // red-500
+                shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
+                shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
+                shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
             }
-        },
-
-        // Helper to convert hex color to RGB 0.0-1.0
-        hexToRGB(hex: string): [number, number, number] {
-            const r = parseInt(hex.slice(1, 3), 16) / 255;
-            const g = parseInt(hex.slice(3, 5), 16) / 255;
-            const b = parseInt(hex.slice(5, 7), 16) / 255;
-            return [r, g, b];
         },
 
         decrementPlayerSwaps() {
@@ -865,10 +688,10 @@ function createGameState() {
             const FADE_DURATION = 300; // ms for fade out animation
 
             // Trigger shader effects once at the start
-            const color = this.hexToRGB('#22c55e'); // green-500
-            this.triggerBackgroundFlash(color, 2000); // Extended duration for slow creep-out
-            this.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
-            this.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
+            const color = shaderBackground.hexToRGB('#22c55e'); // green-500
+            shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
+            shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
+            shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];
@@ -962,10 +785,10 @@ function createGameState() {
             const FADE_DURATION = 300; // ms for fade out animation
 
             // Trigger shader effects once at the start
-            const color = this.hexToRGB('#ef4444'); // red-500
-            this.triggerBackgroundFlash(color, 2000); // Extended duration for slow creep-out
-            this.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
-            this.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
+            const color = shaderBackground.hexToRGB('#ef4444'); // red-500
+            shaderBackground.triggerFlash(color, 2000); // Extended duration for slow creep-out
+            shaderBackground.pulseContrast(1.8, 1500); // Strong contrast spike with slower decay
+            shaderBackground.pulseSpin(2.2, 1600); // Dramatic spin burst with slower decay
 
             for (let i = 0; i < waves.length; i++) {
                 const wave = waves[i];

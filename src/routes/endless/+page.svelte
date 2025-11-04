@@ -9,11 +9,6 @@
     import PlayerInfoPanel from "$components/playerInfoPanel.svelte";
     import { PLAYER_COLORS } from "$lib/game/constants";
     import { onMount } from "svelte";
-    import {
-        loadShaderProgram,
-        setupFullScreenQuad,
-        createShaderAnimation,
-    } from "$lib/shaders/shaderLoader";
     import { fade } from "svelte/transition";
     import {
         getPlayerId,
@@ -69,7 +64,6 @@
         }
     }
 
-    // WebGL shader setup
     onMount(() => {
         // Load player identity
         playerId = getPlayerId();
@@ -77,69 +71,6 @@
         if (savedUsername) {
             username = savedUsername;
         }
-
-        const canvas = document.getElementById(
-            "gameBackgroundCanvas",
-        ) as HTMLCanvasElement;
-        if (!canvas) return;
-
-        const gl =
-            canvas.getContext("webgl", {
-                alpha: true,
-                premultipliedAlpha: false,
-            }) ||
-            (canvas.getContext("experimental-webgl", {
-                alpha: true,
-                premultipliedAlpha: false,
-            }) as WebGLRenderingContext);
-        if (!gl) {
-            console.error("WebGL not supported");
-            return;
-        }
-
-        // Enable blending for opacity to work
-        gl.enable(gl.BLEND);
-        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-
-        let cleanup: (() => void) | undefined;
-
-        // Load shader program from files
-        loadShaderProgram(
-            gl,
-            "/shaders/paint/vert.vert",
-            "/shaders/paint/frag.frag",
-        ).then((shaderProgram) => {
-            if (!shaderProgram) {
-                console.error("Failed to load shader program");
-                return;
-            }
-
-            const { program } = shaderProgram;
-            gl.useProgram(program);
-
-            // Set up full-screen quad
-            setupFullScreenQuad(gl, program);
-
-            // Start animation with dynamic uniforms callback
-            cleanup = createShaderAnimation(
-                gl,
-                program,
-                canvas,
-                undefined, // no custom updateUniforms
-                () => ({
-                    opacity: gameState.backgroundOpacity,
-                    flashColor: gameState.backgroundFlashColor,
-                    flashIntensity: gameState.backgroundFlashIntensity,
-                    contrastMod: gameState.backgroundContrastMod,
-                    spinMod: gameState.backgroundSpinMod,
-                }),
-            );
-        });
-
-        // Return cleanup function
-        return () => {
-            if (cleanup) cleanup();
-        };
     });
 </script>
 
@@ -238,13 +169,6 @@
     {/if}
 
     <div class="relative flex flex-col flex-1 min-h-0">
-        <div class="absolute inset-0 -z-10">
-            <canvas
-                id="gameBackgroundCanvas"
-                class="absolute inset-0 -z-10 w-full h-full"
-            ></canvas>
-        </div>
-
         <div
             class="flex-1 w-full py-1 px-2 sm:py-2 sm:px-3 flex justify-center items-start overflow-auto"
         >
