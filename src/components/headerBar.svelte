@@ -2,11 +2,18 @@
     import { Fa } from "svelte-fa";
     import { faDiscord } from "@fortawesome/free-brands-svg-icons";
     import { page } from "$app/state";
+    import { onMount } from "svelte";
+    import { getUsername } from "$lib/utils/playerIdentity";
 
     let menuOpen = $state(false);
     let howToPlayOpen = $state(false);
+    let username = $state<string | null>(null);
 
     const currentPath = $derived(page.url.pathname);
+
+    onMount(() => {
+        username = getUsername();
+    });
 
     const navLinks = [
         { href: "/", label: "Home" },
@@ -99,6 +106,19 @@
                     {/if}
                 </a>
             {/each}
+
+            <!-- Separator before account button -->
+            <div class="h-6 w-px bg-white/30 mx-2"></div>
+
+            <!-- Account section -->
+            <div class="flex flex-col items-center gap-0.5">
+                <span class="text-xs text-white/60">Account:</span>
+                <button
+                    class="px-3 py-0 hover:bg-blue-300/20 rounded-lg transition-colors border border-white/20"
+                >
+                    {username || "Login"}
+                </button>
+            </div>
         </nav>
     </div>
 </header>
@@ -108,6 +128,18 @@
     <nav
         class="md:hidden flex flex-col text-white bg-blue-900/20 border-t border-blue-300/20 p-4 gap-2"
     >
+        <!-- Account section (mobile) -->
+        <div class="flex flex-col gap-1">
+            <span class="text-xs text-white/60">Account:</span>
+            <button
+                class="px-3 py-2 hover:bg-blue-300/20 rounded-lg transition-colors border border-white/20 text-left"
+            >
+                {username || "Login"}
+            </button>
+        </div>
+
+        <div class="h-px w-full bg-white/30 my-2"></div>
+
         {#each navLinks as link, index}
             {#if index === 3}
                 <div class="h-px w-full bg-white/30 my-2"></div>
