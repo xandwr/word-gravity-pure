@@ -61,6 +61,7 @@
         submitError = "";
 
         try {
+            console.log("Submitting score:", gameState.playerScore);
             const response = await fetch("/api/leaderboard", {
                 method: "POST",
                 headers: {
@@ -71,13 +72,23 @@
                 }),
             });
 
+            console.log("Response status:", response.status);
             const result = await response.json();
+            console.log("Response data:", result);
+
+            if (!response.ok) {
+                submitError = result.error || `Server error (${response.status})`;
+                console.error("Submit failed with status:", response.status, result);
+                return;
+            }
 
             if (result.success) {
                 submitSuccess = true;
                 playerRank = result.rank;
+                console.log("Score submitted successfully! Rank:", result.rank);
             } else {
                 submitError = result.error || "Failed to submit score";
+                console.error("Submit failed:", result);
             }
         } catch (error) {
             submitError = "Network error. Please try again.";

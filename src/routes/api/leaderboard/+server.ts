@@ -68,8 +68,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         const supabase = locals.supabase;
         const user = locals.user;
 
+        console.log('=== Score Submission Request ===');
+        console.log('User:', user?.id, user?.username, user?.email);
+
         // Check if user is authenticated
         if (!user) {
+            console.log('❌ No user authenticated');
             return json(
                 {
                     success: false,
@@ -81,9 +85,11 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
         const body = await request.json();
         const { score } = body;
+        console.log('Score to submit:', score);
 
         // Validate input
         if (typeof score !== 'number' || score < 0) {
+            console.log('❌ Invalid score type or negative');
             return json(
                 {
                     success: false,
@@ -96,6 +102,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         // Basic anti-cheat: reject suspiciously high scores
         const MAX_REASONABLE_SCORE = 10000;
         if (score > MAX_REASONABLE_SCORE) {
+            console.log('❌ Score too high:', score);
             return json(
                 {
                     success: false,
@@ -106,16 +113,18 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         }
 
         // Insert the score into the database
-        const { error: insertError } = await supabase
+        console.log('Attempting to insert score into database...');
+        const { data: insertData, error: insertError } = await supabase
             .from('scores')
             .insert({
                 user_id: user.id,
                 mode: 'endless',
                 score: score
-            });
+            })
+            .select();
 
         if (insertError) {
-            console.error('Error inserting score:', insertError);
+            console.error('❌ Error inserting score:', insertError);
             return json(
                 {
                     success: false,
@@ -124,6 +133,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
                 { status: 500 }
             );
         }
+
+        console.log('✅ Score inserted successfully:', insertData);
 
         // Get the user's new rank using the helper function
         const { data: rankData, error: rankError } = await supabase
