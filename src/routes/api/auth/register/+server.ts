@@ -30,13 +30,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 
 		// Check if username is already taken
-		const { data: existingProfile } = await locals.supabase
+		const { data: existingProfileByUsername } = await locals.supabase
 			.from("profiles")
 			.select("id")
 			.eq("username", username)
 			.single();
 
-		if (existingProfile) {
+		if (existingProfileByUsername) {
 			return json(
 				{ success: false, error: "Username is already taken" },
 				{ status: 400 },
@@ -89,13 +89,13 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		const adminClient = createSupabaseAdminClient();
 
 		// Check if profile already exists (from trigger)
-		const { data: existingProfile } = await adminClient
+		const { data: adminExistingProfile } = await adminClient
 			.from("profiles")
 			.select("username")
 			.eq("id", data.user.id)
 			.maybeSingle();
 
-		if (!existingProfile) {
+		if (!adminExistingProfile) {
 			// Profile doesn't exist, create it
 			const { error: profileInsertError } = await adminClient
 				.from("profiles")
