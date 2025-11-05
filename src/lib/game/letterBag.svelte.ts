@@ -91,9 +91,10 @@ export function createLetterBag(seed?: number) {
 export function drawFromBag(bag: TileData[], count = 1): TileData[] {
     const drawn: TileData[] = [];
     for (let i = 0; i < count && bag.length > 0; i++) {
-        const idx = Math.floor(Math.random() * bag.length);
-        const [tile] = bag.splice(idx, 1); // remove from bag
-        drawn.push(tile);
+        const tile = bag.pop();
+        if (tile) {
+            drawn.push(tile);
+        }
     }
     return drawn;
 }
