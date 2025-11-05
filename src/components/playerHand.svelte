@@ -11,20 +11,28 @@
 
     // Populate both player and opponent hands when the component mounts
     onMount(() => {
-        // Deal player hand
-        const playerTiles = gameState.playerFreshHand();
-        if (playerTiles) {
-            playerTiles.forEach((tile, index) => {
-                gameState.setPlayerHandSlot(index, tile);
-            });
+        const playerHandIsEmpty = gameState.playerHandSlots.every(
+            (slot) => slot.heldLetterTile === null
+        );
+        if (playerHandIsEmpty) {
+            const playerTiles = gameState.playerFreshHand();
+            if (playerTiles) {
+                playerTiles.forEach((tile, index) => {
+                    gameState.setPlayerHandSlot(index, tile);
+                });
+            }
         }
 
-        // Deal opponent hand
-        const opponentTiles = gameState.opponentFreshHand();
-        if (opponentTiles) {
-            opponentTiles.forEach((tile, index) => {
-                gameState.setOpponentHandSlot(index, tile);
-            });
+        const opponentHandIsEmpty = gameState.opponentHandSlots.every(
+            (slot) => slot.heldLetterTile === null
+        );
+        if (opponentHandIsEmpty) {
+            const opponentTiles = gameState.opponentFreshHand();
+            if (opponentTiles) {
+                opponentTiles.forEach((tile, index) => {
+                    gameState.setOpponentHandSlot(index, tile);
+                });
+            }
         }
 
         // Start gravity system (300ms tick interval)

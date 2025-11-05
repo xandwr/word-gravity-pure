@@ -13,14 +13,37 @@
 	let { children } = $props();
 
 	// Initialize global shader background
-	onMount(() => {
-		const cleanup = initializeShaderBackground("globalBackgroundCanvas");
+        onMount(() => {
+                let disposed = false;
+                let cleanup: (() => void) | null = null;
 
-		// Return cleanup function
-		return () => {
-			if (cleanup) cleanup;
-		};
-	});
+                initializeShaderBackground("globalBackgroundCanvas")
+                        .then((result) => {
+                                if (!result) {
+                                        return;
+                                }
+
+                                if (disposed) {
+                                        result();
+                                        return;
+                                }
+
+                                cleanup = result;
+                        })
+                        .catch((error) => {
+                                console.error("Failed to initialize shader background", error);
+                        });
+
+                // Return cleanup function
+                return () => {
+                        disposed = true;
+
+                        if (cleanup) {
+                                cleanup();
+                                cleanup = null;
+                        }
+                };
+        });
 </script>
 
 <svelte:head>
